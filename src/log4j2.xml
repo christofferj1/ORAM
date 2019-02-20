@@ -23,14 +23,10 @@
             </Policies>
         </RollingFile>
 
-        <!--<Console name="console" target="SYSTEM_OUT">-->
-            <!--<PatternLayout   pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />-->
-        <!--</Console>-->
     </Appenders>
     <Loggers>
         <Logger name="log" level="debug" additivity="true">
             <appender-ref ref="fileLogger" level="info" />
-            <!--<appender-ref ref="fileLoggerDebug" level="debug" />-->
         </Logger>
         <Root level="debug" additivity="false">
             <appender-ref ref="fileLoggerDebug" />
