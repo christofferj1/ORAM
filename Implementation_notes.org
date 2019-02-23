@@ -5,3 +5,4 @@ The check boxes is to mark when something is added to the report
    - [ ] There are different addresses for e.g. Path and lookahead (the later needs no address perhaps?)
  - [ ] Dummy blocks get address 0, as they do in some article (maybe Log^3 N)
  - [ ] Address and data byte[] are padded by making sure all arrays are of same length (padded with zero's should enough when CPA secure encryption is used)
+ - [ ] The dummy block check is done in Util, so it can be changed in a central place if the strategy is changed

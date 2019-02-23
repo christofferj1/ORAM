@@ -7,4 +7,7 @@ package oram;
  */
 
 public interface Block {
+    int getAddress();
+
+    byte[] getData();
 }

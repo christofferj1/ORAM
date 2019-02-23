@@ -36,9 +36,10 @@ public class Util {
         return new String(res);
     }
 
-    public static boolean isDummyBlock(byte[] data) {
-        for (byte bit : data)
-            if (bit != 0) return false;
+    public static boolean isDummyBlock(Block block) {
+//        for (byte bit : data)
+//            if (bit != 0) return false;
+        if (block.getAddress() == 0) return false;
         return true;
     }
 }

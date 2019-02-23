@@ -37,7 +37,7 @@ public class AES {
             byte[] keyBytes = key.getBytes("UTF-8");
             MessageDigest sha = MessageDigest.getInstance("SHA-1");
             keyBytes = sha.digest(keyBytes);
-            keyBytes = Arrays.copyOf(keyBytes, 16);
+            keyBytes = Arrays.copyOf(keyBytes, Constants.BYTES_OF_RANDOMNESS);
             secretKey = new SecretKeySpec(keyBytes, "AES");
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -50,7 +50,7 @@ public class AES {
         if (setKeyFailed(key)) return null;
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            String ivString = Util.getRandomString(16);
+            String ivString = Util.getRandomString(Constants.BYTES_OF_RANDOMNESS);
             byte[] iv = ivString.getBytes("UTF-8");
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);

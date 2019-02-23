@@ -1,5 +1,7 @@
 package oram.path;
 
+import oram.Block;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -9,7 +11,7 @@ import java.util.Objects;
  * Master Thesis 2019 </p>
  */
 
-public class BlockPath {
+public class BlockPath implements Block {
     private int address;
     private byte[] data;
 

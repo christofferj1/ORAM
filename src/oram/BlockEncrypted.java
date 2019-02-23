@@ -8,7 +8,7 @@ import java.util.Arrays;
  * Master Thesis 2019 </p>
  */
 
-public class BlockEncrypted implements Block {
+public class BlockEncrypted {
     private byte[] address;
     private byte[] data;
 

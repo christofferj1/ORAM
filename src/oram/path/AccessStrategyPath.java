@@ -83,11 +83,10 @@ public class AccessStrategyPath implements AccessStrategy {
             if (bucket.size() == bucketSize) {
                 for (BlockPath block : bucket) {
                     byte[] message = AES.decrypt(block.getData(), key);
-
-                    if (message == null || Util.isDummyBlock(message))
-                        continue;
-
                     int blockAddress = block.getAddress();
+
+                    if (message == null || Util.isDummyBlock(block)) continue;
+
                     stash.add(new BlockPath(blockAddress, message));
                 }
             } else {
