@@ -8,4 +8,5 @@ package oram;
 
 public class Constants {
     public static final int BLOCK_SIZE = 65536;
+    public static final int DUMMY_BLOCK_ADDRESS = 0;
 }

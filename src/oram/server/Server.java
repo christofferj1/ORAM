@@ -11,5 +11,5 @@ import oram.Block;
 public interface Server {
     Block read(int address);
 
-    void write(int address, Block block);
+    boolean write(int address, Block block);
 }

@@ -15,6 +15,14 @@ public class Util {
         return new byte[]{new Integer(i).byteValue()};
     }
 
+    public static byte[] sizedByteArrayWithInt(int i, int size) {
+        byte[] intArray = new byte[]{new Integer(i).byteValue()};
+        byte[] res = new byte[size];
+        if (intArray.length > res.length) return null;
+        System.arraycopy(intArray, 0, res, 0, size);
+        return res;
+    }
+
     public static String getRandomString(int length) {
         if (length <= 0) return "";
 

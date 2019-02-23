@@ -7,5 +7,5 @@ package oram;
  */
 
 public interface AccessStrategy {
-    byte[] access(OperationType op, int address, Byte[] data);
+    byte[] access(OperationType op, int address, byte[] data);
 }
