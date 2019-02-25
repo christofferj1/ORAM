@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 
 /**
  * <p> ORAM <br>
@@ -14,14 +15,26 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class UtilTest {
     @Test
     public void shouldCreateSizedByteArraysCorrectly() {
+//        Some positive numbers
+        assertThat("2 bytes, 0", Util.sizedByteArrayWithInt(0, 2), is(new byte[]{0b00000000, 0b00000000}));
         assertThat("1 byte, 77", Util.sizedByteArrayWithInt(77, 1), is(new byte[]{0b01001101}));
         assertThat("2 bytes, 77", Util.sizedByteArrayWithInt(77, 2), is(new byte[]{0b01001101, 0b00000000}));
         assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 3),
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100}));
         assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
-//        System.out.println(Integer.toBinaryString(8233));
+
+//        Some negative numbers
+        assertNull("-2 bytes, 0", Util.sizedByteArrayWithInt(0, -2));
+        assertThat("2 bytes, -0", Util.sizedByteArrayWithInt(-0, 2), is(new byte[]{0b00000000, 0b00000000}));
+        assertThat("1 byte, 77", Util.sizedByteArrayWithInt(77, 1), is(new byte[]{0b01001101}));
+        assertThat("2 bytes, 77", Util.sizedByteArrayWithInt(77, 2), is(new byte[]{0b01001101, 0b00000000}));
+        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 3),
+                is(new byte[]{0b00110101, 0b00100010, 0b00101100}));
+        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
+                is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
     }
+//        System.out.println(Integer.toBinaryString(8233));
 
     @Test
     public void shouldGiveTheRightIntFromByteArray() {
@@ -57,5 +70,12 @@ public class UtilTest {
         assertThat("Number 8300", Util.numberOfBytesForInt(8300), is(2));
         assertThat("Number 65535", Util.numberOfBytesForInt(65535), is(2));
         assertThat("Number 65536", Util.numberOfBytesForInt(65536), is(3));
+
+        assertThat("Number -0", Util.numberOfBytesForInt(-0), is(0));
+        assertThat("Number -83", Util.numberOfBytesForInt(-83), is(4));
+        assertThat("Number -830", Util.numberOfBytesForInt(-830), is(4));
+        assertThat("Number -8300", Util.numberOfBytesForInt(-8300), is(4));
+        assertThat("Number -65535", Util.numberOfBytesForInt(-65535), is(4));
+        assertThat("Number -65536", Util.numberOfBytesForInt(-65536), is(4));
     }
 }

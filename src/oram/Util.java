@@ -68,9 +68,9 @@ public class Util {
 
     static int numberOfBytesForInt(int i) {
         int count = 0;
-        while (i > 0) {
+        while (Math.abs(i) > 0) {
             count += 1;
-            i = i >> 8;
+            i = i >>> 8;
         }
         return count;
     }
