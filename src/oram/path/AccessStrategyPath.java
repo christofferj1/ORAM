@@ -5,6 +5,7 @@ import oram.server.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -75,17 +76,19 @@ public class AccessStrategyPath implements AccessStrategy {
         boolean res = true;
         for (int l = 0; l < L; l++) {
             int position = getPosition(address, l);
-            List<BlockPath> bucket = new ArrayList<>();
+            List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
-                bucket.add((BlockPath) server.read(position + i));
+                bucket.add((BlockEncrypted) server.read(position + i));
             }
 
             if (bucket.size() == bucketSize) {
-                for (BlockPath block : bucket) {
+                for (BlockEncrypted block : bucket) {
                     byte[] message = AES.decrypt(block.getData(), key);
-                    int blockAddress = block.getAddress();
+                    byte[] addressBytes = AES.decrypt(block.getAddress(), key);
+                    if (addressBytes == null) continue;
+                    int blockAddress = ByteBuffer.wrap(addressBytes).getInt();
 
-                    if (message == null || Util.isDummyBlock(block)) continue;
+                    if (message == null || Util.isDummyAddress(blockAddress)) continue;
 
                     stash.add(new BlockPath(blockAddress, message));
                 }
@@ -168,7 +171,8 @@ public class AccessStrategyPath implements AccessStrategy {
         return temp;
     }
 
-    private List<Integer> getSubTreeNodes(int position) {
+//    Package private for tests
+    List<Integer> getSubTreeNodes(int position) {
         if (position > Math.pow(2, L - 1) - 2)
             return Collections.singletonList(position - ((int) (Math.pow(2, L - 1) - 1)));
 
