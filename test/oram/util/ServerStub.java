@@ -1,10 +1,7 @@
 package oram.util;
 
-import oram.*;
+import oram.BlockEncrypted;
 import oram.server.Server;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p> ORAM <br>
@@ -13,25 +10,29 @@ import java.util.List;
  */
 
 public class ServerStub implements Server {
-    List<BlockEncrypted> blocks;
+//    List<BlockEncrypted> blocks;
+    private BlockEncrypted[] blocks;
 
-    public ServerStub(int size, String key) {
-        blocks = new ArrayList<>();
-        for (int i = 0; i <= size; i++) {
-            byte[] address = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);
-            byte[] data = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.BLOCK_SIZE), key);
-            blocks.add(new BlockEncrypted(address, data));
-        }
+    public ServerStub(int size, int bucketSize) {
+//        blocks = new ArrayList<>();
+//        for (int i = 0; i < (size * bucketSize); i++) {
+//            byte[] address = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);
+//            byte[] data = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.BLOCK_SIZE), key);
+//            blocks.add(new BlockEncrypted(address, data));
+//        }
 //        blocks = new ArrayList<>(Arrays.asList(new BlockEncrypted[size]));
+        blocks = new BlockEncrypted[size * bucketSize];
     }
 
     @Override
-    public Block read(int address) {
-        return (Block) blocks.get(address);
+    public BlockEncrypted read(int address) {
+//        return blocks.get(address);
+        return blocks[address];
     }
 
     @Override
     public boolean write(int address, BlockEncrypted block) {
-        return false;
+        blocks[address] = block;
+        return true;
     }
 }

@@ -19,10 +19,10 @@ public class Util {
 
     public static byte[] sizedByteArrayWithInt(int i, int size) {
 //        byte[] intArray = new byte[]{new Integer(i).byteValue()};
-        byte[] intArray = leIntToByteArray(i);
-        byte[] res = new byte[size];
         int bytes = numberOfBytesForInt(i);
         if (bytes > size) return null;
+        byte[] intArray = leIntToByteArray(i);
+        byte[] res = new byte[size];
         System.arraycopy(intArray, 0, res, 0, bytes);
         return res;
     }
@@ -51,7 +51,7 @@ public class Util {
         return true;
     }
 
-//    The following two functions are from
+    //    The following two functions are from
 //    https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
     public static int byteArrayToLeInt(byte[] b) {
         final ByteBuffer bb = ByteBuffer.wrap(b);

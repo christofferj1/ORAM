@@ -78,4 +78,11 @@ public class UtilTest {
         assertThat("Number -65535", Util.numberOfBytesForInt(-65535), is(4));
         assertThat("Number -65536", Util.numberOfBytesForInt(-65536), is(4));
     }
+
+    @Test
+    public void shouldGiveRandomStringOfRightLength() {
+        assertThat(Util.getRandomString(14).length(), is(14));
+        assertThat(Util.getRandomString(0).length(), is(0));
+        assertThat(Util.getRandomString(-1).length(), is(0));
+    }
 }

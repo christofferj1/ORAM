@@ -1,6 +1,5 @@
 package oram.server;
 
-import oram.Block;
 import oram.BlockEncrypted;
 
 /**
@@ -10,7 +9,7 @@ import oram.BlockEncrypted;
  */
 
 public interface Server {
-    Block read(int address);
+    BlockEncrypted read(int address);
 
     boolean write(int address, BlockEncrypted block);
 }

@@ -24,7 +24,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private Map<Integer, Integer> positionMap;
     private Server server;
 
-    public AccessStrategyPath(int size, Server server, int bucketSize, String key) {
+    AccessStrategyPath(int size, Server server, int bucketSize, String key) {
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
@@ -78,11 +78,13 @@ public class AccessStrategyPath implements AccessStrategy {
             int position = getPosition(address, l);
             List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
-                bucket.add((BlockEncrypted) server.read(position + i));
+                bucket.add(server.read(position + i));
             }
 
             if (bucket.size() == bucketSize) {
                 for (BlockEncrypted block : bucket) {
+                    if (block == null) continue;
+
                     byte[] message = AES.decrypt(block.getData(), key);
                     byte[] addressBytes = AES.decrypt(block.getAddress(), key);
                     if (addressBytes == null) continue;
@@ -156,10 +158,13 @@ public class AccessStrategyPath implements AccessStrategy {
             for (int i = 0; i < blocksToWrite.size(); i++) {
                 BlockPath block = blocksToWrite.get(i);
                 byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), L);
+                byte[] addressCipher = AES.encrypt(addressSized, key);
+
                 byte[] dataTmp = new byte[Constants.BLOCK_SIZE];
                 System.arraycopy(block.getData(), 0, dataTmp, 0, dataTmp.length);
+                byte[] dataCipher = AES.encrypt(dataTmp, key);
 
-                server.write(position + i, new BlockEncrypted(addressSized, dataTmp));
+                server.write(position + i, new BlockEncrypted(addressCipher, dataCipher));
             }
         }
     }
@@ -171,7 +176,7 @@ public class AccessStrategyPath implements AccessStrategy {
         return temp;
     }
 
-//    Package private for tests
+    //    Package private for tests
     List<Integer> getSubTreeNodes(int position) {
         if (position > Math.pow(2, L - 1) - 2)
             return Collections.singletonList(position - ((int) (Math.pow(2, L - 1) - 1)));
