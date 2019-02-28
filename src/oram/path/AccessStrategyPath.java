@@ -6,8 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.*;
+
+import static oram.Constants.ADDRESS_SIZE;
 
 /**
  * <p> ORAM <br>
@@ -38,8 +41,8 @@ public class AccessStrategyPath implements AccessStrategy {
     private void initializeServer() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
-            positionMap.put(1, i);
-            access(OperationType.WRITE, 1, new byte[Constants.BLOCK_SIZE]);
+            positionMap.put(0, i);
+            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE]);
         }
         positionMap = new HashMap<>();
     }
@@ -55,11 +58,11 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //        Line 1 and 2 in pseudo code.
 //        Return a random position if the block does not have one already
-        int x = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
+        int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
         positionMap.put(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
 
 //        Line 3 to 5 in pseudo code.
-        boolean readPath = readPathToStash(x);
+        boolean readPath = readPathToStash(leafNodeIndex);
         if (!readPath)
             return null;
 
@@ -67,7 +70,7 @@ public class AccessStrategyPath implements AccessStrategy {
         byte[] res = retrieveDataOverwriteBlock(address, op, data);
 
 //        Line 10 to 15 in pseudo code.
-        writeBackPath(address);
+        writeBackPath(leafNodeIndex);
 
         return res;
     }
@@ -88,8 +91,10 @@ public class AccessStrategyPath implements AccessStrategy {
                     byte[] message = AES.decrypt(block.getData(), key);
                     byte[] addressBytes = AES.decrypt(block.getAddress(), key);
                     if (addressBytes == null) continue;
-                    int blockAddress = ByteBuffer.wrap(addressBytes).getInt();
 
+                    int blockAddress = ByteBuffer.wrap(addressBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+
+//                    TODO: check if isDummyAddress working
                     if (message == null || Util.isDummyAddress(blockAddress)) continue;
 
                     stash.add(new BlockPath(blockAddress, message));
@@ -128,10 +133,10 @@ public class AccessStrategyPath implements AccessStrategy {
         return endData;
     }
 
-    private void writeBackPath(int address) {
+    private void writeBackPath(int leafNode) {
         for (int l = L - 1; l >= 0; l--) {
             List<BlockPath> blocksToWrite = new ArrayList<>();
-            int position = getPosition(address, l);
+            int position = getPosition(leafNode, l);
             List<Integer> indices = getSubTreeNodes(position);
 
 //            Pick all the blocks from the stash which can be written to the current node
@@ -157,11 +162,12 @@ public class AccessStrategyPath implements AccessStrategy {
 //            Encrypts all pairs
             for (int i = 0; i < blocksToWrite.size(); i++) {
                 BlockPath block = blocksToWrite.get(i);
-                byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), L);
+                byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), ADDRESS_SIZE);
                 byte[] addressCipher = AES.encrypt(addressSized, key);
 
                 byte[] dataTmp = new byte[Constants.BLOCK_SIZE];
-                System.arraycopy(block.getData(), 0, dataTmp, 0, dataTmp.length);
+                byte[] data = block.getData();
+                System.arraycopy(data, 0, dataTmp, 0, data.length);
                 byte[] dataCipher = AES.encrypt(dataTmp, key);
 
                 server.write(position + i, new BlockEncrypted(addressCipher, dataCipher));

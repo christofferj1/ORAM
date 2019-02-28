@@ -87,8 +87,6 @@ public class AES {
             System.arraycopy(cipherToDecrypt, 16, valueCipher, 0, cipherLength);
 
             byte[] decode = Base64.getDecoder().decode(valueCipher);
-            System.out.println(Arrays.toString(decode));
-            System.out.println("Decode length: " + decode.length);
             return cipher.doFinal(decode);
 
 //            return cipher.doFinal(valueCipher);

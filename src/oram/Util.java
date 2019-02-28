@@ -47,8 +47,8 @@ public class Util {
     }
 
     public static boolean isDummyAddress(int address) {
-        if (address == 0) return false;
-        return true;
+        if (address == 0) return true;
+        return false;
     }
 
     //    The following two functions are from

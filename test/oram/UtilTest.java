@@ -34,7 +34,7 @@ public class UtilTest {
         assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
     }
-//        System.out.println(Integer.toBinaryString(8233));
+//        Integer.toBinaryString(8233)
 
     @Test
     public void shouldGiveTheRightIntFromByteArray() {

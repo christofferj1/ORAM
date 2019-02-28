@@ -10,7 +10,7 @@ import oram.server.Server;
  */
 
 public class ServerStub implements Server {
-//    List<BlockEncrypted> blocks;
+    //    List<BlockEncrypted> blocks;
     private BlockEncrypted[] blocks;
 
     public ServerStub(int size, int bucketSize) {
@@ -32,6 +32,9 @@ public class ServerStub implements Server {
 
     @Override
     public boolean write(int address, BlockEncrypted block) {
+        if (address >= blocks.length)
+            return true;
+
         blocks[address] = block;
         return true;
     }
