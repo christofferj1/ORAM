@@ -11,11 +11,7 @@ import java.security.SecureRandom;
  */
 
 public class Util {
-    static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-    public static byte[] byteFromInt(int i) {
-        return new byte[]{new Integer(i).byteValue()};
-    }
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] sizedByteArrayWithInt(int i, int size) {
 //        byte[] intArray = new byte[]{new Integer(i).byteValue()};
@@ -27,7 +23,7 @@ public class Util {
         return res;
     }
 
-    public static String getRandomString(int length) {
+    static String getRandomString(int length) {
         if (length <= 0) return "";
 
         char[] charactersArray = CHARACTERS.toCharArray();
@@ -40,20 +36,20 @@ public class Util {
         return new String(res);
     }
 
-    public static boolean isDummyBlock(Block block) {
+    static boolean isDummyBlock(Block block) {
+        if (block == null || block.getData() == null || block.getData().length == 0) return false;
         for (byte bit : block.getData())
             if (bit != 0) return false;
         return true;
     }
 
     public static boolean isDummyAddress(int address) {
-        if (address == 0) return true;
-        return false;
+        return address == 0;
     }
 
     //    The following two functions are from
 //    https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
-    public static int byteArrayToLeInt(byte[] b) {
+    static int byteArrayToLeInt(byte[] b) {
 //        Needs for testing. All numbers from 0 to like 100.
         final ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -76,8 +72,7 @@ public class Util {
         return count;
     }
 
-    //    TODO: TEST
-    public static String printByteArray(byte[] array) {
+    static String printByteArray(byte[] array) {
         StringBuilder builder = new StringBuilder("[");
         for (byte b : array) {
             if (b < 10)
@@ -92,7 +87,7 @@ public class Util {
         return builder.append("]").toString();
     }
 
-    public static String printTree(BlockEncrypted[] array, int bucketSize) {
+    static String printTree(BlockEncrypted[] array, int bucketSize) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
@@ -101,7 +96,7 @@ public class Util {
         return printBucket(array, bucketSize, 0, 1, layers);
     }
 
-    public static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
+    static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
         StringBuilder prefix = new StringBuilder();
         for (int i = 1; i < layer; i++) {
             prefix.append("        ");

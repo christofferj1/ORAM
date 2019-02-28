@@ -2,7 +2,10 @@ package oram.path;
 
 import oram.OperationType;
 import oram.ServerStub;
+import oram.permutation.PermutationStrategy;
+import oram.util.PermutationStrategyIdentity;
 import oram.util.TestUtil;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -14,60 +17,116 @@ import static org.junit.Assert.assertNotNull;
 
 public class AccessStrategyPathTest {
     private static final int BUCKET_SIZE = 4;
+    private PermutationStrategy permutationStrategy;
+
+    @Before
+    public void setUp() {
+        permutationStrategy = new PermutationStrategyIdentity();
+    }
+
+//    @Test
+//    public void shouldCalculateThePositionNodeIndexFor7Blocks() {
+//        String key = "Some key 0";
+//        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key,
+//                permutationStrategy);
+//
+//        assertThat(accessStrategy.getPosition(0, 2), is(12));
+//        assertThat(accessStrategy.getPosition(1, 2), is(16));
+//        assertThat(accessStrategy.getPosition(2, 2), is(20));
+//        assertThat(accessStrategy.getPosition(3, 2), is(24));
+//
+//        assertThat(accessStrategy.getPosition(0, 1), is(4));
+//        assertThat(accessStrategy.getPosition(1, 1), is(4));
+//        assertThat(accessStrategy.getPosition(2, 1), is(8));
+//        assertThat(accessStrategy.getPosition(3, 1), is(8));
+//
+//        assertThat(accessStrategy.getPosition(0, 0), is(0));
+//        assertThat(accessStrategy.getPosition(1, 0), is(0));
+//        assertThat(accessStrategy.getPosition(2, 0), is(0));
+//        assertThat(accessStrategy.getPosition(3, 0), is(0));
+//    }
 
     @Test
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
         String key = "Some key 0";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key,
+                permutationStrategy);
 
-        assertThat(accessStrategy.getPosition(0, 2), is(12));
-        assertThat(accessStrategy.getPosition(1, 2), is(16));
-        assertThat(accessStrategy.getPosition(2, 2), is(20));
-        assertThat(accessStrategy.getPosition(3, 2), is(24));
+        assertThat(accessStrategy.getNode(0, 2), is(3));
+        assertThat(accessStrategy.getNode(1, 2), is(4));
+        assertThat(accessStrategy.getNode(2, 2), is(5));
+        assertThat(accessStrategy.getNode(3, 2), is(6));
 
-        assertThat(accessStrategy.getPosition(0, 1), is(4));
-        assertThat(accessStrategy.getPosition(1, 1), is(4));
-        assertThat(accessStrategy.getPosition(2, 1), is(8));
-        assertThat(accessStrategy.getPosition(3, 1), is(8));
+        assertThat(accessStrategy.getNode(0, 1), is(1));
+        assertThat(accessStrategy.getNode(1, 1), is(1));
+        assertThat(accessStrategy.getNode(2, 1), is(2));
+        assertThat(accessStrategy.getNode(3, 1), is(2));
 
-        assertThat(accessStrategy.getPosition(0, 0), is(0));
-        assertThat(accessStrategy.getPosition(1, 0), is(0));
-        assertThat(accessStrategy.getPosition(2, 0), is(0));
-        assertThat(accessStrategy.getPosition(3, 0), is(0));
+        assertThat(accessStrategy.getNode(0, 0), is(0));
+        assertThat(accessStrategy.getNode(1, 0), is(0));
+        assertThat(accessStrategy.getNode(2, 0), is(0));
+        assertThat(accessStrategy.getNode(3, 0), is(0));
     }
-
+//
+//    @Test
+//    public void shouldCalculateTheRightPositionNodeIndexFor15Blocks() {
+//        String key = "Some key 1";
+//        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
+//                key, permutationStrategy);
+//
+//        assertThat(accessStrategy.getPosition(0, 3), is(28));
+//        assertThat(accessStrategy.getPosition(1, 3), is(32));
+//        assertThat(accessStrategy.getPosition(2, 3), is(36));
+//        assertThat(accessStrategy.getPosition(7, 3), is(56));
+//
+//        assertThat(accessStrategy.getPosition(0, 2), is(12));
+//        assertThat(accessStrategy.getPosition(1, 2), is(12));
+//        assertThat(accessStrategy.getPosition(2, 2), is(16));
+//        assertThat(accessStrategy.getPosition(7, 2), is(24));
+//
+//        assertThat(accessStrategy.getPosition(0, 1), is(4));
+//        assertThat(accessStrategy.getPosition(1, 1), is(4));
+//        assertThat(accessStrategy.getPosition(2, 1), is(4));
+//        assertThat(accessStrategy.getPosition(7, 1), is(8));
+//
+//        assertThat(accessStrategy.getPosition(0, 0), is(0));
+//        assertThat(accessStrategy.getPosition(1, 0), is(0));
+//        assertThat(accessStrategy.getPosition(2, 0), is(0));
+//        assertThat(accessStrategy.getPosition(7, 0), is(0));
+//    }
 
     @Test
     public void shouldCalculateTheRightNodeIndexFor15Blocks() {
         String key = "Some key 1";
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
-                key);
+                key, permutationStrategy);
 
-        assertThat(accessStrategy.getPosition(0, 3), is(28));
-        assertThat(accessStrategy.getPosition(1, 3), is(32));
-        assertThat(accessStrategy.getPosition(2, 3), is(36));
-        assertThat(accessStrategy.getPosition(7, 3), is(56));
+        assertThat(accessStrategy.getNode(0, 3), is(7));
+        assertThat(accessStrategy.getNode(1, 3), is(8));
+        assertThat(accessStrategy.getNode(2, 3), is(9));
+        assertThat(accessStrategy.getNode(7, 3), is(14));
 
-        assertThat(accessStrategy.getPosition(0, 2), is(12));
-        assertThat(accessStrategy.getPosition(1, 2), is(12));
-        assertThat(accessStrategy.getPosition(2, 2), is(16));
-        assertThat(accessStrategy.getPosition(7, 2), is(24));
+        assertThat(accessStrategy.getNode(0, 2), is(3));
+        assertThat(accessStrategy.getNode(1, 2), is(3));
+        assertThat(accessStrategy.getNode(2, 2), is(4));
+        assertThat(accessStrategy.getNode(7, 2), is(6));
 
-        assertThat(accessStrategy.getPosition(0, 1), is(4));
-        assertThat(accessStrategy.getPosition(1, 1), is(4));
-        assertThat(accessStrategy.getPosition(2, 1), is(4));
-        assertThat(accessStrategy.getPosition(7, 1), is(8));
+        assertThat(accessStrategy.getNode(0, 1), is(1));
+        assertThat(accessStrategy.getNode(1, 1), is(1));
+        assertThat(accessStrategy.getNode(2, 1), is(1));
+        assertThat(accessStrategy.getNode(7, 1), is(2));
 
-        assertThat(accessStrategy.getPosition(0, 0), is(0));
-        assertThat(accessStrategy.getPosition(1, 0), is(0));
-        assertThat(accessStrategy.getPosition(2, 0), is(0));
-        assertThat(accessStrategy.getPosition(7, 0), is(0));
+        assertThat(accessStrategy.getNode(0, 0), is(0));
+        assertThat(accessStrategy.getNode(1, 0), is(0));
+        assertThat(accessStrategy.getNode(2, 0), is(0));
+        assertThat(accessStrategy.getNode(7, 0), is(0));
     }
 
     @Test
     public void shouldFindTheRightSubTreePositionsSize7() {
         String key = "Some key 2";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key,
+                permutationStrategy);
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(4), is(Collections.singletonList(1)));
         assertThat(accessStrategy.getSubTreeNodes(5), is(Collections.singletonList(2)));
@@ -83,7 +142,7 @@ public class AccessStrategyPathTest {
     public void shouldFindTheRightSubTreePositionsSize15() {
         String key = "Some key 3";
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
-                key);
+                key, permutationStrategy);
 
         assertThat(accessStrategy.getSubTreeNodes(7), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(8), is(Collections.singletonList(1)));
@@ -109,7 +168,7 @@ public class AccessStrategyPathTest {
     public void shouldBeAbleToFillInBlocks() {
         String key = "Some key 4";
         ServerStub server = new ServerStub(7, BUCKET_SIZE);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, BUCKET_SIZE, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, BUCKET_SIZE, key, permutationStrategy);
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes());
         accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes());
@@ -133,7 +192,7 @@ public class AccessStrategyPathTest {
     public void shouldBeAbleToAlterBlocks() {
         String key = "Some key 5";
         ServerStub server = new ServerStub(15, BUCKET_SIZE);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, BUCKET_SIZE, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, BUCKET_SIZE, key, permutationStrategy);
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes());
 //        System.out.println("###########################################\n" + server.getTreeString());

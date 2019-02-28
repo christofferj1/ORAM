@@ -1,10 +1,13 @@
 package oram;
 
+import oram.path.BlockPath;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p> ORAM <br>
@@ -35,6 +38,48 @@ public class UtilTest {
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
     }
 //        Integer.toBinaryString(8233)
+
+    @Test
+    public void shouldGiveRandomStringOfRightLength() {
+        assertThat(Util.getRandomString(14).length(), is(14));
+        assertThat(Util.getRandomString(0).length(), is(0));
+        assertThat(Util.getRandomString(-1).length(), is(0));
+    }
+
+    @Test
+    public void shouldReturnTrueIffAllBytesOfAnArrayIsZero() {
+        assertFalse(Util.isDummyBlock(null));
+
+        BlockPath block = new BlockPath();
+        assertFalse(Util.isDummyBlock(block));
+
+        block.setData(new byte[0]);
+        assertFalse(Util.isDummyBlock(block));
+
+        block.setData(new byte[]{0b0});
+        assertTrue(Util.isDummyBlock(block));
+
+        block.setAddress(5);
+        assertTrue(Util.isDummyBlock(block));
+
+        block.setData(new byte[]{0b0, 0b00000000, 0b0000000000});
+        assertTrue(Util.isDummyBlock(block));
+
+        block.setData(new byte[]{0b00001000});
+        assertFalse(Util.isDummyBlock(block));
+
+        block.setData(new byte[]{0b0, 0b00001000, 0b0});
+        assertFalse(Util.isDummyBlock(block));
+    }
+
+    @Test
+    public void shouldReturnTrueIffAddressIsZero() {
+        assertFalse(Util.isDummyAddress(-32));
+        assertFalse(Util.isDummyAddress(-1));
+        assertTrue(Util.isDummyAddress(0));
+        assertFalse(Util.isDummyAddress(1));
+        assertFalse(Util.isDummyAddress(32));
+    }
 
     @Test
     public void shouldGiveTheRightIntFromByteArray() {
@@ -79,12 +124,7 @@ public class UtilTest {
         assertThat("Number -65536", Util.numberOfBytesForInt(-65536), is(4));
     }
 
-    @Test
-    public void shouldGiveRandomStringOfRightLength() {
-        assertThat(Util.getRandomString(14).length(), is(14));
-        assertThat(Util.getRandomString(0).length(), is(0));
-        assertThat(Util.getRandomString(-1).length(), is(0));
-    }
+//    TODO: Test for printByteArray
 
     @Test
     public void shouldBeAbleToPrintATreeCorrectly() {

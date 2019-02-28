@@ -1,6 +1,7 @@
 package oram.path;
 
 import oram.*;
+import oram.permutation.PermutationStrategy;
 import oram.server.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,10 +27,12 @@ public class AccessStrategyPath implements AccessStrategy {
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
     private Server server;
+    private final PermutationStrategy permutationStrategy;
     private boolean print;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, Server server, int bucketSize, String key) {
+    AccessStrategyPath(int size, Server server, int bucketSize, String key, PermutationStrategy permutationStrategy) {
+        this.permutationStrategy = permutationStrategy;
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
@@ -97,7 +100,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean readPathToStash(int leafNodeIndex) {
         boolean res = true;
         for (int l = 0; l < L; l++) {
-            int position = getPosition(leafNodeIndex, l);
+            int position = getNode(leafNodeIndex, l) * bucketSize;
             List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
                 bucket.add(server.read(position + i));
@@ -185,8 +188,8 @@ public class AccessStrategyPath implements AccessStrategy {
             }
 
 //            Encrypts all pairs
-            for (int i = 0; i < blocksToWrite.size(); i++) {
-                BlockPath block = blocksToWrite.get(i);
+            List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
+            for (BlockPath block : blocksToWrite) {
                 byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), ADDRESS_SIZE);
                 byte[] addressCipher = AES.encrypt(addressSized, key);
 
@@ -197,8 +200,12 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //                TODO: permute the blocks before writing them back
 //                server.write(arrayPosition + i, new BlockEncrypted(addressSized, dataTmp));
-                server.write(arrayPosition + i, new BlockEncrypted(addressCipher, dataCipher));
+//                server.write(arrayPosition + i, new BlockEncrypted(addressCipher, dataCipher));
+                encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
             }
+            encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite);
+            for (int i = 0; i < blocksToWrite.size(); i++)
+                server.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
         }
     }
 
@@ -221,20 +228,20 @@ public class AccessStrategyPath implements AccessStrategy {
 
         return res;
     }
-
-    /**
-     * Calculates the position in the flattened tree based on position and level. When the bucket size is bigger than 1,
-     * the position of the first block is returned.
-     *
-     * @return position of first block in bucket in the flattened tree
-     */
-    int getPosition(int leafNode, int level) {
-        int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
-        for (int i = L - 1; i > level; i--) {
-            res = (int) Math.floor((res - 1) / 2);
-        }
-        return res * bucketSize;
-    }
+//
+//    /**
+//     * Calculates the position in the flattened tree based on position and level. When the bucket size is bigger than 1,
+//     * the position of the first block is returned.
+//     *
+//     * @return position of first block in bucket in the flattened tree
+//     */
+//    int getPosition(int leafNode, int level) {
+//        int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
+//        for (int i = L - 1; i > level; i--) {
+//            res = (int) Math.floor((res - 1) / 2);
+//        }
+//        return res * bucketSize;
+//    }
 
     /**
      * Calculates the position in the tree based on position and level.
