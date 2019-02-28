@@ -54,6 +54,7 @@ public class Util {
     //    The following two functions are from
 //    https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
     public static int byteArrayToLeInt(byte[] b) {
+//        Needs for testing. All numbers from 0 to like 100.
         final ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         return bb.getInt();
@@ -128,8 +129,8 @@ public class Util {
             rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers);
             leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers);
         } else {
-            rightChild = printBucket(array, bucketSize, (int) (Math.pow(2, index) + 2), layer + 1, maxLayers);
-            leftChild = printBucket(array, bucketSize, (int) (Math.pow(2, index) + 1), layer + 1, maxLayers);
+            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
+            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
         }
 
         builder.insert(0, rightChild);

@@ -1,6 +1,5 @@
-package oram.util;
+package oram;
 
-import oram.BlockEncrypted;
 import oram.server.Server;
 
 /**
@@ -12,6 +11,7 @@ import oram.server.Server;
 public class ServerStub implements Server {
     //    List<BlockEncrypted> blocks;
     private BlockEncrypted[] blocks;
+    private int bucketSize;
 
     public ServerStub(int size, int bucketSize) {
 //        blocks = new ArrayList<>();
@@ -21,6 +21,7 @@ public class ServerStub implements Server {
 //            blocks.add(new BlockEncrypted(address, data));
 //        }
 //        blocks = new ArrayList<>(Arrays.asList(new BlockEncrypted[size]));
+        this.bucketSize = bucketSize;
         blocks = new BlockEncrypted[size * bucketSize];
     }
 
@@ -37,5 +38,9 @@ public class ServerStub implements Server {
 
         blocks[address] = block;
         return true;
+    }
+
+    public String getTreeString() {
+        return Util.printTree(blocks, bucketSize);
     }
 }

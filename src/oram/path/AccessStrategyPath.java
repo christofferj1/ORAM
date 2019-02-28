@@ -26,6 +26,8 @@ public class AccessStrategyPath implements AccessStrategy {
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
     private Server server;
+    private boolean print;
+    private int dummyCounter = 0;
 
     AccessStrategyPath(int size, Server server, int bucketSize, String key) {
         this.stash = new ArrayList<>();
@@ -41,10 +43,13 @@ public class AccessStrategyPath implements AccessStrategy {
     private void initializeServer() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
+            System.out.println("Round: " + i + "\n" + server.getTreeString());
             positionMap.put(0, i);
             access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE]);
         }
+        System.out.println("Initialized\n" + server.getTreeString());
         positionMap = new HashMap<>();
+        print = true;
     }
 
 
@@ -59,7 +64,21 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Line 1 and 2 in pseudo code.
 //        Return a random position if the block does not have one already
         int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
+        if (print) {
+            System.out.println("MAP BEFORE");
+            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet()) {
+                System.out.println(entry.getKey() + " -> " + entry.getValue());
+            }
+        }
         positionMap.put(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
+
+        if (print) {
+            System.out.println("Address: " + address + ", leaf node index: " + leafNodeIndex + ", data: " + (data == null ? null : new String(data)));
+            System.out.println("MAP AFTER");
+            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet()) {
+                System.out.println(entry.getKey() + " -> " + entry.getValue());
+            }
+        }
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
@@ -75,10 +94,10 @@ public class AccessStrategyPath implements AccessStrategy {
         return res;
     }
 
-    private boolean readPathToStash(int address) {
+    private boolean readPathToStash(int leafNodeIndex) {
         boolean res = true;
         for (int l = 0; l < L; l++) {
-            int position = getPosition(address, l);
+            int position = getPosition(leafNodeIndex, l);
             List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
                 bucket.add(server.read(position + i));
@@ -86,21 +105,25 @@ public class AccessStrategyPath implements AccessStrategy {
 
             if (bucket.size() == bucketSize) {
                 for (BlockEncrypted block : bucket) {
-                    if (block == null) continue;
+                    if (block == null || block.getAddress() == null || block.getData() == null) continue;
 
-                    byte[] message = AES.decrypt(block.getData(), key);
-                    byte[] addressBytes = AES.decrypt(block.getAddress(), key);
-                    if (addressBytes == null) continue;
+//                    TODO: ENCRYPT AGAIN
+//                    byte[] message = AES.decrypt(block.getData(), key);
+//                    byte[] addressBytes = AES.decrypt(block.getAddress(), key);
+//                    if (addressBytes == null) continue;
 
-                    int blockAddress = ByteBuffer.wrap(addressBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
+//                    int blockAddress = ByteBuffer.wrap(addressBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
 //                    TODO: check if isDummyAddress working
-                    if (message == null || Util.isDummyAddress(blockAddress)) continue;
+//                    if (message == null || Util.isDummyAddress(blockAddress)) continue;
 
-                    stash.add(new BlockPath(blockAddress, message));
+//                    stash.add(new BlockPath(blockAddress, message));
+                    int addressInt = ByteBuffer.wrap(block.getAddress()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+                    if (Util.isDummyAddress(addressInt)) continue;
+                    stash.add(new BlockPath(addressInt, block.getData()));
                 }
             } else {
-                logger.error("Reading bucket for position: " + address + ", in layer: " + l + " failed");
+                logger.error("Reading bucket for position: " + leafNodeIndex + ", in layer: " + l + " failed");
                 res = false;
                 break;
             }
@@ -136,8 +159,9 @@ public class AccessStrategyPath implements AccessStrategy {
     private void writeBackPath(int leafNode) {
         for (int l = L - 1; l >= 0; l--) {
             List<BlockPath> blocksToWrite = new ArrayList<>();
-            int position = getPosition(leafNode, l);
-            List<Integer> indices = getSubTreeNodes(position);
+            int nodeNumber = getNode(leafNode, l);
+            int arrayPosition = nodeNumber * bucketSize;
+            List<Integer> indices = getSubTreeNodes(nodeNumber);
 
 //            Pick all the blocks from the stash which can be written to the current node
             for (BlockPath s : stash) {
@@ -147,8 +171,10 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //            Make sure there are exactly Z blocks to write to the node
             if (blocksToWrite.size() > bucketSize) {
-                for (int i = blocksToWrite.size(); i >= bucketSize; i--)
-                    blocksToWrite.remove(i);
+                System.out.println("Bucket size: " + bucketSize);
+                System.out.println("Blocks to right size: " + blocksToWrite.size());
+                for (int i = blocksToWrite.size(); i > bucketSize; i--)
+                    blocksToWrite.remove(i - 1);
             } else if (blocksToWrite.size() < bucketSize) {
                 blocksToWrite = fillWithDummy(blocksToWrite);
             }
@@ -171,14 +197,16 @@ public class AccessStrategyPath implements AccessStrategy {
                 byte[] dataCipher = AES.encrypt(dataTmp, key);
 
 //                TODO: make sure it is switched back to the encrypted version again
-                server.write(position + i, new BlockEncrypted(addressSized, dataTmp));
+//                TODO: permute the blocks before writing them back
+                server.write(arrayPosition + i, new BlockEncrypted(addressSized, dataTmp));
             }
         }
     }
 
     private List<BlockPath> fillWithDummy(List<BlockPath> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {
-            temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE]));
+//            TODO: the dummy data should be zero's
+            temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
         }
         return temp;
     }
@@ -201,12 +229,24 @@ public class AccessStrategyPath implements AccessStrategy {
      *
      * @return position of first block in bucket in the flattened tree
      */
-    int getPosition(int position, int level) {
-        int res = (int) (Math.pow(2, L - 1) - 1 + position);
+    int getPosition(int leafNode, int level) {
+        int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
         for (int i = L - 1; i > level; i--) {
             res = (int) Math.floor((res - 1) / 2);
         }
         return res * bucketSize;
     }
 
+    /**
+     * Calculates the position in the tree based on position and level.
+     *
+     * @return position of first block in bucket in the flattened tree
+     */
+    int getNode(int leafNode, int level) {
+        int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
+        for (int i = L - 1; i > level; i--) {
+            res = (int) Math.floor((res - 1) / 2);
+        }
+        return res;
+    }
 }

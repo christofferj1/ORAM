@@ -12,4 +12,6 @@ public interface Server {
     BlockEncrypted read(int address);
 
     boolean write(int address, BlockEncrypted block);
+
+    String getTreeString();
 }

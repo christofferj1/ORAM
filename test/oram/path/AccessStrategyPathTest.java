@@ -1,8 +1,7 @@
 package oram.path;
 
 import oram.OperationType;
-import oram.server.Server;
-import oram.util.ServerStub;
+import oram.ServerStub;
 import oram.util.TestUtil;
 import org.junit.Test;
 
@@ -11,6 +10,7 @@ import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 
 public class AccessStrategyPathTest {
     private static final int BUCKET_SIZE = 4;
@@ -40,7 +40,8 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldCalculateTheRightNodeIndexFor15Blocks() {
         String key = "Some key 1";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15,BUCKET_SIZE), 4, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
+                key);
 
         assertThat(accessStrategy.getPosition(0, 3), is(28));
         assertThat(accessStrategy.getPosition(1, 3), is(32));
@@ -106,7 +107,7 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldBeAbleToFillInBlocks() {
         String key = "Some key 4";
-        Server server = new ServerStub(7, BUCKET_SIZE);
+        ServerStub server = new ServerStub(7, BUCKET_SIZE);
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, 4, key);
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes());
@@ -130,23 +131,33 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldBeAbleToAlterBlocks() {
         String key = "Some key 5";
-        Server server = new ServerStub(15, BUCKET_SIZE);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, 4, key);
+        ServerStub server = new ServerStub(15, 2);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, 2, key);
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes());
+        System.out.println("###########################################\n" + server.getTreeString());
         byte[] endObject = accessStrategy.access(OperationType.READ, 4, null);
+        assertNotNull(endObject);
         assertThat("Value is 'Test 1'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 1"));
 
+        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "42".getBytes());
+        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 42", new String(TestUtil.removeTrailingZeroes(endObject)), is("42"));
 
+        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "1337".getBytes());
+        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 1337", new String(TestUtil.removeTrailingZeroes(endObject)), is("1337"));
 
+        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "Test 4".getBytes());
+        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
+
+        System.out.println("###########################################\n" + server.getTreeString());
     }
 }
