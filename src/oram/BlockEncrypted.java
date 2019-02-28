@@ -36,8 +36,8 @@ public class BlockEncrypted {
     @Override
     public String toString() {
         return "BlockEncrypted{" +
-                "address=" + Arrays.toString(address) +
-                ", data=" + Arrays.toString(data) +
+                "address=" + Util.printByteArray(address) +
+                ", data=" + Util.printByteArray(data) +
                 '}';
     }
 

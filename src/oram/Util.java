@@ -74,4 +74,67 @@ public class Util {
         }
         return count;
     }
+
+    //    TODO: TEST
+    public static String printByteArray(byte[] array) {
+        StringBuilder builder = new StringBuilder("[");
+        for (byte b : array) {
+            if (b < 10)
+                builder.append("  ");
+            else if (b < 100)
+                builder.append(" ");
+            builder.append(b);
+            builder.append(", ");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.deleteCharAt(builder.length() - 1);
+        return builder.append("]").toString();
+    }
+
+    public static String printTree(BlockEncrypted[] array, int bucketSize) {
+        int layers = 0;
+        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
+            layers++;
+        }
+
+//        Only accept nice trees
+//        if ((array.length / bucketSize) != Math.pow(2, layers) - 1) return null;
+
+        return printBucket(array, bucketSize, 0, 1, layers);
+    }
+
+    public static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
+        StringBuilder prefix = new StringBuilder();
+        for (int i = 1; i < layer; i++) {
+            prefix.append("        ");
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bucketSize; i++) {
+            int i2 = index * bucketSize;
+            int i1 = i2 + i;
+            if (array.length > i1)
+                builder.append(prefix).append(array[i1]);
+            builder.append("\n");
+        }
+
+        if (index >= Math.pow(2, maxLayers - 1) - 1)
+            return builder.toString();
+
+
+        String rightChild;
+        String leftChild;
+        if (index == 0) {
+            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers);
+            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers);
+        } else {
+            rightChild = printBucket(array, bucketSize, (int) (Math.pow(2, index) + 2), layer + 1, maxLayers);
+            leftChild = printBucket(array, bucketSize, (int) (Math.pow(2, index) + 1), layer + 1, maxLayers);
+        }
+
+        builder.insert(0, rightChild);
+        builder.append(leftChild);
+
+        return builder.toString();
+    }
 }

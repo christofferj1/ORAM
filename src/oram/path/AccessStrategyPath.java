@@ -170,7 +170,8 @@ public class AccessStrategyPath implements AccessStrategy {
                 System.arraycopy(data, 0, dataTmp, 0, data.length);
                 byte[] dataCipher = AES.encrypt(dataTmp, key);
 
-                server.write(position + i, new BlockEncrypted(addressCipher, dataCipher));
+//                TODO: make sure it is switched back to the encrypted version again
+                server.write(position + i, new BlockEncrypted(addressSized, dataTmp));
             }
         }
     }

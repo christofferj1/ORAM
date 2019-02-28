@@ -85,4 +85,129 @@ public class UtilTest {
         assertThat(Util.getRandomString(0).length(), is(0));
         assertThat(Util.getRandomString(-1).length(), is(0));
     }
+
+    @Test
+    public void shouldBeAbleToPrintATreeCorrectly() {
+        BlockEncrypted block = new BlockEncrypted(new byte[]{0b0, 0b0, 0b0}, new byte[]{0b0, 0b0, 0b0});
+        BlockEncrypted[] blocks = new BlockEncrypted[]{block, block,};
+        String string =
+                "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat("A single block, bucket size 2", Util.printTree(blocks, 2), is(string));
+
+        blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
+                block, block, block};
+        string =
+                "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat("3 filled layers", Util.printTree(blocks, 2), is(string));
+
+        blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
+                block};
+        string =
+                "\n" +
+                        "\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat("The number of nodes is not an exponent of two", Util.printTree(blocks, 2), is(string));
+
+        blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block};
+        string =
+                "\n" +
+                        "\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "\n" +
+                        "\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "\n" +
+                        "\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat("The number of nodes is not an exponent of two", Util.printTree(blocks, 2), is(string));
+
+        blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
+                block, block, block, block, block, block, block, block, block, block};
+        string =
+                "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat("Trying bucket size 3", Util.printTree(blocks, 3), is(string));
+    }
+
+    @Test
+    public void shouldPrintBucketsCorrectly() {
+        BlockEncrypted block = new BlockEncrypted(new byte[]{0b0, 0b0, 0b0}, new byte[]{0b0, 0b0, 0b0});
+        BlockEncrypted[] blocks = new BlockEncrypted[]{block, block, block, block, block, block};
+        String string =
+                "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat(Util.printBucket(blocks, 2, 0, 1, 2), is(string));
+
+        blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
+                block, block, block};
+        string =
+                "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "        BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n" +
+                        "                BlockEncrypted{address=[  0,   0,   0], data=[  0,   0,   0]}\n";
+        assertThat(Util.printBucket(blocks, 2, 0, 1, 3), is(string));
+    }
 }
