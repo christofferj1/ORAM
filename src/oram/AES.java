@@ -78,13 +78,13 @@ public class AES {
         if (setKeyFailed(key)) return null;
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = new byte[16];
-            System.arraycopy(cipherToDecrypt, 0, iv, 0, 16);
+            byte[] iv = new byte[Constants.BYTES_OF_RANDOMNESS];
+            System.arraycopy(cipherToDecrypt, 0, iv, 0, Constants.BYTES_OF_RANDOMNESS);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
             int cipherLength = cipherToDecrypt.length - Constants.BLOCK_SIZE;
             byte[] valueCipher = new byte[cipherLength];
-            System.arraycopy(cipherToDecrypt, 16, valueCipher, 0, cipherLength);
+            System.arraycopy(cipherToDecrypt, Constants.BYTES_OF_RANDOMNESS, valueCipher, 0, cipherLength);
 
             byte[] decode = Base64.getDecoder().decode(valueCipher);
             return cipher.doFinal(decode);

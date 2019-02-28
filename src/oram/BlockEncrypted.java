@@ -35,8 +35,8 @@ public class BlockEncrypted {
 
     @Override
     public String toString() {
-        if (Util.isDummyAddress(Util.byteArrayToLeInt(address)))
-            return "DUMMY COUNTER: " + Util.byteArrayToLeInt(data);
+//        if (Util.isDummyAddress(Util.byteArrayToLeInt(address)))
+//            return "DUMMY COUNTER: " + Util.byteArrayToLeInt(data);
         return "BlockEncrypted{" +
                 "address=" + Util.printByteArray(address) +
                 ", data=" + Util.printByteArray(data) +

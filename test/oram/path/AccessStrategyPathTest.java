@@ -18,7 +18,7 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
         String key = "Some key 0";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), 4, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key);
 
         assertThat(accessStrategy.getPosition(0, 2), is(12));
         assertThat(accessStrategy.getPosition(1, 2), is(16));
@@ -67,7 +67,7 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldFindTheRightSubTreePositionsSize7() {
         String key = "Some key 2";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), 4, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key);
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(4), is(Collections.singletonList(1)));
         assertThat(accessStrategy.getSubTreeNodes(5), is(Collections.singletonList(2)));
@@ -82,7 +82,8 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldFindTheRightSubTreePositionsSize15() {
         String key = "Some key 3";
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), 4, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
+                key);
 
         assertThat(accessStrategy.getSubTreeNodes(7), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(8), is(Collections.singletonList(1)));
@@ -108,7 +109,7 @@ public class AccessStrategyPathTest {
     public void shouldBeAbleToFillInBlocks() {
         String key = "Some key 4";
         ServerStub server = new ServerStub(7, BUCKET_SIZE);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, 4, key);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, BUCKET_SIZE, key);
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes());
         accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes());
@@ -131,33 +132,33 @@ public class AccessStrategyPathTest {
     @Test
     public void shouldBeAbleToAlterBlocks() {
         String key = "Some key 5";
-        ServerStub server = new ServerStub(15, 2);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, 2, key);
+        ServerStub server = new ServerStub(15, BUCKET_SIZE);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, BUCKET_SIZE, key);
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes());
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         byte[] endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertNotNull(endObject);
         assertThat("Value is 'Test 1'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 1"));
 
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "42".getBytes());
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 42", new String(TestUtil.removeTrailingZeroes(endObject)), is("42"));
 
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "1337".getBytes());
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 1337", new String(TestUtil.removeTrailingZeroes(endObject)), is("1337"));
 
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "Test 4".getBytes());
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null);
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
 
-        System.out.println("###########################################\n" + server.getTreeString());
+//        System.out.println("###########################################\n" + server.getTreeString());
     }
 }

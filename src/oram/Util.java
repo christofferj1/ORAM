@@ -60,7 +60,7 @@ public class Util {
         return bb.getInt();
     }
 
-    static byte[] leIntToByteArray(int i) {
+    public static byte[] leIntToByteArray(int i) {
         final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         bb.putInt(i);
@@ -97,9 +97,6 @@ public class Util {
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
         }
-
-//        Only accept nice trees
-//        if ((array.length / bucketSize) != Math.pow(2, layers) - 1) return null;
 
         return printBucket(array, bucketSize, 0, 1, layers);
     }
