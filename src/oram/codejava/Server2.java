@@ -3,9 +3,9 @@ package oram.codejava;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.Arrays;
+import java.util.Enumeration;
 
 /**
  * This program demonstrates a simple TCP/IP socket server.
@@ -15,9 +15,14 @@ import java.util.Arrays;
 public class Server2 {
 
     public static void main(String[] args) {
-        if (args.length < 1) return;
+        if (args.length < 1) {
+            System.out.println("Enter port number");
+            return;
+        }
 
         int port = Integer.parseInt(args[0]);
+
+        System.out.println(getIPAddress());
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
@@ -41,11 +46,11 @@ public class Server2 {
                     System.out.println(Arrays.toString(message));
                 }
 
-                if (message != null && message.equals(new byte[]{0b0, 0b0, 0b0, 0b0})) {
+                if (message != null && Arrays.equals(message, new byte[]{0b0, 0b0, 0b0, 0b0})) {
                     System.out.println("MESSAGE 0");
                     dOut.writeInt(message0.length); // write length of the message
                     dOut.write(message0);
-                } else if (message != null && message.equals(new byte[]{0b1, 0b0, 0b0, 0b0})) {
+                } else if (message != null && Arrays.equals(message, new byte[]{0b1, 0b0, 0b0, 0b0})) {
                     System.out.println("MESSAGE 1");
                     dOut.writeInt(message0.length); // write length of the message
                     dOut.write(message1);
@@ -64,5 +69,26 @@ public class Server2 {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    private static String getIPAddress() {
+        Enumeration en = null;
+        try {
+            en = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        while (en.hasMoreElements()) {
+            NetworkInterface i = (NetworkInterface) en.nextElement();
+            for (Enumeration en2 = i.getInetAddresses(); en2.hasMoreElements(); ) {
+                InetAddress addr = (InetAddress) en2.nextElement();
+                if (!addr.isLoopbackAddress()) {
+                    if (addr instanceof Inet4Address) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

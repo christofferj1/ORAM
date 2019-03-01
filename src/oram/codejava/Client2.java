@@ -18,12 +18,17 @@ import java.util.Scanner;
 public class Client2 {
 
     public static void main(String[] args) {
-        if (args.length < 2) return;
+        if (args.length < 1) {
+            System.out.println("Enter port number");
+            return;
+        }
 
-        String hostname = args[0];
-        int port = Integer.parseInt(args[1]);
+//        String hostname = args[0];
+        int port = Integer.parseInt(args[0]);
 
+        System.out.println("Enter IP");
         Scanner scanner = new Scanner(System.in);
+        String hostname = scanner.nextLine();
 
         try (Socket socket = new Socket(hostname, port)) {
             // InputStream input = socket.getInputStream();
