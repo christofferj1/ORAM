@@ -1,5 +1,6 @@
 package oram;
 
+import oram.path.BlockPath;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -7,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -25,14 +26,51 @@ public class AES {
     private static final Logger logger = LogManager.getLogger("log");
     private static SecretKey secretKey;
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        String string = "TEST STRING 12345678";
-        byte[] bytes = string.getBytes("UTF-8");
-        byte[] cipher = AES.encrypt(bytes, "Hello World");
-        byte[] message = AES.decrypt(cipher, "Hello World");
+    public static void main(String[] args) {
+        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
+        String key = "KEY STRING";
 
-        System.out.println(new String(cipher));
-        System.out.println(new String(message));
+        byte[] bytesBefore = null;
+
+        System.out.println(block);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(block);
+            bytesBefore = baos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        System.out.println(Arrays.toString(bytesBefore));
+
+        byte[] cipher = AES.encrypt(bytesBefore, key);
+
+//        System.out.println(Arrays.toString(cipher));
+
+        byte[] res = AES.decrypt(cipher, key);
+
+//        System.out.println(Arrays.toString(res));
+
+        BlockPath block2 = null;
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
+        ObjectInputStream ois = new ObjectInputStream(bais)) {
+            block2 = (BlockPath) ois.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(block2);
+//
+//        String string = "TEST STRING 12345678";
+//        byte[] bytes = string.getBytes("UTF-8");
+//        byte[] cipher = AES.encrypt(bytes, "Hello World");
+//        byte[] message = AES.decrypt(cipher, "Hello World");
+//
+//        System.out.println(new String(cipher));
+//        System.out.println(new String(message));
     }
 
     private static boolean setKeyFailed(String key) {
@@ -54,13 +92,26 @@ public class AES {
         try {
 //            if (message.length != Constants.BLOCK_SIZE) return null;
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//            Generate random bytes instead of string
             String ivString = Util.getRandomString(Constants.BYTES_OF_RANDOMNESS);
             byte[] iv = ivString.getBytes("UTF-8");
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
             byte[] src = cipher.doFinal(message);
+//            try without decoding
             byte[] cipherByteArray = Base64.getEncoder().encode(src);
+
+//            System.out.println("IV: (size: " + iv.length + ")");
+//            System.out.println(Util.printByteArray(iv));
+//            System.out.println("Message: (size: " + message.length + ")");
+//            System.out.println(Util.printByteArray(message));
+//            System.out.println("src: (size: " + src.length + ")");
+//            System.out.println(Util.printByteArray(src));
+//            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
+//            System.out.println(Util.printByteArray(cipherByteArray));
+
+
             return ArrayUtils.addAll(iv, cipherByteArray);
 
 //            return ArrayUtils.addAll(iv, src);
@@ -88,8 +139,6 @@ public class AES {
 
             byte[] decode = Base64.getDecoder().decode(valueCipher);
             return cipher.doFinal(decode);
-
-//            return cipher.doFinal(valueCipher);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                 BadPaddingException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();

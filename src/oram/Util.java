@@ -1,5 +1,7 @@
 package oram;
 
+import org.apache.commons.lang3.Range;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
@@ -23,7 +25,7 @@ public class Util {
         return res;
     }
 
-    static String getRandomString(int length) {
+    public static String getRandomString(int length) {
         if (length <= 0) return "";
 
         char[] charactersArray = CHARACTERS.toCharArray();
@@ -36,7 +38,7 @@ public class Util {
         return new String(res);
     }
 
-    static boolean isDummyBlock(Block block) {
+    public static boolean isDummyBlock(Block block) {
         if (block == null || block.getData() == null || block.getData().length == 0) return false;
         for (byte bit : block.getData())
             if (bit != 0) return false;
@@ -49,7 +51,7 @@ public class Util {
 
     //    The following two functions are from
 //    https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
-    static int byteArrayToLeInt(byte[] b) {
+    public static int byteArrayToLeInt(byte[] b) {
 //        Needs for testing. All numbers from 0 to like 100.
         final ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -63,7 +65,7 @@ public class Util {
         return bb.array();
     }
 
-    static int numberOfBytesForInt(int i) {
+    public static int numberOfBytesForInt(int i) {
         int count = 0;
         while (Math.abs(i) > 0) {
             count += 1;
@@ -72,22 +74,33 @@ public class Util {
         return count;
     }
 
-    static String printByteArray(byte[] array) {
+//    TODO: Test, and for bytes with negative values
+    public static String printByteArray(byte[] array) {
+        if (array == null) return null;
+
+        Range<Integer> oneCipher = Range.between(0, 9);
+        Range<Integer> twoCiphers = Range.between(10, 99);
+        Range<Integer> treeCiphers = Range.between(100, 127);
+        Range<Integer> oneCipherNegative = Range.between(-9, -0);
+        Range<Integer> twoCiphersNegative = Range.between(-99, -10);
+
         StringBuilder builder = new StringBuilder("[");
         for (byte b : array) {
-            if (b < 10)
+            int i = b;
+            if (oneCipher.contains(i))
+                builder.append("   ");
+            else if (twoCiphers.contains(i) || oneCipherNegative.contains(i))
                 builder.append("  ");
-            else if (b < 100)
+            else if (treeCiphers.contains(i) || twoCiphersNegative.contains(i))
                 builder.append(" ");
             builder.append(b);
-            builder.append(", ");
+            builder.append(",");
         }
-        builder.deleteCharAt(builder.length() - 1);
         builder.deleteCharAt(builder.length() - 1);
         return builder.append("]").toString();
     }
 
-    static String printTree(BlockEncrypted[] array, int bucketSize) {
+    public static String printTree(BlockEncrypted[] array, int bucketSize) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
@@ -96,7 +109,7 @@ public class Util {
         return printBucket(array, bucketSize, 0, 1, layers);
     }
 
-    static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
+    public static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
         StringBuilder prefix = new StringBuilder();
         for (int i = 1; i < layer; i++) {
             prefix.append("        ");

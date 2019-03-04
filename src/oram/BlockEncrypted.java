@@ -1,5 +1,6 @@
 package oram;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Arrays;
  * Master Thesis 2019 </p>
  */
 
-public class BlockEncrypted {
+public class BlockEncrypted implements Serializable {
     private byte[] address;
     private byte[] data;
 

@@ -26,7 +26,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private final String key;
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
-    private Server server;
+    private final Server server;
     private final PermutationStrategy permutationStrategy;
     private boolean print;
     private int dummyCounter = 0;

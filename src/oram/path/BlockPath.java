@@ -2,6 +2,7 @@ package oram.path;
 
 import oram.Block;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -11,14 +12,14 @@ import java.util.Objects;
  * Master Thesis 2019 </p>
  */
 
-public class BlockPath implements Block {
-    private int address;
+public class BlockPath implements Block, Serializable {
+    private Integer address;
     private byte[] data;
 
     public BlockPath() {
     }
 
-    BlockPath(int address, byte[] data) {
+    public BlockPath(int address, byte[] data) {
         this.address = address;
         this.data = data;
     }
