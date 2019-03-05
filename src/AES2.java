@@ -1,5 +1,3 @@
-import oram.Constants;
-import oram.Util;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,7 +70,7 @@ public class AES2 {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-1");
             key = sha.digest(key);
-            key = Arrays.copyOf(key, Constants.BYTES_OF_RANDOMNESS);
+            key = Arrays.copyOf(key, 16);
             secretKey = new SecretKeySpec(key, "AES");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -88,7 +86,7 @@ public class AES2 {
 //            Initiate Cipher
 //            Always adds some padding (16 bytes if message is exactly a factor of 16 bytes)
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
+            byte[] iv = Util.getRandomByteArray(16);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
@@ -122,13 +120,13 @@ public class AES2 {
         try {
 //            Initiate Cipher
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = new byte[Constants.BYTES_OF_RANDOMNESS];
-            System.arraycopy(cipherToDecrypt, 0, iv, 0, Constants.BYTES_OF_RANDOMNESS);
+            byte[] iv = new byte[16];
+            System.arraycopy(cipherToDecrypt, 0, iv, 0, 16);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
-            int cipherLength = cipherToDecrypt.length - Constants.BLOCK_SIZE;
+            int cipherLength = cipherToDecrypt.length - 16;
             byte[] valueCipher = new byte[cipherLength];
-            System.arraycopy(cipherToDecrypt, Constants.BYTES_OF_RANDOMNESS, valueCipher, 0, cipherLength);
+            System.arraycopy(cipherToDecrypt, 16, valueCipher, 0, cipherLength);
 
 //            Decode and decrypt
 //            byte[] decode = Base64.getDecoder().decode(valueCipher);
