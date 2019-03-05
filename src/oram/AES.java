@@ -28,7 +28,7 @@ public class AES {
     private static SecretKey secretKey;
 
     public static void main(String[] args) {
-        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
+        BlockPath block = new BlockPath(1337, Util.getRandomByteArray(128));
         String key = "KEY STRING";
 
         byte[] bytesBefore = null;

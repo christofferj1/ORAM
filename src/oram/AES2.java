@@ -14,7 +14,6 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Base64;
 
 /**
  * <p> ORAM <br>
@@ -89,6 +88,7 @@ public class AES2 {
         try {
 //            if (message.length != Constants.BLOCK_SIZE) return null;
 //            Initiate Cipher
+//            Always adds some padding (16 bytes if message is exactly a factor of 16 bytes)
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
@@ -96,7 +96,7 @@ public class AES2 {
 
 //            Encrypt and encode
             byte[] src = cipher.doFinal(message);
-            byte[] cipherByteArray = Base64.getEncoder().encode(src);
+//            byte[] cipherByteArray = Base64.getEncoder().encode(src);
 
             System.out.println("IV: (size: " + iv.length + ")");
             System.out.println(Util.printByteArray(iv));
