@@ -110,7 +110,7 @@ public class AES {
             System.out.println(Util.printByteArray(cipherByteArray));
 
 //            Return
-            return ArrayUtils.addAll(iv, cipherByteArray);
+            return ArrayUtils.addAll(iv, src);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
                 InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
@@ -135,8 +135,8 @@ public class AES {
             System.arraycopy(cipherToDecrypt, Constants.BYTES_OF_RANDOMNESS, valueCipher, 0, cipherLength);
 
 //            Decode and decrypt
-            byte[] decode = Base64.getDecoder().decode(valueCipher);
-            byte[] message = cipher.doFinal(decode);
+//            byte[] decode = Base64.getDecoder().decode(valueCipher);
+            byte[] message = cipher.doFinal(valueCipher);
 
             System.out.println("IV: (size: " + iv.length + ")");
             System.out.println(Util.printByteArray(iv));
@@ -144,8 +144,8 @@ public class AES {
             System.out.println(Util.printByteArray(cipherToDecrypt));
             System.out.println("Value cipher: (size: " + valueCipher.length + ")");
             System.out.println(Util.printByteArray(valueCipher));
-            System.out.println("Decode: (size: " + decode.length + ")");
-            System.out.println(Util.printByteArray(decode));
+//            System.out.println("Decode: (size: " + decode.length + ")");
+//            System.out.println(Util.printByteArray(decode));
 
             return message;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
