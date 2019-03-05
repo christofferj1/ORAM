@@ -55,9 +55,23 @@ public class Util {
         return bb.getInt();
     }
 
+    public static int byteArrayToBeInt(byte[] b) {
+//        Needs for testing. All numbers from 0 to like 100.
+        final ByteBuffer bb = ByteBuffer.wrap(b);
+        bb.order(ByteOrder.BIG_ENDIAN);
+        return bb.getInt();
+    }
+
     public static byte[] leIntToByteArray(int i) {
         final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
         bb.order(ByteOrder.LITTLE_ENDIAN);
+        bb.putInt(i);
+        return bb.array();
+    }
+
+    public static byte[] beIntToByteArray(int i) {
+        final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
+        bb.order(ByteOrder.BIG_ENDIAN);
         bb.putInt(i);
         return bb.array();
     }

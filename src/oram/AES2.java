@@ -104,8 +104,8 @@ public class AES2 {
             System.out.println(Util.printByteArray(message));
             System.out.println("src: (size: " + src.length + ")");
             System.out.println(Util.printByteArray(src));
-            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
-            System.out.println(Util.printByteArray(cipherByteArray));
+//            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
+//            System.out.println(Util.printByteArray(cipherByteArray));
 
 //            Return
             return ArrayUtils.addAll(iv, src);

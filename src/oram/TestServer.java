@@ -55,14 +55,14 @@ public class TestServer {
         if (bytesForFile == null)
             System.exit(-5);
 
-        byte[] address = new byte[8];
-        byte[] data = new byte[Constants.BYTES_OF_RANDOMNESS * 8];
-        System.arraycopy(bytesFromFile, 0, address, 0, 8);
-        System.arraycopy(bytesFromFile, 8, data, 0, Constants.BYTES_OF_RANDOMNESS * 8);
+        byte[] address = new byte[32];
+        byte[] data = new byte[Constants.BYTES_OF_RANDOMNESS * 8 + 16];
+        System.arraycopy(bytesFromFile, 0, address, 0, 32);
+        System.arraycopy(bytesFromFile, 32, data, 0, Constants.BYTES_OF_RANDOMNESS * 8 + 16);
 
         if (!sendBlock(data, address))
             System.exit(-6);
-        
+
         if (!closeSocket())
             System.exit(-7);
     }
@@ -91,6 +91,7 @@ public class TestServer {
     private static boolean openSocket(int port) {
         try {
             serverSocket = new ServerSocket(port);
+            System.out.println("Socket opened");
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -101,9 +102,12 @@ public class TestServer {
     private static boolean initializeStreams() {
         try {
             socket = serverSocket.accept();
+            System.out.println("Client accepted");
 
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            System.out.println("Opened output stream");
             dataInputStream = new DataInputStream(socket.getInputStream());
+            System.out.println("Opened input stream");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -111,21 +115,24 @@ public class TestServer {
     }
 
     private static Pair<byte[], byte[]> receiveBlock() {
+        System.out.println("Ready to receive blocks");
         byte[] message0 = new byte[0];
         byte[] message1 = new byte[0];
         try {
             int length = dataInputStream.readInt();
+            System.out.println("Received first length: " + length);
             if (length > 0) {
                 message0 = new byte[length];
                 dataInputStream.readFully(message0, 0, message0.length);
-                System.out.println("Received byte array: " + Arrays.toString(message0) + ", of length: " + length);
+                System.out.println("Received address array: " + Arrays.toString(message0) + ", of length: " + length);
             }
 
             length = dataInputStream.readInt();
+            System.out.println("Received second length: " + length);
             if (length > 0) {
                 message1 = new byte[length];
                 dataInputStream.readFully(message1, 0, message1.length);
-                System.out.println("Received byte array: " + Arrays.toString(message1) + ", of length: " + length);
+                System.out.println("Received data array: " + Arrays.toString(message1) + ", of length: " + length);
             }
 
         } catch (IOException e) {
@@ -138,6 +145,7 @@ public class TestServer {
     private static boolean writeFile(byte[] bytesForFile) {
         try (FileOutputStream fos = new FileOutputStream("test_file")) {
             fos.write(bytesForFile);
+            System.out.println("File written");
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -149,6 +157,7 @@ public class TestServer {
         byte[] res;
         try {
             res = Files.readAllBytes(Paths.get("test_file"));
+            System.out.println("File read");
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -156,17 +165,21 @@ public class TestServer {
         return res;
     }
 
-
-
     private static boolean sendBlock(byte[] data, byte[] address) {
         try {
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataInputStream = new DataInputStream(socket.getInputStream());
 
-            dataOutputStream.write(address.length);
+            int length = address.length;
+            byte[] bytes = Util.beIntToByteArray(length);
+            dataOutputStream.write(bytes);
             dataOutputStream.write(address);
-            dataOutputStream.write(data.length);
+            System.out.println("Address send: (size: " + length + ")\n" + Arrays.toString(address));
+            int length1 = data.length;
+            byte[] bytes1 = Util.beIntToByteArray(length1);
+            dataOutputStream.write(bytes1);
             dataOutputStream.write(data);
+            System.out.println("Data send: (size: " + length1 + ")\n" + Arrays.toString(data));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -178,6 +191,7 @@ public class TestServer {
         try {
             if (serverSocket != null)
                 serverSocket.close();
+            System.out.println("Socket closed");
         } catch (IOException e) {
             e.printStackTrace();
             return false;
