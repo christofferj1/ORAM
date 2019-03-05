@@ -1,6 +1,4 @@
 import oram.AES2;
-import oram.BlockEncrypted;
-import oram.Constants;
 import oram.Util;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,12 +31,12 @@ public class TestClient {
         if (!openSocket(args))
             System.exit(-1);
 
-        byte[] data = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS * 8 - 1);
+        byte[] data = Util.getRandomByteArray(16 * 8 - 1);
         byte[] address = Util.leIntToByteArray(1337);
-        BlockEncrypted block = new BlockEncrypted(address, data);
-        System.out.println(block);
+        System.out.println("ADDRESS (size: " + address.length + "):\n" + Arrays.toString(address));
+        System.out.println("DATA (size: " + data.length + "):\n" + Arrays.toString(data));
 
-        byte[] key = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
+        byte[] key = Util.getRandomByteArray(16);
 
         byte[] addressCipher = AES2.encrypt(address, key);
         byte[] dataCipher = AES2.encrypt(data, key);
@@ -54,14 +52,13 @@ public class TestClient {
             System.exit(-3);
 
         byte[] add = pair.getKey();
-        byte[] addressReceived =  AES2.decrypt(add, key);
+        byte[] addressReceived = AES2.decrypt(add, key);
         byte[] dat = pair.getValue();
         byte[] dataReceived = AES2.decrypt(dat, key);
 
-        BlockEncrypted block2 = new BlockEncrypted(addressReceived, dataReceived);
-        System.out.println(block2);
-
-        System.out.println(block.equals(block2));
+        System.out.println("ADDRESS Received (size: " + addressReceived.length + "):\n" + Arrays.toString(addressReceived));
+        System.out.println("DATA Received (size: " + dataReceived.length + "):\n" + Arrays.toString(dataReceived));
+        System.out.println(Arrays.equals(address, addressReceived) && Arrays.equals(data, dataReceived));
 
         if (!closeSocket())
             System.exit(-4);
@@ -69,7 +66,7 @@ public class TestClient {
 
     private static boolean createBlockFile() {
         int address = 1337;
-        byte[] data = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS * 8);
+        byte[] data = Util.getRandomByteArray(16 * 8);
         byte[] res = new byte[4 + data.length];
 
         try (FileOutputStream fos = new FileOutputStream("pathname")) {

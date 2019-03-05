@@ -1,6 +1,5 @@
-package oram;
-
-import oram.path.BlockPath;
+import oram.Constants;
+import oram.Util;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -26,40 +24,40 @@ public class AES2 {
     private static SecretKey secretKey;
 
     public static void main(String[] args) {
-        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
-        String key = "KEY STRING";
-
-        byte[] bytesBefore = null;
-
-        System.out.println(block);
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(block);
-            bytesBefore = baos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-//        System.out.println(Arrays.toString(bytesBefore));
-
-        byte[] cipher = AES.encrypt(bytesBefore, key);
-
-//        System.out.println(Arrays.toString(cipher));
-
-        byte[] res = AES.decrypt(cipher, key);
-
-//        System.out.println(Arrays.toString(res));
-
-        BlockPath block2 = null;
-
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
-             ObjectInputStream ois = new ObjectInputStream(bais)) {
-            block2 = (BlockPath) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(block2);
+//        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
+//        String key = "KEY STRING";
+//
+//        byte[] bytesBefore = null;
+//
+//        System.out.println(block);
+//        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+//            oos.writeObject(block);
+//            bytesBefore = baos.toByteArray();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+////        System.out.println(Arrays.toString(bytesBefore));
+//
+//        byte[] cipher = AES.encrypt(bytesBefore, key);
+//
+////        System.out.println(Arrays.toString(cipher));
+//
+//        byte[] res = AES.decrypt(cipher, key);
+//
+////        System.out.println(Arrays.toString(res));
+//
+//        BlockPath block2 = null;
+//
+//        try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
+//             ObjectInputStream ois = new ObjectInputStream(bais)) {
+//            block2 = (BlockPath) ois.readObject();
+//        } catch (IOException | ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//
+//        System.out.println(block2);
 
 //        String string = "TEST STRING 12345678";
 //        byte[] bytes = string.getBytes("UTF-8");
