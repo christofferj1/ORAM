@@ -25,17 +25,14 @@ public class Util {
         return res;
     }
 
-    public static String getRandomString(int length) {
-        if (length <= 0) return "";
+    public static byte[] getRandomByteArray(int length) {
+        if (length <= 0) return new byte[0];
 
-        char[] charactersArray = CHARACTERS.toCharArray();
-        SecureRandom secureRandom = new SecureRandom();
+        SecureRandom random = new SecureRandom();
+        byte[] res = new byte[length];
+        random.nextBytes(res);
 
-        char[] res = new char[length];
-        for (int i = 0; i < length; i++) {
-            res[i] = charactersArray[secureRandom.nextInt(charactersArray.length)];
-        }
-        return new String(res);
+        return res;
     }
 
     public static boolean isDummyBlock(Block block) {

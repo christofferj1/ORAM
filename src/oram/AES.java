@@ -20,6 +20,7 @@ import java.util.Base64;
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 20-02-2019. <br>
  * Master Thesis 2019 </p>
+ * Inspired by: howtodoinjava.com/security/java-aes-encryption-example
  */
 
 public class AES {
@@ -54,16 +55,14 @@ public class AES {
         BlockPath block2 = null;
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
-        ObjectInputStream ois = new ObjectInputStream(bais)) {
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
             block2 = (BlockPath) ois.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
         System.out.println(block2);
-//
+
 //        String string = "TEST STRING 12345678";
 //        byte[] bytes = string.getBytes("UTF-8");
 //        byte[] cipher = AES.encrypt(bytes, "Hello World");
@@ -91,32 +90,29 @@ public class AES {
         if (setKeyFailed(key)) return null;
         try {
 //            if (message.length != Constants.BLOCK_SIZE) return null;
+//            Initiate Cipher
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-//            Generate random bytes instead of string
-            String ivString = Util.getRandomString(Constants.BYTES_OF_RANDOMNESS);
-            byte[] iv = ivString.getBytes("UTF-8");
+            byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
+//            Encrypt and encode
             byte[] src = cipher.doFinal(message);
-//            try without decoding
             byte[] cipherByteArray = Base64.getEncoder().encode(src);
 
-//            System.out.println("IV: (size: " + iv.length + ")");
-//            System.out.println(Util.printByteArray(iv));
-//            System.out.println("Message: (size: " + message.length + ")");
-//            System.out.println(Util.printByteArray(message));
-//            System.out.println("src: (size: " + src.length + ")");
-//            System.out.println(Util.printByteArray(src));
-//            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
-//            System.out.println(Util.printByteArray(cipherByteArray));
+            System.out.println("IV: (size: " + iv.length + ")");
+            System.out.println(Util.printByteArray(iv));
+            System.out.println("Message: (size: " + message.length + ")");
+            System.out.println(Util.printByteArray(message));
+            System.out.println("src: (size: " + src.length + ")");
+            System.out.println(Util.printByteArray(src));
+            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
+            System.out.println(Util.printByteArray(cipherByteArray));
 
-
+//            Return
             return ArrayUtils.addAll(iv, cipherByteArray);
-
-//            return ArrayUtils.addAll(iv, src);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | UnsupportedEncodingException
-                | InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+                InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
             logger.error("Error happened while encrypting");
             logger.error(e);
@@ -128,6 +124,7 @@ public class AES {
     public static byte[] decrypt(byte[] cipherToDecrypt, String key) {
         if (setKeyFailed(key)) return null;
         try {
+//            Initiate Cipher
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             byte[] iv = new byte[Constants.BYTES_OF_RANDOMNESS];
             System.arraycopy(cipherToDecrypt, 0, iv, 0, Constants.BYTES_OF_RANDOMNESS);
@@ -137,8 +134,20 @@ public class AES {
             byte[] valueCipher = new byte[cipherLength];
             System.arraycopy(cipherToDecrypt, Constants.BYTES_OF_RANDOMNESS, valueCipher, 0, cipherLength);
 
+//            Decode and decrypt
             byte[] decode = Base64.getDecoder().decode(valueCipher);
-            return cipher.doFinal(decode);
+            byte[] message = cipher.doFinal(decode);
+
+            System.out.println("IV: (size: " + iv.length + ")");
+            System.out.println(Util.printByteArray(iv));
+            System.out.println("Cipher to decrypt: (size: " + cipherToDecrypt.length + ")");
+            System.out.println(Util.printByteArray(cipherToDecrypt));
+            System.out.println("Value cipher: (size: " + valueCipher.length + ")");
+            System.out.println(Util.printByteArray(valueCipher));
+            System.out.println("Decode: (size: " + decode.length + ")");
+            System.out.println(Util.printByteArray(decode));
+
+            return message;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                 BadPaddingException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();

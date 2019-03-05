@@ -37,14 +37,6 @@ public class UtilTest {
         assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
     }
-//        Integer.toBinaryString(8233)
-
-    @Test
-    public void shouldGiveRandomStringOfRightLength() {
-        assertThat(Util.getRandomString(14).length(), is(14));
-        assertThat(Util.getRandomString(0).length(), is(0));
-        assertThat(Util.getRandomString(-1).length(), is(0));
-    }
 
     @Test
     public void shouldReturnTrueIffAllBytesOfAnArrayIsZero() {
