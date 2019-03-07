@@ -7,3 +7,4 @@ The check boxes is to mark when something is added to the report
  - [ ] Address and data byte[] are padded by making sure all arrays are of same length (padded with zero's should enough when CPA secure encryption is used)
  - [ ] The dummy block check is done in Util, so it can be changed in a central place if the strategy is changed
  - [ ] Using 32 bytes for encrypted integers as it is easier with padding (less errors) and then I can get 16 bytes of randomness
+   - [ ] All integers are changed to byte arrays of size fore before encryption, this pads them, so size does not disclose any information about addresses

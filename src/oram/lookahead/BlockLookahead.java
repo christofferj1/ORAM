@@ -15,7 +15,7 @@ import java.util.Objects;
 public class BlockLookahead implements Block {
     private int address;
     private byte[] data;
-    private int columnIndex;
+    private int colIndex;
     private int rowIndex;
 
     public BlockLookahead() {
@@ -24,6 +24,13 @@ public class BlockLookahead implements Block {
     BlockLookahead(int address, byte[] data) {
         this.address = address;
         this.data = data;
+    }
+
+    public BlockLookahead(int address, byte[] data, int colIndex, int rowIndex) {
+        this.address = address;
+        this.data = data;
+        this.colIndex = colIndex;
+        this.rowIndex = rowIndex;
     }
 
     public int getAddress() {
@@ -42,12 +49,12 @@ public class BlockLookahead implements Block {
         this.data = data;
     }
 
-    public int getColumnIndex() {
-        return columnIndex;
+    public int getColIndex() {
+        return colIndex;
     }
 
-    public void setColumnIndex(int columnIndex) {
-        this.columnIndex = columnIndex;
+    public void setColIndex(int colIndex) {
+        this.colIndex = colIndex;
     }
 
     public int getRowIndex() {
@@ -63,7 +70,7 @@ public class BlockLookahead implements Block {
         return "BlockLookahead{" +
                 "address=" + address +
                 ", data=" + Util.printByteArray(data) +
-                ", columnIndex=" + columnIndex +
+                ", colIndex=" + colIndex +
                 ", rowIndex=" + rowIndex +
                 '}';
     }
@@ -74,7 +81,7 @@ public class BlockLookahead implements Block {
         if (o == null || getClass() != o.getClass()) return false;
         BlockLookahead that = (BlockLookahead) o;
         return getAddress() == that.getAddress() &&
-                getColumnIndex() == that.getColumnIndex() &&
+                getColIndex() == that.getColIndex() &&
                 getRowIndex() == that.getRowIndex() &&
                 Arrays.equals(getData(), that.getData());
     }
@@ -82,7 +89,7 @@ public class BlockLookahead implements Block {
     @Override
     public int hashCode() {
 
-        int result = Objects.hash(getAddress(), getColumnIndex(), getRowIndex());
+        int result = Objects.hash(getAddress(), getColIndex(), getRowIndex());
         result = 31 * result + Arrays.hashCode(getData());
         return result;
     }

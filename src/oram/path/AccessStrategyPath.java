@@ -109,11 +109,12 @@ public class AccessStrategyPath implements AccessStrategy {
             if (bucket.size() == bucketSize) {
                 for (BlockEncrypted block : bucket) {
                     if (block == null || block.getAddress() == null || block.getData() == null) continue;
-
+//                    TODO: create method for block conversion (and test it)
                     byte[] message = AES.decrypt(block.getData(), key);
                     byte[] addressBytes = AES.decrypt(block.getAddress(), key);
                     if (addressBytes == null) continue;
 
+//                    TODO: use Util method
                     int addressInt = ByteBuffer.wrap(addressBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
 
 //                    TODO: check if isDummyAddress working
@@ -190,6 +191,7 @@ public class AccessStrategyPath implements AccessStrategy {
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
             for (BlockPath block : blocksToWrite) {
+//                TODO: Sized byte array not necessary, as integers are padded to be 16 bytes when encrypted
                 byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), ADDRESS_SIZE);
                 byte[] addressCipher = AES.encrypt(addressSized, key);
 
