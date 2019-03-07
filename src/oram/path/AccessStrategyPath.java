@@ -24,10 +24,10 @@ public class AccessStrategyPath implements AccessStrategy {
     private final int L;
     private final int bucketSize;
     private final byte[] key;
-    private List<BlockPath> stash;
-    private Map<Integer, Integer> positionMap;
     private final Server server;
     private final PermutationStrategy permutationStrategy;
+    private List<BlockPath> stash;
+    private Map<Integer, Integer> positionMap;
     private boolean print;
     private int dummyCounter = 0;
 

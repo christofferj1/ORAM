@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
  */
 
 public class PermutationStrategyTest {
-   private PermutationStrategy permutationStrategy;
+    private PermutationStrategy permutationStrategy;
 
     @Before
     public void setUp() {

@@ -5,9 +5,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * <p> ORAM <br>
@@ -225,7 +223,7 @@ public class UtilTest {
         BlockEncrypted block = new BlockEncrypted(new byte[]{0b0, 0b0, 0b0}, new byte[]{0b0, 0b0, 0b0});
         BlockEncrypted[] blocks = new BlockEncrypted[]{block, block, block, block, block, block};
         String string =
-                        "        BlockEncrypted{address=[   0,   0,   0], data=[   0,   0,   0]}\n" +
+                "        BlockEncrypted{address=[   0,   0,   0], data=[   0,   0,   0]}\n" +
                         "        BlockEncrypted{address=[   0,   0,   0], data=[   0,   0,   0]}\n" +
                         "BlockEncrypted{address=[   0,   0,   0], data=[   0,   0,   0]}\n" +
                         "BlockEncrypted{address=[   0,   0,   0], data=[   0,   0,   0]}\n" +

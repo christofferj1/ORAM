@@ -48,7 +48,7 @@ public class Client2 {
                 dOut.write(arr);
 
                 int length = dIn.readInt();                    // read length of incoming message
-                if(length>0) {
+                if (length > 0) {
                     byte[] message = new byte[length];
                     dIn.readFully(message, 0, message.length); // read the message
                     System.out.println("Received byte array: " + Arrays.toString(message) + ", of length: " + length);

@@ -23,9 +23,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final int size;
     private final int matrixSize;
     private final String key;
+    private final Server server;
     private List<BlockLookahead> stash;
     private Map<Integer, Integer> positionMap;
-    private final Server server;
     private int accessCounter;
 
     public AccessStrategyLookahead(int size, int matrixWidth, String key, Server server) {
@@ -54,7 +54,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap(Map<Integer, Map<Integer, BlockLookahead>> map,
-                                                              int column, int row, BlockLookahead block) {
+                                                                   int column, int row, BlockLookahead block) {
         if (map.containsKey(column)) {
             map.get(column).put(row, block);
         } else {

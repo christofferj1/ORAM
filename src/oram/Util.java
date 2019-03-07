@@ -85,7 +85,7 @@ public class Util {
         return count;
     }
 
-//    TODO: Test, and for bytes with negative values
+    //    TODO: Test, and for bytes with negative values
     public static String printByteArray(byte[] array) {
         if (array == null) return null;
 

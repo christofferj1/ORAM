@@ -52,7 +52,7 @@ public class TestClient {
             System.exit(-3);
 
         byte[] add = pair.getKey();
-        byte[] addressReceived =  AES.decrypt(add, key);
+        byte[] addressReceived = AES.decrypt(add, key);
         byte[] dat = pair.getValue();
         byte[] dataReceived = AES.decrypt(dat, key);
 

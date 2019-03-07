@@ -24,13 +24,13 @@ import java.util.Arrays;
 public class AES {
     private static final Logger logger = LogManager.getLogger("log");
     private static SecretKey secretKey;
+//    TODO: optimize by create one key on the client and pass it around
+//    TODO: test if it is faster to do non statically
 
     public static void main(String[] args) {
         BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
-        byte[] key = "KEY STRING".getBytes();
 
         byte[] bytesBefore = null;
-
         System.out.println(block);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ObjectOutputStream oos = new ObjectOutputStream(baos)) {
@@ -40,18 +40,12 @@ public class AES {
             e.printStackTrace();
         }
 
-//        System.out.println(Arrays.toString(bytesBefore));
-
+        byte[] key = "KEY STRING".getBytes();
         byte[] cipher = AES.encrypt(bytesBefore, key);
-
-//        System.out.println(Arrays.toString(cipher));
 
         byte[] res = AES.decrypt(cipher, key);
 
-//        System.out.println(Arrays.toString(res));
-
         BlockPath block2 = null;
-
         try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
              ObjectInputStream ois = new ObjectInputStream(bais)) {
             block2 = (BlockPath) ois.readObject();
@@ -61,14 +55,6 @@ public class AES {
 
         System.out.println(block2);
         System.out.println(block.equals(block2));
-
-//        String string = "TEST STRING 12345678";
-//        byte[] bytes = string.getBytes("UTF-8");
-//        byte[] cipher = AES.encrypt(bytes, "Hello World");
-//        byte[] message = AES.decrypt(cipher, "Hello World");
-//
-//        System.out.println(new String(cipher));
-//        System.out.println(new String(message));
     }
 
     private static boolean setKeyFailed(byte[] key) {
@@ -78,7 +64,9 @@ public class AES {
             key = Arrays.copyOf(key, Constants.BYTES_OF_RANDOMNESS);
             secretKey = new SecretKeySpec(key, "AES");
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("Error happened generating a key");
+            logger.error(e);
+            logger.debug("Stacktrace", e);
             return true;
         }
         return false;
@@ -87,32 +75,13 @@ public class AES {
     public static byte[] encrypt(byte[] message, byte[] key) {
         if (setKeyFailed(key)) return null;
         try {
-//            if (message.length != Constants.BLOCK_SIZE) return null;
-//            Initiate Cipher
-//            Always adds some padding (16 bytes if message is exactly a factor of 16 bytes)
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
 
-//            Encrypt and encode
-            byte[] src = cipher.doFinal(message);
-//            byte[] cipherByteArray = Base64.getEncoder().encode(src);
-
-            System.out.println("IV: (size: " + iv.length + ")");
-            System.out.println(Arrays.toString(iv));
-            System.out.println("Message: (size: " + message.length + ")");
-            System.out.println(Arrays.toString(message));
-            System.out.println("src: (size: " + src.length + ")");
-            System.out.println(Arrays.toString(src));
-//            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
-//            System.out.println(Arrays.toString(cipherByteArray));
-
-//            Return
-            return ArrayUtils.addAll(iv, src);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
-                InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException e) {
-            e.printStackTrace();
+            return ArrayUtils.addAll(iv, cipher.doFinal(message));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
+                BadPaddingException | InvalidAlgorithmParameterException e) {
             logger.error("Error happened while encrypting");
             logger.error(e);
             logger.debug("Stacktrace", e);
@@ -120,41 +89,21 @@ public class AES {
         return null;
     }
 
-    public static byte[] decrypt(byte[] cipherToDecrypt, byte[] key) {
+    public static byte[] decrypt(byte[] ciphertext, byte[] key) {
         if (setKeyFailed(key)) return null;
         try {
-//            Initiate Cipher
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = new byte[Constants.BYTES_OF_RANDOMNESS];
-            System.arraycopy(cipherToDecrypt, 0, iv, 0, Constants.BYTES_OF_RANDOMNESS);
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
-            int cipherLength = cipherToDecrypt.length - Constants.BLOCK_SIZE;
-            byte[] valueCipher = new byte[cipherLength];
-            System.arraycopy(cipherToDecrypt, Constants.BYTES_OF_RANDOMNESS, valueCipher, 0, cipherLength);
+            byte[] iv = Arrays.copyOf(ciphertext, Constants.AES_BLOCK_BYTES);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            byte[] valueCipher = Arrays.copyOfRange(ciphertext, Constants.AES_BLOCK_BYTES, ciphertext.length);
 
-//            Decode and decrypt
-//            byte[] decode = Base64.getDecoder().decode(valueCipher);
-            byte[] message = cipher.doFinal(valueCipher);
-
-            System.out.println("IV: (size: " + iv.length + ")");
-            System.out.println(Arrays.toString(iv));
-            System.out.println("Cipher to decrypt: (size: " + cipherToDecrypt.length + ")");
-            System.out.println(Arrays.toString(cipherToDecrypt));
-            System.out.println("Value cipher: (size: " + valueCipher.length + ")");
-            System.out.println(Arrays.toString(valueCipher));
-//            System.out.println("Decode: (size: " + decode.length + ")");
-//            System.out.println(Arrays.toString(decode));
-
-            return message;
+            return cipher.doFinal(valueCipher);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                 BadPaddingException | InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
             logger.error("Error happened while decrypting");
             logger.error(e);
             logger.debug("Stacktrace", e);
         }
         return null;
     }
-
 }
