@@ -55,7 +55,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             res = addToAccessStashMap(res, blockLookahead);
         }
 
-        return null;
+        return res;
     }
 
     Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap(Map<Integer, Map<Integer, BlockLookahead>> map,
@@ -85,7 +85,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     BlockLookahead lookaheadBlockFromEncryptedBlock(BlockEncrypted blockEncrypted) {
         byte[] data = AES.decrypt(blockEncrypted.getData(), key);
-        if (data == null) return null;
+        if (data == null) {
+            logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
+            return null;
+        }
         int rowDataIndex = data.length - (INTEGER_BYTE_ARRAY_SIZE * 2);
         int colDataIndex = data.length - INTEGER_BYTE_ARRAY_SIZE;
         byte[] blockData = Arrays.copyOfRange(data, 0, rowDataIndex);

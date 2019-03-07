@@ -8,7 +8,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -39,7 +42,25 @@ public class AccessStrategyLookaheadTest {
     @Test
     public void shouldBeAbleToCreateAccessStash() {
         setStandardServer2();
+        Map<Integer, Map<Integer, BlockLookahead>> map = access.getAccessStash();
+//        It should have three entries, where the first is a map with two entries
+        assertThat(map, aMapWithSize(3));
+        assertThat(map, hasKey(0));
+        assertThat(map, hasKey(2));
+        assertThat(map, hasKey(3));
 
+        Map<Integer, BlockLookahead> map0 = map.get(0);
+        assertThat(map0, aMapWithSize(2));
+        assertThat(map0, hasEntry(0, new BlockLookahead(0, Util.leIntToByteArray(0), 0, 0)));
+        assertThat(map0, hasEntry(3, new BlockLookahead(3, Util.leIntToByteArray(0), 3, 0)));
+
+        Map<Integer, BlockLookahead> map2 = map.get(2);
+        assertThat(map2, aMapWithSize(1));
+        assertThat(map2, hasEntry(2, new BlockLookahead(10, Util.leIntToByteArray(10), 2, 2)));
+
+        Map<Integer, BlockLookahead> map3 = map.get(3);
+        assertThat(map3, aMapWithSize(1));
+        assertThat(map3, hasEntry(0, new BlockLookahead(12, Util.leIntToByteArray(12), 0, 3)));
     }
 
     @Test
@@ -138,67 +159,30 @@ public class AccessStrategyLookaheadTest {
                         Util.leIntToByteArray(6))));
     }
 
-    private void setStandardServer(int matrixWidth) {
-        ServerStub server = new ServerStub(matrixWidth, matrixWidth + 2);
-        int matrixSize = matrixWidth * matrixWidth;
-        BlockLookahead[] blocks = new BlockLookahead[matrixWidth * (matrixWidth + 2)];
-//        Add matrix values
-        for (int i = 0; i < matrixWidth; i++) {
-            for (int j = 0; j < matrixWidth; j++) {
-                int address = i + j * 4;
-                byte[] data = Util.getRandomByteArray(15);
-                blocks[address] = new BlockLookahead(address, data, j, i);
-            }
-        }
-//        Move some blocks to access stash
-        List<Integer> movedBlocks = new ArrayList<>();
-        for (int i = 0; i < matrixWidth; i++) {
-            int index = new Random().nextInt(matrixSize);
-            while (movedBlocks.contains(index))
-                index = new Random().nextInt(matrixSize);
-            blocks[matrixSize + i] = blocks[index];
-            blocks[index] = null;
-        }
-//        Move some blocks to access stash
-        for (int i = 0; i < matrixWidth; i++) {
-            int index = new Random().nextInt(matrixSize);
-            while (movedBlocks.contains(index))
-                index = new Random().nextInt(matrixSize);
-            blocks[matrixSize + i + 4] = blocks[index];
-            blocks[index] = null;
-        }
-
-        List<BlockLookahead> blockLookaheads = Arrays.asList(blocks);
-        List<BlockEncrypted> encryptedList = access.encryptBlocks(blockLookaheads);
-        BlockEncrypted[] blocksList = new BlockEncrypted[encryptedList.size()];
-        for (int i = 0; i < encryptedList.size(); i++) {
-            blocksList[i] = encryptedList.get(i);
-        }
-        server.setBlocks(blocksList);
-
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, server);
-    }
-
     private void setStandardServer2() {
         ServerStub server = new ServerStub(4, 6);
         BlockLookahead[] blocks = new BlockLookahead[24];
 
-        BlockLookahead block0 = new BlockLookahead(0, Util.getRandomByteArray(13), 0, 0);
-        BlockLookahead block1 = new BlockLookahead(1, Util.getRandomByteArray(14), 1, 0);
-        BlockLookahead block2 = new BlockLookahead(2, Util.getRandomByteArray(15), 2, 0);
-        BlockLookahead block3 = new BlockLookahead(3, Util.getRandomByteArray(16), 3, 0);
-        BlockLookahead block4 = new BlockLookahead(4, Util.getRandomByteArray(17), 0, 1);
-        BlockLookahead block5 = new BlockLookahead(5, Util.getRandomByteArray(18), 1, 1);
-        BlockLookahead block6 = new BlockLookahead(6, Util.getRandomByteArray(19), 2, 1);
-        BlockLookahead block7 = new BlockLookahead(7, Util.getRandomByteArray(20), 3, 1);
-        BlockLookahead block8 = new BlockLookahead(8, Util.getRandomByteArray(21), 0, 2);
-        BlockLookahead block9 = new BlockLookahead(9, Util.getRandomByteArray(22), 1, 2);
-        BlockLookahead block10 = new BlockLookahead(10, Util.getRandomByteArray(23), 2, 2);
-        BlockLookahead block11 = new BlockLookahead(11, Util.getRandomByteArray(24), 3, 2);
-        BlockLookahead block12 = new BlockLookahead(12, Util.getRandomByteArray(25), 0, 3);
-        BlockLookahead block13 = new BlockLookahead(13, Util.getRandomByteArray(26), 1, 3);
-        BlockLookahead block14 = new BlockLookahead(14, Util.getRandomByteArray(27), 2, 3);
-        BlockLookahead block15 = new BlockLookahead(15, Util.getRandomByteArray(28), 3, 3);
+//        Column 0
+        BlockLookahead block0 = new BlockLookahead(0, Util.leIntToByteArray(0), 0, 0);
+        BlockLookahead block1 = new BlockLookahead(1, Util.leIntToByteArray(1), 1, 0);
+        BlockLookahead block2 = new BlockLookahead(2, Util.leIntToByteArray(2), 2, 0);
+        BlockLookahead block3 = new BlockLookahead(3, Util.leIntToByteArray(3), 3, 0);
+//        Column 1
+        BlockLookahead block4 = new BlockLookahead(4, Util.leIntToByteArray(4), 0, 1);
+        BlockLookahead block5 = new BlockLookahead(5, Util.leIntToByteArray(5), 1, 1);
+        BlockLookahead block6 = new BlockLookahead(6, Util.leIntToByteArray(6), 2, 1);
+        BlockLookahead block7 = new BlockLookahead(7, Util.leIntToByteArray(7), 3, 1);
+//        Column 2
+        BlockLookahead block8 = new BlockLookahead(8, Util.leIntToByteArray(8), 0, 2);
+        BlockLookahead block9 = new BlockLookahead(9, Util.leIntToByteArray(9), 1, 2);
+        BlockLookahead block10 = new BlockLookahead(10, Util.leIntToByteArray(10), 2, 2);
+        BlockLookahead block11 = new BlockLookahead(11, Util.leIntToByteArray(11), 3, 2);
+//        Column 3
+        BlockLookahead block12 = new BlockLookahead(12, Util.leIntToByteArray(12), 0, 3);
+        BlockLookahead block13 = new BlockLookahead(13, Util.leIntToByteArray(13), 1, 3);
+        BlockLookahead block14 = new BlockLookahead(14, Util.leIntToByteArray(14), 2, 3);
+        BlockLookahead block15 = new BlockLookahead(15, Util.leIntToByteArray(15), 3, 3);
 
 //        Access stash
         blocks[16] = block0;
