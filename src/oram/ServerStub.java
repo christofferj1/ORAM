@@ -43,4 +43,8 @@ public class ServerStub implements Server {
     public String getTreeString() {
         return Util.printTree(blocks, bucketSize);
     }
+
+    public void setBlocks(BlockEncrypted[] blocks) {
+        this.blocks = blocks;
+    }
 }

@@ -1,11 +1,9 @@
 package oram.lookahead;
 
 
-import oram.AES;
-import oram.AccessStrategy;
-import oram.BlockEncrypted;
-import oram.OperationType;
+import oram.*;
 import oram.server.Server;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +16,7 @@ import static oram.Util.byteArrayToLeInt;
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 04-03-2019. <br>
  * Master Thesis 2019 </p>
- *
+ * <p>
  * Without keeping the stash locally
  */
 
@@ -45,8 +43,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
     public byte[] access(OperationType op, int address, byte[] data) {
         return null;
     }
-    
-//    TODO: Test this
+
+    //    TODO: Test this
     Map<Integer, Map<Integer, BlockLookahead>> getAccessStash() {
         int beginIndex = size;
         int endIndex = beginIndex + matrixHeight;
@@ -73,7 +71,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return map;
     }
 
-//    TODO: test this
+    //    TODO: test this
     List<BlockLookahead> getSwapStash() {
         int beginIndex = size + matrixHeight;
         int endIndex = size + matrixHeight * 2;
@@ -100,5 +98,22 @@ public class AccessStrategyLookahead implements AccessStrategy {
         blockLookahead.setRowIndex(byteArrayToLeInt(rowIndexBytes));
         blockLookahead.setColIndex(byteArrayToLeInt(colIndexBytes));
         return blockLookahead;
+    }
+
+    List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
+        List<BlockEncrypted> res = new ArrayList<>();
+        for (BlockLookahead block : blockLookaheads) {
+            if (block == null) {
+                res.add(null);
+                continue;
+            }
+            byte[] rowIndexBytes = Util.leIntToByteArray(block.getRowIndex());
+            byte[] colIndexBytes = Util.leIntToByteArray(block.getColIndex());
+            res.add(new BlockEncrypted(
+                    AES.encrypt(Util.leIntToByteArray(block.getAddress()), key),
+                    AES.encrypt(ArrayUtils.addAll(
+                            ArrayUtils.addAll(block.getData(), rowIndexBytes), colIndexBytes), key)));
+        }
+        return res;
     }
 }

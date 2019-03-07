@@ -26,7 +26,7 @@ public class BlockLookahead implements Block {
         this.data = data;
     }
 
-    public BlockLookahead(int address, byte[] data, int colIndex, int rowIndex) {
+    public BlockLookahead(int address, byte[] data, int rowIndex, int colIndex) {
         this.address = address;
         this.data = data;
         this.colIndex = colIndex;
