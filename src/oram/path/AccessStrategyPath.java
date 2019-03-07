@@ -23,7 +23,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
     private final int L;
     private final int bucketSize;
-    private final String key;
+    private final byte[] key;
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
     private final Server server;
@@ -31,7 +31,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean print;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, Server server, int bucketSize, String key, PermutationStrategy permutationStrategy) {
+    AccessStrategyPath(int size, Server server, int bucketSize, byte[] key, PermutationStrategy permutationStrategy) {
         this.permutationStrategy = permutationStrategy;
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();

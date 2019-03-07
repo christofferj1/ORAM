@@ -26,7 +26,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
-        String key = "Some key 0";
+        byte[] key = "Some key 0".getBytes();
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key,
                 permutationStrategy);
 
@@ -48,7 +48,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldCalculateTheRightNodeIndexFor15Blocks() {
-        String key = "Some key 1";
+        byte[] key = "Some key 1".getBytes();
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
                 key, permutationStrategy);
 
@@ -75,7 +75,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldFindTheRightSubTreePositionsSize7() {
-        String key = "Some key 2";
+        byte[] key = "Some key 2".getBytes();
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, new ServerStub(7, BUCKET_SIZE), BUCKET_SIZE, key,
                 permutationStrategy);
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
@@ -91,7 +91,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldFindTheRightSubTreePositionsSize15() {
-        String key = "Some key 3";
+        byte[] key = "Some key 3".getBytes();
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, new ServerStub(15, BUCKET_SIZE), BUCKET_SIZE,
                 key, permutationStrategy);
 
@@ -117,7 +117,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldBeAbleToFillInBlocks() {
-        String key = "Some key 4";
+        byte[] key = "Some key 4".getBytes();
         ServerStub server = new ServerStub(7, BUCKET_SIZE);
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, server, BUCKET_SIZE, key, permutationStrategy);
 
@@ -141,7 +141,7 @@ public class AccessStrategyPathTest {
 
     @Test
     public void shouldBeAbleToAlterBlocks() {
-        String key = "Some key 5";
+        byte[] key = "Some key 5".getBytes();
         ServerStub server = new ServerStub(15, BUCKET_SIZE);
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, server, BUCKET_SIZE, key, permutationStrategy);
 

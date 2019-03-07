@@ -38,8 +38,8 @@ public class TestClient {
 
         byte[] key = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
 
-        byte[] addressCipher = AES2.encrypt(address, key);
-        byte[] dataCipher = AES2.encrypt(data, key);
+        byte[] addressCipher = AES.encrypt(address, key);
+        byte[] dataCipher = AES.encrypt(data, key);
 
         System.out.println("Address cipher: (of length: " + addressCipher.length + ")\n" + Arrays.toString(addressCipher));
         System.out.println("Address cipher: (of length: " + dataCipher.length + ")\n" + Arrays.toString(dataCipher));
@@ -52,9 +52,9 @@ public class TestClient {
             System.exit(-3);
 
         byte[] add = pair.getKey();
-        byte[] addressReceived =  AES2.decrypt(add, key);
+        byte[] addressReceived =  AES.decrypt(add, key);
         byte[] dat = pair.getValue();
-        byte[] dataReceived = AES2.decrypt(dat, key);
+        byte[] dataReceived = AES.decrypt(dat, key);
 
         BlockEncrypted block2 = new BlockEncrypted(addressReceived, dataReceived);
         System.out.println(block2);

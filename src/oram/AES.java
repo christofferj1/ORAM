@@ -14,13 +14,11 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Base64;
 
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 20-02-2019. <br>
  * Master Thesis 2019 </p>
- * Inspired by: howtodoinjava.com/security/java-aes-encryption-example
  */
 
 public class AES {
@@ -28,8 +26,8 @@ public class AES {
     private static SecretKey secretKey;
 
     public static void main(String[] args) {
-        BlockPath block = new BlockPath(1337, Util.getRandomByteArray(128));
-        String key = "KEY STRING";
+        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
+        byte[] key = "KEY STRING".getBytes();
 
         byte[] bytesBefore = null;
 
@@ -62,6 +60,7 @@ public class AES {
         }
 
         System.out.println(block2);
+        System.out.println(block.equals(block2));
 
 //        String string = "TEST STRING 12345678";
 //        byte[] bytes = string.getBytes("UTF-8");
@@ -72,25 +71,25 @@ public class AES {
 //        System.out.println(new String(message));
     }
 
-    private static boolean setKeyFailed(String key) {
+    private static boolean setKeyFailed(byte[] key) {
         try {
-            byte[] keyBytes = key.getBytes("UTF-8");
             MessageDigest sha = MessageDigest.getInstance("SHA-1");
-            keyBytes = sha.digest(keyBytes);
-            keyBytes = Arrays.copyOf(keyBytes, Constants.BYTES_OF_RANDOMNESS);
-            secretKey = new SecretKeySpec(keyBytes, "AES");
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+            key = sha.digest(key);
+            key = Arrays.copyOf(key, Constants.BYTES_OF_RANDOMNESS);
+            secretKey = new SecretKeySpec(key, "AES");
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return true;
         }
         return false;
     }
 
-    public static byte[] encrypt(byte[] message, String key) {
+    public static byte[] encrypt(byte[] message, byte[] key) {
         if (setKeyFailed(key)) return null;
         try {
 //            if (message.length != Constants.BLOCK_SIZE) return null;
 //            Initiate Cipher
+//            Always adds some padding (16 bytes if message is exactly a factor of 16 bytes)
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
@@ -98,16 +97,16 @@ public class AES {
 
 //            Encrypt and encode
             byte[] src = cipher.doFinal(message);
-            byte[] cipherByteArray = Base64.getEncoder().encode(src);
+//            byte[] cipherByteArray = Base64.getEncoder().encode(src);
 
             System.out.println("IV: (size: " + iv.length + ")");
-            System.out.println(Util.printByteArray(iv));
+            System.out.println(Arrays.toString(iv));
             System.out.println("Message: (size: " + message.length + ")");
-            System.out.println(Util.printByteArray(message));
+            System.out.println(Arrays.toString(message));
             System.out.println("src: (size: " + src.length + ")");
-            System.out.println(Util.printByteArray(src));
-            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
-            System.out.println(Util.printByteArray(cipherByteArray));
+            System.out.println(Arrays.toString(src));
+//            System.out.println("cipher byte array: (size: " + cipherByteArray.length + ")");
+//            System.out.println(Arrays.toString(cipherByteArray));
 
 //            Return
             return ArrayUtils.addAll(iv, src);
@@ -121,7 +120,7 @@ public class AES {
         return null;
     }
 
-    public static byte[] decrypt(byte[] cipherToDecrypt, String key) {
+    public static byte[] decrypt(byte[] cipherToDecrypt, byte[] key) {
         if (setKeyFailed(key)) return null;
         try {
 //            Initiate Cipher
@@ -139,13 +138,13 @@ public class AES {
             byte[] message = cipher.doFinal(valueCipher);
 
             System.out.println("IV: (size: " + iv.length + ")");
-            System.out.println(Util.printByteArray(iv));
+            System.out.println(Arrays.toString(iv));
             System.out.println("Cipher to decrypt: (size: " + cipherToDecrypt.length + ")");
-            System.out.println(Util.printByteArray(cipherToDecrypt));
+            System.out.println(Arrays.toString(cipherToDecrypt));
             System.out.println("Value cipher: (size: " + valueCipher.length + ")");
-            System.out.println(Util.printByteArray(valueCipher));
+            System.out.println(Arrays.toString(valueCipher));
 //            System.out.println("Decode: (size: " + decode.length + ")");
-//            System.out.println(Util.printByteArray(decode));
+//            System.out.println(Arrays.toString(decode));
 
             return message;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
@@ -157,4 +156,5 @@ public class AES {
         }
         return null;
     }
+
 }
