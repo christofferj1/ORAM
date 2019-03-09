@@ -6,12 +6,8 @@ import oram.server.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.*;
-
-import static oram.Constants.ADDRESS_SIZE;
 
 /**
  * <p> ORAM <br>
@@ -107,24 +103,7 @@ public class AccessStrategyPath implements AccessStrategy {
             }
 
             if (bucket.size() == bucketSize) {
-                for (BlockEncrypted block : bucket) {
-                    if (block == null || block.getAddress() == null || block.getData() == null) continue;
-//                    TODO: create method for block conversion (and test it)
-                    byte[] message = AES.decrypt(block.getData(), key);
-                    byte[] addressBytes = AES.decrypt(block.getAddress(), key);
-                    if (addressBytes == null) continue;
-
-//                    TODO: use Util method
-                    int addressInt = ByteBuffer.wrap(addressBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-
-//                    TODO: check if isDummyAddress working
-                    if (message == null || Util.isDummyAddress(addressInt)) continue;
-
-                    stash.add(new BlockPath(addressInt, message));
-//                    int addressInt = ByteBuffer.wrap(block.getAddress()).order(ByteOrder.LITTLE_ENDIAN).getInt();
-//                    if (Util.isDummyAddress(addressInt)) continue;
-//                    stash.add(new BlockPath(addressInt, block.getData()));
-                }
+                stash.addAll(decryptBlockPaths(bucket));
             } else {
                 logger.error("Reading bucket for position: " + leafNodeIndex + ", in layer: " + l + " failed");
                 res = false;
@@ -191,18 +170,8 @@ public class AccessStrategyPath implements AccessStrategy {
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
             for (BlockPath block : blocksToWrite) {
-//                TODO: Sized byte array not necessary, as integers are padded to be 16 bytes when encrypted
-                byte[] addressSized = Util.sizedByteArrayWithInt(block.getAddress(), ADDRESS_SIZE);
-                byte[] addressCipher = AES.encrypt(addressSized, key);
-
-                byte[] dataTmp = new byte[Constants.BLOCK_SIZE];
-                byte[] data = block.getData();
-                System.arraycopy(data, 0, dataTmp, 0, data.length);
-                byte[] dataCipher = AES.encrypt(dataTmp, key);
-
-//                TODO: permute the blocks before writing them back
-//                server.write(arrayPosition + i, new BlockEncrypted(addressSized, dataTmp));
-//                server.write(arrayPosition + i, new BlockEncrypted(addressCipher, dataCipher));
+                byte[] addressCipher = AES.encrypt(Util.leIntToByteArray(block.getAddress()), key);
+                byte[] dataCipher = AES.encrypt(block.getData(), key);
                 encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
             }
             encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite);
@@ -230,20 +199,6 @@ public class AccessStrategyPath implements AccessStrategy {
 
         return res;
     }
-//
-//    /**
-//     * Calculates the position in the flattened tree based on position and level. When the bucket size is bigger than 1,
-//     * the position of the first block is returned.
-//     *
-//     * @return position of first block in bucket in the flattened tree
-//     */
-//    int getPosition(int leafNode, int level) {
-//        int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
-//        for (int i = L - 1; i > level; i--) {
-//            res = (int) Math.floor((res - 1) / 2);
-//        }
-//        return res * bucketSize;
-//    }
 
     /**
      * Calculates the position in the tree based on position and level.
@@ -254,6 +209,23 @@ public class AccessStrategyPath implements AccessStrategy {
         int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
         for (int i = L - 1; i > level; i--) {
             res = (int) Math.floor((res - 1) / 2);
+        }
+        return res;
+    }
+
+    List<BlockPath> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
+        List<BlockPath> res = new ArrayList<>();
+        for (BlockEncrypted block : encryptedBlocks) {
+            if (block == null) continue;
+            byte[] message = AES.decrypt(block.getData(), key);
+            byte[] addressBytes = AES.decrypt(block.getAddress(), key);
+
+            if (addressBytes == null) continue;
+            int addressInt = Util.byteArrayToLeInt(addressBytes);
+
+            if (message == null || Util.isDummyAddress(addressInt)) continue;
+
+            res.add(new BlockPath(addressInt, message));
         }
         return res;
     }

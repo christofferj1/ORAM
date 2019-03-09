@@ -13,18 +13,6 @@ import java.security.SecureRandom;
  */
 
 public class Util {
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-    public static byte[] sizedByteArrayWithInt(int i, int size) {
-//        byte[] intArray = new byte[]{new Integer(i).byteValue()};
-        int bytes = numberOfBytesForInt(i);
-        if (bytes > size) return null;
-        byte[] intArray = leIntToByteArray(i);
-        byte[] res = new byte[size];
-        System.arraycopy(intArray, 0, res, 0, bytes);
-        return res;
-    }
-
     public static byte[] getRandomByteArray(int length) {
         if (length <= 0) return new byte[0];
 

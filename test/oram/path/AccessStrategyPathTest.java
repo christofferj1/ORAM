@@ -1,7 +1,6 @@
 package oram.path;
 
-import oram.OperationType;
-import oram.ServerStub;
+import oram.*;
 import oram.permutation.PermutationStrategy;
 import oram.util.PermutationStrategyIdentity;
 import oram.util.TestUtil;
@@ -10,9 +9,12 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertNotNull;
 
 public class AccessStrategyPathTest {
@@ -170,5 +172,37 @@ public class AccessStrategyPathTest {
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
 
 //        System.out.println("###########################################\n" + server.getTreeString());
+    }
+
+    @Test
+    public void shouldBeAbleToDecryptAListOfBlocks() {
+        byte[] bytes1 = Util.getRandomByteArray(15);
+        byte[] bytes2 = Util.getRandomByteArray(16);
+        byte[] bytes4 = Util.getRandomByteArray(18);
+        BlockPath block0 = new BlockPath(1, bytes1);
+        BlockPath block1 = new BlockPath(2, bytes2);
+        BlockPath block2 = new BlockPath(0, new byte[17]);
+        BlockPath block3 = new BlockPath(4, bytes4);
+
+        byte[] key = "Some Key 6".getBytes();
+
+        BlockEncrypted encrypted0 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block0.getAddress()), key),
+                AES.encrypt(block0.getData(), key));
+        BlockEncrypted encrypted1 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block1.getAddress()), key),
+                AES.encrypt(block1.getData(), key));
+        BlockEncrypted encrypted2 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block2.getAddress()), key),
+                AES.encrypt(block2.getData(), key));
+        BlockEncrypted encrypted3 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block3.getAddress()), key),
+                AES.encrypt(block3.getData(), key));
+
+        List<BlockEncrypted> encryptedList = Arrays.asList(encrypted0, encrypted1, encrypted2, encrypted3);
+
+        AccessStrategyPath access = new AccessStrategyPath(4, new ServerStub(4, 1), 1, key,
+                new PermutationStrategyIdentity());
+        List<BlockPath> res = access.decryptBlockPaths(encryptedList);
+        assertThat(res, hasSize(3));
+        assertThat(res, hasItem(block0));
+        assertThat(res, hasItem(block1));
+        assertThat(res, hasItem(block3));
     }
 }

@@ -15,28 +15,6 @@ import static org.junit.Assert.*;
 
 public class UtilTest {
     @Test
-    public void shouldCreateSizedByteArraysCorrectly() {
-//        Some positive numbers
-        assertThat("2 bytes, 0", Util.sizedByteArrayWithInt(0, 2), is(new byte[]{0b00000000, 0b00000000}));
-        assertThat("1 byte, 77", Util.sizedByteArrayWithInt(77, 1), is(new byte[]{0b01001101}));
-        assertThat("2 bytes, 77", Util.sizedByteArrayWithInt(77, 2), is(new byte[]{0b01001101, 0b00000000}));
-        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 3),
-                is(new byte[]{0b00110101, 0b00100010, 0b00101100}));
-        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
-                is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
-
-//        Some negative numbers
-        assertNull("-2 bytes, 0", Util.sizedByteArrayWithInt(0, -2));
-        assertThat("2 bytes, -0", Util.sizedByteArrayWithInt(-0, 2), is(new byte[]{0b00000000, 0b00000000}));
-        assertThat("1 byte, 77", Util.sizedByteArrayWithInt(77, 1), is(new byte[]{0b01001101}));
-        assertThat("2 bytes, 77", Util.sizedByteArrayWithInt(77, 2), is(new byte[]{0b01001101, 0b00000000}));
-        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 3),
-                is(new byte[]{0b00110101, 0b00100010, 0b00101100}));
-        assertThat("3 bytes, 2892341", Util.sizedByteArrayWithInt(2892341, 6),
-                is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000, 0b00000000, 0b00000000}));
-    }
-
-    @Test
     public void shouldReturnTrueIffAllBytesOfAnArrayIsZero() {
         assertFalse(Util.isDummyBlock(null));
 
