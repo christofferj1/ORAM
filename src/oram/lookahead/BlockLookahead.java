@@ -33,6 +33,10 @@ public class BlockLookahead implements Block {
         this.rowIndex = rowIndex;
     }
 
+    public Index getIndex() {
+        return new Index(rowIndex, colIndex);
+    }
+
     public int getAddress() {
         return address;
     }

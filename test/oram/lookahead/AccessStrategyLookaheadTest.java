@@ -5,13 +5,11 @@ import oram.BlockEncrypted;
 import oram.ServerStub;
 import oram.Util;
 import org.apache.commons.lang3.ArrayUtils;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -41,7 +39,7 @@ public class AccessStrategyLookaheadTest {
 
     @Test
     public void shouldBeAbleToCreateAccessStash() {
-        setStandardServer2();
+        setStandardServer();
         Map<Integer, Map<Integer, BlockLookahead>> map = access.getAccessStash();
 //        It should have three entries, where the first is a map with two entries
         assertThat(map, aMapWithSize(3));
@@ -52,7 +50,7 @@ public class AccessStrategyLookaheadTest {
         Map<Integer, BlockLookahead> map0 = map.get(0);
         assertThat(map0, aMapWithSize(2));
         assertThat(map0, hasEntry(0, new BlockLookahead(0, Util.leIntToByteArray(0), 0, 0)));
-        assertThat(map0, hasEntry(3, new BlockLookahead(3, Util.leIntToByteArray(0), 3, 0)));
+        assertThat(map0, hasEntry(3, new BlockLookahead(3, Util.leIntToByteArray(3), 3, 0)));
 
         Map<Integer, BlockLookahead> map2 = map.get(2);
         assertThat(map2, aMapWithSize(1));
@@ -61,6 +59,20 @@ public class AccessStrategyLookaheadTest {
         Map<Integer, BlockLookahead> map3 = map.get(3);
         assertThat(map3, aMapWithSize(1));
         assertThat(map3, hasEntry(0, new BlockLookahead(12, Util.leIntToByteArray(12), 0, 3)));
+    }
+
+    @Test
+    public void shouldBeAbleToCreateSwatStash() {
+        setStandardServer();
+        List<BlockLookahead> list = access.getSwapStash();
+
+        assertThat(list, Matchers.<Collection<BlockLookahead>>allOf(
+                hasSize(4),
+                hasItem(new BlockLookahead(7, Util.leIntToByteArray(7), 3, 1)),
+                hasItem(new BlockLookahead(8, Util.leIntToByteArray(8), 0, 2)),
+                hasItem(new BlockLookahead(9, Util.leIntToByteArray(9), 1, 2)),
+                hasItem(new BlockLookahead(14, Util.leIntToByteArray(14), 2, 3))
+        ));
     }
 
     @Test
@@ -97,6 +109,64 @@ public class AccessStrategyLookaheadTest {
         assertThat("Outer map has 2 element", value, aMapWithSize(2));
         assertThat("Inner map 3 has 2 elements", value.get(3), aMapWithSize(2));
         assertThat("Inner map 1 has 1 element", value.get(1), aMapWithSize(1));
+    }
+
+    @Test
+    public void shouldBeAbleToReadCorrectIndexInMatrix() {
+        setStandardServer();
+        BlockLookahead block = access.fetchBlockFromMatrix(new Index(3, 2));
+        assertThat(block, equalTo(new BlockLookahead(11, Util.leIntToByteArray(11), 3, 2)));
+
+        block = access.fetchBlockFromMatrix(new Index(1, 0));
+        assertThat(block, equalTo(new BlockLookahead(1, Util.leIntToByteArray(1), 1, 0)));
+
+        block = access.fetchBlockFromMatrix(new Index(0, 1));
+        assertThat(block, equalTo(new BlockLookahead(4, Util.leIntToByteArray(4), 0, 1)));
+    }
+
+    @Test
+    public void shouldBeAbleToLookUpInAccessStash() {
+        BlockLookahead block0 = new BlockLookahead(0, null);
+        BlockLookahead block1 = new BlockLookahead(1, null);
+        BlockLookahead block2 = new BlockLookahead(2, null);
+        BlockLookahead block3 = new BlockLookahead(3, null);
+        BlockLookahead block4 = new BlockLookahead(4, null);
+
+        Map<Integer, BlockLookahead> map0 = new HashMap<>();
+        map0.put(3, block0);
+
+        Map<Integer, BlockLookahead> map1 = new HashMap<>();
+        map1.put(0, block1);
+        map1.put(1, block2);
+
+        Map<Integer, BlockLookahead> map3 = new HashMap<>();
+        map3.put(0, block3);
+        map3.put(2, block4);
+
+        Map<Integer, Map<Integer, BlockLookahead>> map = new HashMap<>();
+        map.put(0, map0);
+        map.put(1, map1);
+        map.put(3, map3);
+
+//        Should be able to look up the blocks in the map
+        assertThat(access.findBlockInAccessStash(map, 3, 0), is(block0));
+        assertThat(access.findBlockInAccessStash(map, 0, 1), is(block1));
+        assertThat(access.findBlockInAccessStash(map, 1, 1), is(block2));
+        assertThat(access.findBlockInAccessStash(map, 0, 3), is(block3));
+        assertThat(access.findBlockInAccessStash(map, 2, 3), is(block4));
+
+//        All other should return null
+        assertNull(access.findBlockInAccessStash(map, 0, 0));
+        assertNull(access.findBlockInAccessStash(map, 1, 0));
+        assertNull(access.findBlockInAccessStash(map, 2, 0));
+        assertNull(access.findBlockInAccessStash(map, 2, 1));
+        assertNull(access.findBlockInAccessStash(map, 3, 1));
+        assertNull(access.findBlockInAccessStash(map, 0, 2));
+        assertNull(access.findBlockInAccessStash(map, 1, 2));
+        assertNull(access.findBlockInAccessStash(map, 2, 2));
+        assertNull(access.findBlockInAccessStash(map, 3, 2));
+        assertNull(access.findBlockInAccessStash(map, 1, 3));
+        assertNull(access.findBlockInAccessStash(map, 3, 3));
     }
 
     @Test
@@ -142,24 +212,22 @@ public class AccessStrategyLookaheadTest {
     @Test
     public void shouldBeAbleToEncryptAListOfBlocks() {
         byte[] bytes0 = Util.getRandomByteArray(14);
-        byte[] bytes1 = Util.getRandomByteArray(15);
         byte[] bytes2 = Util.getRandomByteArray(16);
         BlockLookahead block0 = new BlockLookahead(41, bytes0, 2, 4);
-        BlockLookahead block1 = new BlockLookahead(42, bytes1, 3, 5);
         BlockLookahead block2 = new BlockLookahead(43, bytes2, 4, 6);
 
         List<BlockEncrypted> encryptedBlocks = access.encryptBlocks(Arrays.asList(block0, null, block2));
         assertThat(encryptedBlocks, hasSize(3));
-        assertThat(AES.decrypt(encryptedBlocks.get(0).getData(),defaultKey),
+        assertThat(AES.decrypt(encryptedBlocks.get(0).getData(), defaultKey),
                 equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes0, Util.leIntToByteArray(2)),
                         Util.leIntToByteArray(4))));
         assertNull(encryptedBlocks.get(1));
-        assertThat(AES.decrypt(encryptedBlocks.get(2).getData(),defaultKey),
+        assertThat(AES.decrypt(encryptedBlocks.get(2).getData(), defaultKey),
                 equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes2, Util.leIntToByteArray(4)),
                         Util.leIntToByteArray(6))));
     }
 
-    private void setStandardServer2() {
+    private void setStandardServer() {
         ServerStub server = new ServerStub(4, 6);
         BlockLookahead[] blocks = new BlockLookahead[24];
 
@@ -195,13 +263,13 @@ public class AccessStrategyLookaheadTest {
         blocks[22] = block9;
         blocks[23] = block8;
 //        Matrix
-        blocks[0] = block1;
-        blocks[1] = block11;
+        blocks[1] = block1;
         blocks[2] = block2;
-        blocks[4] = block13;
+        blocks[5] = block5;
+        blocks[4] = block4;
         blocks[6] = block6;
-        blocks[8] = block4;
-        blocks[10] = block5;
+        blocks[11] = block11;
+        blocks[13] = block13;
         blocks[15] = block15;
 
         List<BlockLookahead> blockLookaheads = Arrays.asList(blocks);

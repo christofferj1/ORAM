@@ -27,7 +27,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final byte[] key;
     private final Server server;
     private List<BlockLookahead> stash;
-    private Map<Integer, Integer> positionMap;
+    private Map<Integer, Index> positionMap;
     private int accessCounter;
 
     public AccessStrategyLookahead(int size, int matrixWidth, byte[] key, Server server) {
@@ -41,10 +41,31 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
+        Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash();
+        List<BlockLookahead> swapStash = getSwapStash();
+
+        Index index = positionMap.get(address);
+        BlockLookahead block = fetchBlockFromMatrix(index);
+
+        boolean blockFoundInMatrix = true;
+        boolean blockFoundInAccessStash = true;
+        boolean blockFoundInSwapStash = true;
+        if (Util.isDummyAddress(block.getAddress())) {
+            blockFoundInMatrix = false;
+            block = findBlockInAccessStash(accessStash, index.getRowIndex(), index.getRowIndex());
+            if (block == null) {
+                blockFoundInAccessStash = false;
+                block = findBlockInSwapStash(swapStash, index);
+            }
+        }
+
+        byte[] res = block.getData();
+
+
+
         return null;
     }
 
-    //    TODO: Test this
     Map<Integer, Map<Integer, BlockLookahead>> getAccessStash() {
         int beginIndex = size;
         int endIndex = beginIndex + matrixHeight;
@@ -71,7 +92,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return map;
     }
 
-    //    TODO: test this
     List<BlockLookahead> getSwapStash() {
         int beginIndex = size + matrixHeight;
         int endIndex = size + matrixHeight * 2;
@@ -81,6 +101,29 @@ public class AccessStrategyLookahead implements AccessStrategy {
             res.add(lookaheadBlockFromEncryptedBlock(server.read(i)));
         }
         return res;
+    }
+
+    BlockLookahead fetchBlockFromMatrix(Index index) {
+        int serverIndex = index.getRowIndex();
+        serverIndex += index.getColIndex() * matrixHeight;
+
+        return lookaheadBlockFromEncryptedBlock(server.read(serverIndex));
+    }
+
+    BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, int rowIndex, int colIndex) {
+        if (stash.containsKey(colIndex)) {
+            Map<Integer, BlockLookahead> columnMap = stash.get(colIndex);
+            return columnMap.getOrDefault(rowIndex, null);
+        }
+        return null;
+    }
+
+    BlockLookahead findBlockInSwapStash(List<BlockLookahead> stash, Index index) {
+        for (BlockLookahead block : stash) {
+            if (block != null && block.getIndex().equals(index))
+                return block;
+        }
+        return null;
     }
 
     BlockLookahead lookaheadBlockFromEncryptedBlock(BlockEncrypted blockEncrypted) {
