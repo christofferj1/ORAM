@@ -7,6 +7,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.security.SecureRandom;
 import java.util.*;
 
 import static oram.Constants.INTEGER_BYTE_ARRAY_SIZE;
@@ -26,18 +27,20 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final int matrixHeight;
     private final byte[] key;
     private final Server server;
-    private List<BlockLookahead> stash;
     private Map<Integer, Index> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
 
-    public AccessStrategyLookahead(int size, int matrixWidth, byte[] key, Server server) {
+    public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Server server) {
         this.size = size;
-        this.matrixHeight = matrixWidth;
+        this.matrixHeight = matrixHeight;
         this.key = key;
         this.server = server;
-        if (!(size == matrixWidth * matrixWidth))
+        if (!(size == matrixHeight * matrixHeight))
             logger.error("Size of matrix is wrong");
+        accessCounter = 0;
+        futureSwapPartners = new ArrayList<>();
+        positionMap = new HashMap<>();
     }
 
     @Override
@@ -71,6 +74,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Set index to index of swap partner
         block.setIndex(swapPartner.getIndex());
+        positionMap.put(address, swapPartner.getIndex());
 
         if (op.equals(OperationType.WRITE)) {block.setData(data);}
 
@@ -109,8 +113,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
         }
 
-//        TODO pick new swap partner
-        maintanenceJob(accessStash, swapStash);
+        pickNewFutureSwapPartner();
+        maintenanceJob(accessStash, swapStash);
 
         accessCounter++;
         return block.getData();
@@ -178,12 +182,24 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return null;
     }
 
-    BlockLookahead findBlockInSwapStash(List<BlockLookahead> stash, Index index) {
+    private BlockLookahead findBlockInSwapStash(List<BlockLookahead> stash, Index index) {
         for (BlockLookahead block : stash) {
             if (block != null && block.getIndex().equals(index))
                 return block;
         }
         return null;
+    }
+
+    private void pickNewFutureSwapPartner() {
+        SecureRandom randomness = new SecureRandom();
+        boolean futureSwapsContainsIndex = true;
+        Index index = null;
+        while (futureSwapsContainsIndex) {
+            index = new Index(randomness.nextInt(matrixHeight), randomness.nextInt(matrixHeight));
+            Index finalIndex = index;
+            futureSwapsContainsIndex = futureSwapPartners.stream().anyMatch(f -> f.getIndex().equals(finalIndex));
+        }
+        futureSwapPartners.set(Math.floorMod(accessCounter, matrixHeight), new SwapPartnerData(index, accessCounter));
     }
 
     BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
@@ -237,7 +253,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
-    boolean maintanenceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, List<BlockLookahead> swapStash) {
+    boolean maintenanceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, List<BlockLookahead> swapStash) {
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
         List<BlockLookahead> column = new ArrayList<>();
 
@@ -282,7 +298,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (encryptedBlocks.size() != matrixHeight) {
             logger.error("Wrong number of encrypted blocks to write back: " + encryptedBlocks.size());
         }
-        for (int i = 0; i < matrixHeight; i ++) {
+        for (int i = 0; i < matrixHeight; i++) {
             Index index = new Index(i, columnIndex);
             if (!server.write(getFlatArrayIndex(index), encryptedBlocks.get(i))) {
                 logger.error("Unable to write block to server with index: " + index);
