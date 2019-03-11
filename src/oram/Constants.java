@@ -15,4 +15,6 @@ public class Constants {
     public static final int AES_BLOCK_BYTES = 16;
     public static final int INTEGER_BYTE_ARRAY_SIZE = 4;
     public static final int ENCRYPTED_INTEGER_BYTE_ARRAY_SIZE = 8;
+
+    public static final int PORT = 59595;
 }
