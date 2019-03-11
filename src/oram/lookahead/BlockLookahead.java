@@ -37,6 +37,11 @@ public class BlockLookahead implements Block {
         return new Index(rowIndex, colIndex);
     }
 
+    public void setIndex(Index index) {
+        rowIndex = index.getRowIndex();
+        colIndex = index.getColIndex();
+    }
+
     public int getAddress() {
         return address;
     }

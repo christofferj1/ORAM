@@ -49,21 +49,68 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         boolean blockFoundInMatrix = true;
         boolean blockFoundInAccessStash = true;
-        boolean blockFoundInSwapStash = true;
         if (Util.isDummyAddress(block.getAddress())) {
             blockFoundInMatrix = false;
             block = findBlockInAccessStash(accessStash, index.getRowIndex(), index.getRowIndex());
             if (block == null) {
                 blockFoundInAccessStash = false;
                 block = findBlockInSwapStash(swapStash, index);
+                if (block == null) {
+                    logger.error("Unable to locate block");
+                    return null;
+                } else
+                    logger.info("Block found in swap stash: " + block.toString());
+            } else
+                logger.info("Block found in access stash: " + block.toString());
+        } else
+            logger.info("Block found in matrix: " + block.toString());
+
+//        Get swap partner
+        BlockLookahead swapPartner = swapStash.remove(Math.floorMod(accessCounter, matrixHeight));
+        accessCounter++;
+
+//        Set index to index of swap partner
+        block.setIndex(swapPartner.getIndex());
+        if (op.equals(OperationType.WRITE))
+            block.setData(data);
+
+//        Update swap partner index and encrypt it
+//        Index swapPartnerIndex = swapPartner.getIndex();
+        swapPartner.setIndex(index);
+        BlockEncrypted encryptedBlock = encryptBlock(swapPartner);
+        if (encryptedBlock == null)
+            return null;
+
+        addToAccessStashMap(accessStash, block);
+
+        if (blockFoundInMatrix) {
+            if (!server.write(getFlatArrayIndex(index), encryptedBlock)) {
+                logger.error("Unable to write swap partner to server: " + swapPartner.toString());
+            }
+            accessStash.get(index.getColIndex()).remove(index.getRowIndex());
+//            block.setIndex(swapPartnerIndex);
+        } else if (blockFoundInAccessStash) {
+            if (!server.write(getFlatArrayIndex(index), encryptedBlock)) {
+                logger.error("Unable to write swap partner to server: " + swapPartner.toString());
+            }
+//            Remove old version of block
+
+        } else {
+            BlockEncrypted dummyBlock = new BlockEncrypted(
+                    AES.encrypt(Util.leIntToByteArray(0), key),
+                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
+            if (!server.write(getFlatArrayIndex(index), dummyBlock)) {
+                logger.error("Unable to write swap partner to server: dummy block");
+            }
+            for (int i = 0; i < matrixHeight; i++) {
+                if (swapStash.get(i).getIndex().equals(index)) {
+                    swapStash.set(i, swapPartner);
+                    break;
+                }
             }
         }
-
-        byte[] res = block.getData();
-
-
-
-        return null;
+        
+        return block.getData();
     }
 
     Map<Integer, Map<Integer, BlockLookahead>> getAccessStash() {
@@ -104,8 +151,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     BlockLookahead fetchBlockFromMatrix(Index index) {
-        int serverIndex = index.getRowIndex();
-        serverIndex += index.getColIndex() * matrixHeight;
+        int serverIndex = getFlatArrayIndex(index);
 
         return lookaheadBlockFromEncryptedBlock(server.read(serverIndex));
     }
@@ -146,6 +192,14 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return blockLookahead;
     }
 
+    BlockEncrypted encryptBlock(BlockLookahead block) {
+        List<BlockEncrypted> encryptedList = encryptBlocks(Collections.singletonList(block));
+        if (encryptedList.isEmpty())
+            return null;
+        else
+            return encryptedList.get(0);
+    }
+
     List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
         List<BlockEncrypted> res = new ArrayList<>();
         for (BlockLookahead block : blockLookaheads) {
@@ -160,6 +214,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     AES.encrypt(ArrayUtils.addAll(
                             ArrayUtils.addAll(block.getData(), rowIndexBytes), colIndexBytes), key)));
         }
+        return res;
+    }
+
+    int getFlatArrayIndex(Index index) {
+        int res = index.getRowIndex();
+        res += index.getColIndex() * matrixHeight;
         return res;
     }
 }
