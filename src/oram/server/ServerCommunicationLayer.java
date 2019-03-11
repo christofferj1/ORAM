@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,16 +21,17 @@ import java.util.List;
 
 public class ServerCommunicationLayer {
     private final Logger logger = LogManager.getLogger("log");
-    private ServerSocket serverSocket;
     private Socket socket;
     private ServerApplication application;
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
 
-    void run(ServerSocket serverSocket, Socket socket, ServerApplication application) {
-        this.serverSocket = serverSocket;
-        this.socket = socket;
+    public ServerCommunicationLayer(ServerApplication application) {
         this.application = application;
+    }
+
+    void run(Socket socket) {
+        this.socket = socket;
 
         if (!initializeStreams())
             System.exit(-2);
@@ -62,9 +62,6 @@ public class ServerCommunicationLayer {
 
     private boolean initializeStreams() {
         try {
-            socket = serverSocket.accept();
-            System.out.println("Client accepted");
-
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataInputStream = new DataInputStream(socket.getInputStream());
         } catch (IOException e) {

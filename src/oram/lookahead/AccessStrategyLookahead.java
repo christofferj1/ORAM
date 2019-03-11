@@ -2,7 +2,7 @@ package oram.lookahead;
 
 
 import oram.*;
-import oram.server.Server;
+import oram.clientcom.Server;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

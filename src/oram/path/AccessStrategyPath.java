@@ -2,7 +2,7 @@ package oram.path;
 
 import oram.*;
 import oram.permutation.PermutationStrategy;
-import oram.server.Server;
+import oram.clientcom.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

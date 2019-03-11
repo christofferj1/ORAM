@@ -1,6 +1,6 @@
 package oram;
 
-import oram.server.Server;
+import oram.clientcom.Server;
 
 /**
  * <p> ORAM <br>
