@@ -9,3 +9,5 @@ The check boxes is to mark when something is added to the report
  - [ ] Using 32 bytes for encrypted integers as it is easier with padding (less errors) and then I can get 16 bytes of randomness
    - [ ] All integers are changed to byte arrays of size fore before encryption, this pads them, so size does not disclose any information about addresses
  - [ ] The access strategies assumes blocks are of correct size. This should simulate a RAM placed on third party hardware, it does not provide more than simple/stupid read write operations
+ - [ ] Lookahead
+   - [ ] Matrix is indexed such that the first 'matrixHeight' blocks are in the first column

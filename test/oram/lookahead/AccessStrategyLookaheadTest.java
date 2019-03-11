@@ -183,7 +183,7 @@ public class AccessStrategyLookaheadTest {
         BlockEncrypted blockEncrypted = new BlockEncrypted(AES.encrypt(address, defaultKey),
                 AES.encrypt(data, defaultKey));
 
-        BlockLookahead blockLookahead = access.lookaheadBlockFromEncryptedBlock(blockEncrypted);
+        BlockLookahead blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));
@@ -202,7 +202,7 @@ public class AccessStrategyLookaheadTest {
         blockEncrypted = new BlockEncrypted(AES.encrypt(address, defaultKey),
                 AES.encrypt(data, defaultKey));
 
-        blockLookahead = access.lookaheadBlockFromEncryptedBlock(blockEncrypted);
+        blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));

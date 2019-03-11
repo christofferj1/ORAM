@@ -29,6 +29,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private List<BlockLookahead> stash;
     private Map<Integer, Index> positionMap;
     private int accessCounter;
+    private List<SwapPartnerData> futureSwapPartners;
 
     public AccessStrategyLookahead(int size, int matrixWidth, byte[] key, Server server) {
         this.size = size;
@@ -67,34 +68,32 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Get swap partner
         BlockLookahead swapPartner = swapStash.remove(Math.floorMod(accessCounter, matrixHeight));
-        accessCounter++;
 
 //        Set index to index of swap partner
         block.setIndex(swapPartner.getIndex());
-        if (op.equals(OperationType.WRITE))
-            block.setData(data);
+
+        if (op.equals(OperationType.WRITE)) {block.setData(data);}
 
 //        Update swap partner index and encrypt it
 //        Index swapPartnerIndex = swapPartner.getIndex();
         swapPartner.setIndex(index);
-        BlockEncrypted encryptedBlock = encryptBlock(swapPartner);
-        if (encryptedBlock == null)
-            return null;
+        BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
+
+        if (encryptedSwapPartner == null) {return null;}
 
         addToAccessStashMap(accessStash, block);
 
         if (blockFoundInMatrix) {
-            if (!server.write(getFlatArrayIndex(index), encryptedBlock)) {
+            if (!server.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
                 logger.error("Unable to write swap partner to server: " + swapPartner.toString());
             }
-            accessStash.get(index.getColIndex()).remove(index.getRowIndex());
-//            block.setIndex(swapPartnerIndex);
         } else if (blockFoundInAccessStash) {
-            if (!server.write(getFlatArrayIndex(index), encryptedBlock)) {
+            if (!server.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
                 logger.error("Unable to write swap partner to server: " + swapPartner.toString());
             }
 //            Remove old version of block
-
+//            accessStash.get(index.getColIndex()).remove(index.getRowIndex());
+            accessStash = removeFromAccessStash(accessStash, index);
         } else {
             BlockEncrypted dummyBlock = new BlockEncrypted(
                     AES.encrypt(Util.leIntToByteArray(0), key),
@@ -109,7 +108,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 }
             }
         }
-        
+
+//        TODO pick new swap partner
+        maintanenceJob(accessStash, swapStash);
+
+        accessCounter++;
         return block.getData();
     }
 
@@ -119,7 +122,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         Map<Integer, Map<Integer, BlockLookahead>> res = new HashMap<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            BlockLookahead blockLookahead = lookaheadBlockFromEncryptedBlock(server.read(i));
+            BlockLookahead blockLookahead = decryptToLookaheadBlock(server.read(i));
             res = addToAccessStashMap(res, blockLookahead);
         }
 
@@ -139,13 +142,24 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return map;
     }
 
+    Map<Integer, Map<Integer, BlockLookahead>> removeFromAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash,
+                                                                     Index index) {
+        if (stash.containsKey(index.getColIndex())) {
+            Map<Integer, BlockLookahead> map = stash.get(index.getColIndex());
+            map.remove(index.getRowIndex());
+            if (map.isEmpty())
+                stash.remove(index.getColIndex());
+        }
+        return stash;
+    }
+
     List<BlockLookahead> getSwapStash() {
         int beginIndex = size + matrixHeight;
         int endIndex = size + matrixHeight * 2;
 
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            res.add(lookaheadBlockFromEncryptedBlock(server.read(i)));
+            res.add(decryptToLookaheadBlock(server.read(i)));
         }
         return res;
     }
@@ -153,7 +167,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     BlockLookahead fetchBlockFromMatrix(Index index) {
         int serverIndex = getFlatArrayIndex(index);
 
-        return lookaheadBlockFromEncryptedBlock(server.read(serverIndex));
+        return decryptToLookaheadBlock(server.read(serverIndex));
     }
 
     BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, int rowIndex, int colIndex) {
@@ -172,7 +186,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return null;
     }
 
-    BlockLookahead lookaheadBlockFromEncryptedBlock(BlockEncrypted blockEncrypted) {
+    BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
         byte[] data = AES.decrypt(blockEncrypted.getData(), key);
         if (data == null) {
             logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
@@ -221,5 +235,60 @@ public class AccessStrategyLookahead implements AccessStrategy {
         int res = index.getRowIndex();
         res += index.getColIndex() * matrixHeight;
         return res;
+    }
+
+    boolean maintanenceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, List<BlockLookahead> swapStash) {
+        int columnIndex = Math.floorMod(accessCounter, matrixHeight);
+        List<BlockLookahead> column = new ArrayList<>();
+
+//        Retrieve column from matrix
+        for (int i = 0; i < matrixHeight; i++) {
+            BlockEncrypted encryptedBlock = server.read(getFlatArrayIndex(new Index(i, columnIndex)));
+            if (encryptedBlock == null) {
+                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from server");
+                return false;
+            }
+            BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
+            column.add(block);
+        }
+
+//        Move blocks from access stash to column
+        Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
+        for (Map.Entry<Integer, BlockLookahead> entry : map.entrySet()) {
+            if (!Util.isDummyAddress(column.get(entry.getKey()).getAddress())) {
+                logger.error("Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
+                        columnIndex + "), but place were not filled with dummy block");
+                return false;
+            }
+            column.set(entry.getKey(), entry.getValue());
+        }
+        accessStash.remove(columnIndex);
+
+//        Move blocks from column to swap stash
+        for (SwapPartnerData swap : futureSwapPartners) {
+            if (swap.getIndex().getColIndex() == columnIndex) {
+                int rowIndex = swap.getIndex().getRowIndex();
+                BlockLookahead swapPartner = column.get(rowIndex);
+                if (Util.isDummyAddress(swapPartner.getAddress())) {
+                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
+                    return false;
+                }
+                swapStash.set(Math.floorMod(swap.getSwapNumber(), matrixHeight), swapPartner);
+                column.set(rowIndex, new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
+            }
+        }
+
+        List<BlockEncrypted> encryptedBlocks = encryptBlocks(column);
+        if (encryptedBlocks.size() != matrixHeight) {
+            logger.error("Wrong number of encrypted blocks to write back: " + encryptedBlocks.size());
+        }
+        for (int i = 0; i < matrixHeight; i ++) {
+            Index index = new Index(i, columnIndex);
+            if (!server.write(getFlatArrayIndex(index), encryptedBlocks.get(i))) {
+                logger.error("Unable to write block to server with index: " + index);
+                return false;
+            }
+        }
+        return true;
     }
 }
