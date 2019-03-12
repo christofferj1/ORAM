@@ -32,7 +32,10 @@ public class EncryptionStrategyIdentity implements EncryptionStrategy {
 
     @Override
     public byte[] encrypt(byte[] message, SecretKey key) {
-        return message;
+        if (message.length >= 32)
+            return message;
+        else
+            return Arrays.copyOf(message, 32); // Makes sure all messages are at least 32 bytes, as IRL
     }
 
     @Override

@@ -195,13 +195,17 @@ public class AccessStrategyPathTest {
         EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(key);
 
-        BlockEncrypted encrypted0 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block0.getAddress()), key),
+        BlockEncrypted encrypted0 = new BlockEncrypted(
+                encryptionStrategy.encrypt(Util.leIntToByteArray(block0.getAddress()), secretKey),
                 encryptionStrategy.encrypt(block0.getData(), secretKey));
-        BlockEncrypted encrypted1 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block1.getAddress()), key),
+        BlockEncrypted encrypted1 = new BlockEncrypted(
+                encryptionStrategy.encrypt(Util.leIntToByteArray(block1.getAddress()), secretKey),
                 encryptionStrategy.encrypt(block1.getData(), secretKey));
-        BlockEncrypted encrypted2 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block2.getAddress()), key),
+        BlockEncrypted encrypted2 = new BlockEncrypted(
+                encryptionStrategy.encrypt(Util.leIntToByteArray(block2.getAddress()), secretKey),
                 encryptionStrategy.encrypt(block2.getData(), secretKey));
-        BlockEncrypted encrypted3 = new BlockEncrypted(AES.encrypt(Util.leIntToByteArray(block3.getAddress()), key),
+        BlockEncrypted encrypted3 = new BlockEncrypted(
+                encryptionStrategy.encrypt(Util.leIntToByteArray(block3.getAddress()), secretKey),
                 encryptionStrategy.encrypt(block3.getData(), secretKey));
 
         List<BlockEncrypted> encryptedList = Arrays.asList(encrypted0, encrypted1, encrypted2, encrypted3);

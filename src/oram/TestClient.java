@@ -1,8 +1,11 @@
 package oram;
 
+import oram.encryption.EncryptionStrategy;
+import oram.encryption.EncryptionStrategyImpl;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.crypto.SecretKey;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -38,8 +41,10 @@ public class TestClient {
 
         byte[] key = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
 
-        byte[] addressCipher = AES.encrypt(address, key);
-        byte[] dataCipher = AES.encrypt(data, key);
+        EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
+        SecretKey secretKey = encryptionStrategy.generateSecretKey(key);
+        byte[] addressCipher = encryptionStrategy.encrypt(address, secretKey);
+        byte[] dataCipher = encryptionStrategy.encrypt(data, secretKey);
 
         System.out.println("Address cipher: (of length: " + addressCipher.length + ")\n" + Arrays.toString(addressCipher));
         System.out.println("Address cipher: (of length: " + dataCipher.length + ")\n" + Arrays.toString(dataCipher));
@@ -52,9 +57,9 @@ public class TestClient {
             System.exit(-3);
 
         byte[] add = pair.getKey();
-        byte[] addressReceived = AES.decrypt(add, key);
+        byte[] addressReceived = encryptionStrategy.decrypt(add, secretKey);
         byte[] dat = pair.getValue();
-        byte[] dataReceived = AES.decrypt(dat, key);
+        byte[] dataReceived = encryptionStrategy.decrypt(dat, secretKey);
 
         BlockEncrypted block2 = new BlockEncrypted(addressReceived, dataReceived);
         System.out.println(block2);
