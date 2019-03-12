@@ -8,12 +8,12 @@ import oram.clientcom.CommunicationStrategy;
  * Master Thesis 2019 </p>
  */
 
-public class ServerStub implements CommunicationStrategy {
+public class CommunicationStrategyStub implements CommunicationStrategy {
     //    List<BlockEncrypted> blocks;
     private BlockEncrypted[] blocks;
     private int bucketSize;
 
-    public ServerStub(int size, int bucketSize) {
+    public CommunicationStrategyStub(int size, int bucketSize) {
 //        blocks = new ArrayList<>();
 //        for (int i = 0; i < (size * bucketSize); i++) {
 //            byte[] address = EncryptionStrategy.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);

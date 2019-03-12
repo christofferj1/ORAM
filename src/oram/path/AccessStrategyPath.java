@@ -2,10 +2,13 @@ package oram.path;
 
 import oram.*;
 import oram.clientcom.CommunicationStrategy;
+import oram.encryption.EncryptionStrategy;
+import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -19,22 +22,24 @@ public class AccessStrategyPath implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
     private final int L;
     private final int bucketSize;
-    private final byte[] key;
+    private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
+    private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
     private boolean print;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, CommunicationStrategy communicationStrategy, int bucketSize, byte[] key, PermutationStrategy permutationStrategy) {
+    AccessStrategyPath(int size, int bucketSize, PermutationStrategy permutationStrategy, byte[] key, Factory factory) {
         this.permutationStrategy = permutationStrategy;
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
         this.L = (int) Math.ceil(Math.log(size) / Math.log(2));
-        this.communicationStrategy = communicationStrategy;
-        this.key = key;
+        this.communicationStrategy = factory.getCommunicationStrategy();
+        this.encryptionStrategy = factory.getEncryptionStrategy();
+        this.secretKey = encryptionStrategy.generateSecretKey(key);
 
         initializeServer();
     }
@@ -170,11 +175,11 @@ public class AccessStrategyPath implements AccessStrategy {
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
             for (BlockStandard block : blocksToWrite) {
-                byte[] addressCipher = AES.encrypt(Util.leIntToByteArray(block.getAddress()), key);
-                byte[] dataCipher = AES.encrypt(block.getData(), key);
+                byte[] addressCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
+                byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
                 encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
             }
-            encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite);
+            encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite); // TODO: Can be done with Collections.shuffle
             for (int i = 0; i < blocksToWrite.size(); i++)
                 communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
         }
@@ -217,8 +222,8 @@ public class AccessStrategyPath implements AccessStrategy {
         List<BlockStandard> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
             if (block == null) continue;
-            byte[] message = AES.decrypt(block.getData(), key);
-            byte[] addressBytes = AES.decrypt(block.getAddress(), key);
+            byte[] message = encryptionStrategy.decrypt(block.getData(), secretKey);
+            byte[] addressBytes = encryptionStrategy.decrypt(block.getAddress(), secretKey);
 
             if (addressBytes == null) continue;
             int addressInt = Util.byteArrayToLeInt(addressBytes);

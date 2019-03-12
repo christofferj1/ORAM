@@ -1,12 +1,18 @@
 package oram.lookahead;
 
-import oram.*;
+import oram.BlockEncrypted;
+import oram.CommunicationStrategyStub;
+import oram.Util;
+import oram.encryption.EncryptionStrategy;
+import oram.encryption.EncryptionStrategyImpl;
 import oram.path.BlockStandard;
+import oram.util.FactoryStub;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.crypto.SecretKey;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,13 +32,15 @@ public class AccessStrategyLookaheadTest {
     private byte[] defaultKey;
     private int defaultSize;
     private int defaultMatrixSize;
+    private FactoryStub factory;
 
     @Before
     public void setUp() {
         defaultKey = "Some key".getBytes();
         defaultSize = 16;
         defaultMatrixSize = 4;
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, secretKey, new ServerStub(0, 0), encryptionStrategy);
+        factory = new FactoryStub(new CommunicationStrategyStub(0, 0));
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
     }
 
     @Test
@@ -215,12 +223,18 @@ public class AccessStrategyLookaheadTest {
         int rowIndex = 133742;
         int colIndex = 0;
 
+//        Define method specific encryption
+        EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
+        SecretKey secretKey = encryptionStrategy.generateSecretKey(defaultKey);
+        factory.setEncryptionStrategy(encryptionStrategy);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
+
         byte[] rowBytes = Util.leIntToByteArray(rowIndex);
         byte[] colBytes = Util.leIntToByteArray(colIndex);
         byte[] data = ArrayUtils.addAll(ArrayUtils.addAll(blockData, rowBytes), colBytes);
         byte[] address = Util.leIntToByteArray(addressInt);
-        BlockEncrypted blockEncrypted = new BlockEncrypted(AES.encrypt(address, defaultKey),
-                AES.encrypt(data, defaultKey));
+        BlockEncrypted blockEncrypted = new BlockEncrypted(encryptionStrategy.encrypt(address, secretKey),
+                encryptionStrategy.encrypt(data, secretKey));
 
         BlockLookahead blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
@@ -238,8 +252,8 @@ public class AccessStrategyLookaheadTest {
         colBytes = Util.leIntToByteArray(colIndex);
         data = ArrayUtils.addAll(ArrayUtils.addAll(blockData, rowBytes), colBytes);
         address = Util.leIntToByteArray(addressInt);
-        blockEncrypted = new BlockEncrypted(AES.encrypt(address, defaultKey),
-                AES.encrypt(data, defaultKey));
+        blockEncrypted = new BlockEncrypted(encryptionStrategy.encrypt(address, secretKey),
+                encryptionStrategy.encrypt(data, secretKey));
 
         blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
@@ -255,19 +269,25 @@ public class AccessStrategyLookaheadTest {
         BlockLookahead block0 = new BlockLookahead(41, bytes0, 2, 4);
         BlockLookahead block2 = new BlockLookahead(43, bytes2, 4, 6);
 
+//        Define method specific encryption
+        EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
+        SecretKey secretKey = encryptionStrategy.generateSecretKey(defaultKey);
+        factory.setEncryptionStrategy(encryptionStrategy);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
+
         List<BlockEncrypted> encryptedBlocks = access.encryptBlocks(Arrays.asList(block0, null, block2));
         assertThat(encryptedBlocks, hasSize(3));
-        assertThat(AES.decrypt(encryptedBlocks.get(0).getData(), defaultKey),
+        assertThat(encryptionStrategy.decrypt(encryptedBlocks.get(0).getData(), secretKey),
                 equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes0, Util.leIntToByteArray(2)),
                         Util.leIntToByteArray(4))));
         assertNull(encryptedBlocks.get(1));
-        assertThat(AES.decrypt(encryptedBlocks.get(2).getData(), defaultKey),
+        assertThat(encryptionStrategy.decrypt(encryptedBlocks.get(2).getData(), secretKey),
                 equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes2, Util.leIntToByteArray(4)),
                         Util.leIntToByteArray(6))));
     }
 
     private void setStandardServer() {
-        ServerStub server = new ServerStub(4, 6);
+        CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(4, 6);
         BlockLookahead[] blocks = new BlockLookahead[24];
 
 //        Column 0
@@ -317,8 +337,9 @@ public class AccessStrategyLookaheadTest {
         for (int i = 0; i < encryptedList.size(); i++) {
             blocksList[i] = encryptedList.get(i);
         }
-        server.setBlocks(blocksList);
+        communicationStrategyStub.setBlocks(blocksList);
 
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, secretKey, server, encryptionStrategy);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey,
+                new FactoryStub(communicationStrategyStub));
     }
 }

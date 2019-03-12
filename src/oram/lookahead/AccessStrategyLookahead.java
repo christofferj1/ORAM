@@ -30,7 +30,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final Logger logger = LogManager.getLogger("log");
     private final int size;
     private final int matrixHeight; // Assumes to be equal to matrix width
-    private final byte[] key;
     private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
@@ -39,13 +38,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private List<SwapPartnerData> futureSwapPartners;
 
 
-    AccessStrategyLookahead(int size, int matrixHeight, byte[] key, SecretKey secretKey, Factory factory) {
+    AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
         this.size = size;
         this.matrixHeight = matrixHeight;
-        this.key = key;
-        this.secretKey = secretKey;
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
+        this.secretKey = encryptionStrategy.generateSecretKey(key);
         if (!(size == matrixHeight * matrixHeight))
             logger.error("Size of matrix is wrong");
         accessCounter = 0;
@@ -245,7 +243,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return decryptToLookaheadBlock(communicationStrategy.read(serverIndex));
     }
 
-    BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, int rowIndex, int colIndex) {
+    BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, int rowIndex,
+                                          int colIndex) {
         if (stash.containsKey(colIndex)) {
             Map<Integer, BlockLookahead> columnMap = stash.get(colIndex);
             return columnMap.getOrDefault(rowIndex, null);
@@ -274,7 +273,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
-        byte[] data = AES.decrypt(blockEncrypted.getData(), key);
+        byte[] data = encryptionStrategy.decrypt(blockEncrypted.getData(), secretKey);
         if (data == null) {
             logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
@@ -286,7 +285,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         byte[] colIndexBytes = Arrays.copyOfRange(data, colDataIndex, data.length);
 
         BlockLookahead blockLookahead = new BlockLookahead();
-        blockLookahead.setAddress(byteArrayToLeInt(AES.decrypt(blockEncrypted.getAddress(), key)));
+        blockLookahead.setAddress(byteArrayToLeInt(encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey)));
         blockLookahead.setData(blockData);
         blockLookahead.setRowIndex(byteArrayToLeInt(rowIndexBytes));
         blockLookahead.setColIndex(byteArrayToLeInt(colIndexBytes));
@@ -311,9 +310,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
             byte[] rowIndexBytes = Util.leIntToByteArray(block.getRowIndex());
             byte[] colIndexBytes = Util.leIntToByteArray(block.getColIndex());
             res.add(new BlockEncrypted(
-                    AES.encrypt(Util.leIntToByteArray(block.getAddress()), key),
-                    AES.encrypt(ArrayUtils.addAll(
-                            ArrayUtils.addAll(block.getData(), rowIndexBytes), colIndexBytes), key)));
+                    encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey),
+                    encryptionStrategy.encrypt(ArrayUtils.addAll(
+                            ArrayUtils.addAll(block.getData(), rowIndexBytes), colIndexBytes), secretKey)));
         }
         return res;
     }
