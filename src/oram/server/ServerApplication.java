@@ -1,7 +1,5 @@
 package oram.server;
 
-import oram.BlockEncrypted;
-
 import java.util.List;
 
 /**
@@ -11,7 +9,7 @@ import java.util.List;
  */
 
 public interface ServerApplication {
-    List<BlockEncrypted> read(List<Integer> address);
+    List<BlockServer> read(List<Integer> address);
 
     boolean write(List<String> addresses, List<byte[]> dataArrays);
 }

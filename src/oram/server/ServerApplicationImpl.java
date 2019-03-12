@@ -1,7 +1,5 @@
 package oram.server;
 
-import oram.BlockEncrypted;
-import oram.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,13 +20,13 @@ public class ServerApplicationImpl implements ServerApplication {
     private final Logger logger = LogManager.getLogger("log");
 
     @Override
-    public List<BlockEncrypted> read(List<Integer> addresses) {
-        List<BlockEncrypted> res = new ArrayList<>();
+    public List<BlockServer> read(List<Integer> addresses) {
+        List<BlockServer> res = new ArrayList<>();
         for (Integer i : addresses) {
             byte[] data = readFile(Integer.toString(i));
             if (data == null) return null;
 
-            res.add(new BlockEncrypted(Util.leIntToByteArray(i), data));
+            res.add(new BlockServer(i, data));
         }
         return res;
     }

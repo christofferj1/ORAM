@@ -1,6 +1,5 @@
 package oram.server;
 
-import oram.BlockEncrypted;
 import oram.OperationType;
 import oram.Util;
 import org.apache.logging.log4j.LogManager;
@@ -106,14 +105,10 @@ public class ServerCommunicationLayer {
         }
     }
 
-    private boolean sendBlocks(List<BlockEncrypted> blocks) {
+    private boolean sendBlocks(List<BlockServer> blocks) {
         try {
-            for (BlockEncrypted block : blocks) {
-                int length = block.getAddress().length;
-                dataOutputStream.write(Util.beIntToByteArray(length));
-                dataOutputStream.write(block.getAddress());
-
-                length = block.getData().length;
+            for (BlockServer block : blocks) {
+                int length = block.getData().length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(block.getData());
             }
