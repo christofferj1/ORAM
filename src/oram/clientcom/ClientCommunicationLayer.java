@@ -11,6 +11,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Scanner;
 
 /**
@@ -24,10 +25,6 @@ public class ClientCommunicationLayer implements Server {
     private Socket socket;
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
-
-    public ClientCommunicationLayer(Socket socket) {
-        this.socket = socket;
-    }
 
     public boolean start() {
         if (!setupConnection()) return false;
@@ -45,12 +42,12 @@ public class ClientCommunicationLayer implements Server {
 
             dataOutputStream.flush();
 
-            byte[] receivedAddressBytes = new byte[0];
-            length = dataInputStream.readInt();
-            if (length > 0) {
-                receivedAddressBytes = new byte[length];
-                dataInputStream.readFully(receivedAddressBytes, 0, length);
-            }
+//            byte[] receivedAddressBytes = new byte[0];
+//            length = dataInputStream.readInt();
+//            if (length > 0) {
+//                receivedAddressBytes = new byte[length];
+//                dataInputStream.readFully(receivedAddressBytes, 0, length);
+//            }
 
             byte[] data = new byte[0];
             length = dataInputStream.readInt();
@@ -59,9 +56,10 @@ public class ClientCommunicationLayer implements Server {
                 dataInputStream.readFully(data, 0, length);
             }
 
+            byte[] blockAddress = Arrays.copyOfRange(data, 0, Constants.ENCRYPTED_INTEGER_SIZE);
+            byte[] blockData = Arrays.copyOfRange(data, Constants.ENCRYPTED_INTEGER_SIZE, length);
 
-
-            res = new BlockEncrypted(receivedAddressBytes, data);
+            res = new BlockEncrypted(blockAddress, blockData);
         } catch (IOException e) {
             logger.error("Error happened while reading block: " + e);
             logger.debug("Stacktrace", e);
@@ -77,6 +75,11 @@ public class ClientCommunicationLayer implements Server {
             int length = addressBytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(addressBytes);
+
+            if (block.getAddress().length != Constants.ENCRYPTED_INTEGER_SIZE) {
+                logger.error("Address byte array has wrong size: " + block.getAddress().length);
+                return false;
+            }
 
             byte[] combinedData = ArrayUtils.addAll(block.getAddress(), block.getData());
             length = combinedData.length;
