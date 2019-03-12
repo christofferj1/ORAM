@@ -2,17 +2,21 @@ package oram.lookahead;
 
 
 import oram.*;
-import oram.clientcom.Server;
+import oram.clientcom.CommunicationStrategy;
+import oram.encryption.EncryptionStrategy;
+import oram.factory.Factory;
 import oram.path.BlockStandard;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.*;
 
 import static oram.Constants.INTEGER_BYTE_ARRAY_SIZE;
 import static oram.Util.byteArrayToLeInt;
+import static oram.Util.getEncryptedDummy;
 
 /**
  * <p> ORAM <br>
@@ -23,20 +27,25 @@ import static oram.Util.byteArrayToLeInt;
  */
 
 public class AccessStrategyLookahead implements AccessStrategy {
-    private static final Logger logger = LogManager.getLogger("log");
+    private final Logger logger = LogManager.getLogger("log");
     private final int size;
     private final int matrixHeight; // Assumes to be equal to matrix width
     private final byte[] key;
-    private final Server server;
+    private final SecretKey secretKey;
+    private final CommunicationStrategy communicationStrategy;
+    private final EncryptionStrategy encryptionStrategy;
     private Map<Integer, Index> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
 
-    public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Server server) {
+
+    AccessStrategyLookahead(int size, int matrixHeight, byte[] key, SecretKey secretKey, Factory factory) {
         this.size = size;
         this.matrixHeight = matrixHeight;
         this.key = key;
-        this.server = server;
+        this.secretKey = secretKey;
+        this.communicationStrategy = factory.getCommunicationStrategy();
+        this.encryptionStrategy = factory.getEncryptionStrategy();
         if (!(size == matrixHeight * matrixHeight))
             logger.error("Size of matrix is wrong");
         accessCounter = 0;
@@ -63,8 +72,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(blockLookaheads);
 
         for (int i = 0; i < encryptedBlocks.size(); i++) {
-            System.out.println("Writing block to server: #" + i);
-            if (!server.write(i, encryptedBlocks.get(i)))
+            System.out.println("Writing block to communicationStrategy: #" + i);
+            if (!communicationStrategy.write(i, encryptedBlocks.get(i)))
                 return false;
         }
 
@@ -78,24 +87,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 Index finalIndex = index;
                 indexIsNotUnique = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(finalIndex));
             }
-            BlockEncrypted blockRead = server.read(getFlatArrayIndex(index)); // TODO: handle the negative case
+            BlockEncrypted blockRead = communicationStrategy.read(getFlatArrayIndex(index)); // TODO: handle the negative case
 
             futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
-            server.write(size + matrixHeight + accessCounter, blockRead); // TODO: handle the negative case
+            communicationStrategy.write(size + matrixHeight + accessCounter, blockRead); // TODO: handle the negative case
             accessCounter++;
 
-//            TODO: Create dummy block strategy
-            BlockEncrypted dummyBlock = new BlockEncrypted(
-                    AES.encrypt(Util.leIntToByteArray(0), key),
-                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
-            server.write(getFlatArrayIndex(index), dummyBlock); // TODO: handle the negative case
+            communicationStrategy.write(getFlatArrayIndex(index), getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
         }
 
         for (int i = 0; i < matrixHeight; i++) {
-            BlockEncrypted dummyBlock = new BlockEncrypted(
-                    AES.encrypt(Util.leIntToByteArray(0), key),
-                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
-            server.write(size + i, dummyBlock); // TODO: handle the negative case
+            communicationStrategy.write(size + i, getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
         }
 
         return true;
@@ -159,22 +161,20 @@ public class AccessStrategyLookahead implements AccessStrategy {
         addToAccessStashMap(accessStash, block);
 
         if (blockFoundInMatrix) {
-            if (!server.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
-                logger.error("Unable to write swap partner to server: " + swapPartner.toString());
+            if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
+                logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
             }
         } else if (blockFoundInAccessStash) {
-            if (!server.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
-                logger.error("Unable to write swap partner to server: " + swapPartner.toString());
+            if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
+                logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
             }
 //            Remove old version of block
 //            accessStash.get(index.getColIndex()).remove(index.getRowIndex());
             accessStash = removeFromAccessStash(accessStash, index);
         } else {
-            BlockEncrypted dummyBlock = new BlockEncrypted(
-                    AES.encrypt(Util.leIntToByteArray(0), key),
-                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
-            if (!server.write(getFlatArrayIndex(index), dummyBlock)) {
-                logger.error("Unable to write swap partner to server: dummy block");
+            if (!communicationStrategy.write(getFlatArrayIndex(index),
+                    getEncryptedDummy(secretKey, encryptionStrategy))) {
+                logger.error("Unable to write swap partner to communicationStrategy: dummy block");
             }
             for (int i = 0; i < matrixHeight; i++) {
                 if (swapStash.get(i).getIndex().equals(index)) {
@@ -197,7 +197,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         Map<Integer, Map<Integer, BlockLookahead>> res = new HashMap<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            BlockLookahead blockLookahead = decryptToLookaheadBlock(server.read(i));
+            BlockLookahead blockLookahead = decryptToLookaheadBlock(communicationStrategy.read(i));
             res = addToAccessStashMap(res, blockLookahead);
         }
 
@@ -234,7 +234,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            res.add(decryptToLookaheadBlock(server.read(i)));
+            res.add(decryptToLookaheadBlock(communicationStrategy.read(i)));
         }
         return res;
     }
@@ -242,7 +242,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     BlockLookahead fetchBlockFromMatrix(Index index) {
         int serverIndex = getFlatArrayIndex(index);
 
-        return decryptToLookaheadBlock(server.read(serverIndex));
+        return decryptToLookaheadBlock(communicationStrategy.read(serverIndex));
     }
 
     BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, int rowIndex, int colIndex) {
@@ -330,9 +330,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Retrieve column from matrix
         for (int i = 0; i < matrixHeight; i++) {
-            BlockEncrypted encryptedBlock = server.read(getFlatArrayIndex(new Index(i, columnIndex)));
+            BlockEncrypted encryptedBlock = communicationStrategy.read(getFlatArrayIndex(new Index(i, columnIndex)));
             if (encryptedBlock == null) {
-                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from server");
+                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from communicationStrategy");
                 return false;
             }
             BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
@@ -371,8 +371,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
         for (int i = 0; i < matrixHeight; i++) {
             Index index = new Index(i, columnIndex);
-            if (!server.write(getFlatArrayIndex(index), encryptedBlocks.get(i))) {
-                logger.error("Unable to write block to server with index: " + index);
+            if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedBlocks.get(i))) {
+                logger.error("Unable to write block to communicationStrategy with index: " + index);
                 return false;
             }
         }

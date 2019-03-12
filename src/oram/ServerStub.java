@@ -1,6 +1,6 @@
 package oram;
 
-import oram.clientcom.Server;
+import oram.clientcom.CommunicationStrategy;
 
 /**
  * <p> ORAM <br>
@@ -8,7 +8,7 @@ import oram.clientcom.Server;
  * Master Thesis 2019 </p>
  */
 
-public class ServerStub implements Server {
+public class ServerStub implements CommunicationStrategy {
     //    List<BlockEncrypted> blocks;
     private BlockEncrypted[] blocks;
     private int bucketSize;
@@ -16,8 +16,8 @@ public class ServerStub implements Server {
     public ServerStub(int size, int bucketSize) {
 //        blocks = new ArrayList<>();
 //        for (int i = 0; i < (size * bucketSize); i++) {
-//            byte[] address = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);
-//            byte[] data = AES.encrypt(Util.sizedByteArrayWithInt(0, Constants.BLOCK_SIZE), key);
+//            byte[] address = EncryptionStrategy.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);
+//            byte[] data = EncryptionStrategy.encrypt(Util.sizedByteArrayWithInt(0, Constants.BLOCK_SIZE), key);
 //            blocks.add(new BlockEncrypted(address, data));
 //        }
 //        blocks = new ArrayList<>(Arrays.asList(new BlockEncrypted[size]));

@@ -1,7 +1,9 @@
 package oram;
 
+import oram.encryption.EncryptionStrategy;
 import org.apache.commons.lang3.Range;
 
+import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
@@ -137,5 +139,11 @@ public class Util {
         builder.append(leftChild);
 
         return builder.toString();
+    }
+
+    public static BlockEncrypted getEncryptedDummy(SecretKey key, EncryptionStrategy encryptionStrategy) {
+        byte[] encryptedAddress = encryptionStrategy.encrypt(Util.leIntToByteArray(0), key);
+        byte[] encryptedData = encryptionStrategy.encrypt(new byte[Constants.BLOCK_SIZE], key);
+        return new BlockEncrypted(encryptedAddress, encryptedData);
     }
 }

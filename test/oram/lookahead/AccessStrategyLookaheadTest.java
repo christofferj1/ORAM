@@ -32,7 +32,7 @@ public class AccessStrategyLookaheadTest {
         defaultKey = "Some key".getBytes();
         defaultSize = 16;
         defaultMatrixSize = 4;
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, new ServerStub(0, 0));
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, secretKey, new ServerStub(0, 0), encryptionStrategy);
     }
 
     @Test
@@ -319,6 +319,6 @@ public class AccessStrategyLookaheadTest {
         }
         server.setBlocks(blocksList);
 
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, server);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, secretKey, server, encryptionStrategy);
     }
 }

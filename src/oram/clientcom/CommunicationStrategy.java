@@ -8,7 +8,7 @@ import oram.BlockEncrypted;
  * Master Thesis 2019 </p>
  */
 
-public interface Server {
+public interface CommunicationStrategy {
     boolean start();
 
     BlockEncrypted read(int address);

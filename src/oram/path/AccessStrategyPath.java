@@ -1,8 +1,8 @@
 package oram.path;
 
 import oram.*;
+import oram.clientcom.CommunicationStrategy;
 import oram.permutation.PermutationStrategy;
-import oram.clientcom.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,20 +20,20 @@ public class AccessStrategyPath implements AccessStrategy {
     private final int L;
     private final int bucketSize;
     private final byte[] key;
-    private final Server server;
+    private final CommunicationStrategy communicationStrategy;
     private final PermutationStrategy permutationStrategy;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
     private boolean print;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, Server server, int bucketSize, byte[] key, PermutationStrategy permutationStrategy) {
+    AccessStrategyPath(int size, CommunicationStrategy communicationStrategy, int bucketSize, byte[] key, PermutationStrategy permutationStrategy) {
         this.permutationStrategy = permutationStrategy;
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
         this.L = (int) Math.ceil(Math.log(size) / Math.log(2));
-        this.server = server;
+        this.communicationStrategy = communicationStrategy;
         this.key = key;
 
         initializeServer();
@@ -42,11 +42,11 @@ public class AccessStrategyPath implements AccessStrategy {
     private void initializeServer() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
-//            System.out.println("Round: " + i + "\n" + server.getTreeString());
+//            System.out.println("Round: " + i + "\n" + communicationStrategy.getTreeString());
             positionMap.put(0, i);
             access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE]);
         }
-//        System.out.println("Initialized\n" + server.getTreeString());
+//        System.out.println("Initialized\n" + communicationStrategy.getTreeString());
         positionMap = new HashMap<>();
 //        print = true;
     }
@@ -99,7 +99,7 @@ public class AccessStrategyPath implements AccessStrategy {
             int position = getNode(leafNodeIndex, l) * bucketSize;
             List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
-                bucket.add(server.read(position + i));
+                bucket.add(communicationStrategy.read(position + i));
             }
 
             if (bucket.size() == bucketSize) {
@@ -176,7 +176,7 @@ public class AccessStrategyPath implements AccessStrategy {
             }
             encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite);
             for (int i = 0; i < blocksToWrite.size(); i++)
-                server.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
+                communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
         }
     }
 

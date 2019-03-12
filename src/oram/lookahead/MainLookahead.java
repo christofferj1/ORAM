@@ -2,7 +2,7 @@ package oram.lookahead;
 
 import oram.OperationType;
 import oram.clientcom.ClientCommunicationLayer;
-import oram.clientcom.Server;
+import oram.clientcom.CommunicationStrategy;
 import oram.path.BlockStandard;
 
 import java.security.SecureRandom;
@@ -29,9 +29,9 @@ public class MainLookahead {
         BlockStandard block6 = new BlockStandard(6, "Block 5".getBytes());
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6));
 
-        Server clientCommunicationLayer = new ClientCommunicationLayer();
+        CommunicationStrategy clientCommunicationLayer = new ClientCommunicationLayer();
         clientCommunicationLayer.start();
-        AccessStrategyLookahead access = new AccessStrategyLookahead(16, 4, key, clientCommunicationLayer);
+        AccessStrategyLookahead access = new AccessStrategyLookahead(16, 4, key, secretKey, clientCommunicationLayer, encryptionStrategy);
         access.setup(blocks);
 
         byte[] res = access.access(OperationType.READ, 4, null);

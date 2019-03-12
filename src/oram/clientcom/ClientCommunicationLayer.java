@@ -19,7 +19,7 @@ import java.util.Arrays;
  * Master Thesis 2019 </p>
  */
 
-public class ClientCommunicationLayer implements Server {
+public class ClientCommunicationLayer implements CommunicationStrategy {
     private final Logger logger = LogManager.getLogger("log");
     private Socket socket;
     private DataOutputStream dataOutputStream;
