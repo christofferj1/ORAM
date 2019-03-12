@@ -12,14 +12,14 @@ import java.util.Objects;
  * Master Thesis 2019 </p>
  */
 
-public class BlockPath implements Block, Serializable {
+public class BlockStandard implements Block, Serializable {
     private Integer address;
     private byte[] data;
 
-    public BlockPath() {
+    public BlockStandard() {
     }
 
-    public BlockPath(int address, byte[] data) {
+    public BlockStandard(int address, byte[] data) {
         this.address = address;
         this.data = data;
     }
@@ -44,9 +44,9 @@ public class BlockPath implements Block, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BlockPath blockPath = (BlockPath) o;
-        return getAddress() == blockPath.getAddress() &&
-                Arrays.equals(getData(), blockPath.getData());
+        BlockStandard blockStandard = (BlockStandard) o;
+        return getAddress() == blockStandard.getAddress() &&
+                Arrays.equals(getData(), blockStandard.getData());
     }
 
     @Override
@@ -59,7 +59,7 @@ public class BlockPath implements Block, Serializable {
 
     @Override
     public String toString() {
-        return "BlockPath{" +
+        return "BlockStandard{" +
                 "address=" + address +
                 ", data=" + Arrays.toString(data) +
                 '}';

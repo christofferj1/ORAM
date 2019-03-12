@@ -9,6 +9,8 @@ import oram.BlockEncrypted;
  */
 
 public interface Server {
+    boolean start();
+
     BlockEncrypted read(int address);
 
     boolean write(int address, BlockEncrypted block);

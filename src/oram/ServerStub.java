@@ -26,6 +26,11 @@ public class ServerStub implements Server {
     }
 
     @Override
+    public boolean start() {
+        return false;
+    }
+
+    @Override
     public BlockEncrypted read(int address) {
 //        return blocks.get(address);
         return blocks[address];

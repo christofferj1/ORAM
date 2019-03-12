@@ -1,9 +1,7 @@
 package oram.lookahead;
 
-import oram.AES;
-import oram.BlockEncrypted;
-import oram.ServerStub;
-import oram.Util;
+import oram.*;
+import oram.path.BlockStandard;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -35,6 +33,47 @@ public class AccessStrategyLookaheadTest {
         defaultSize = 16;
         defaultMatrixSize = 4;
         access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, new ServerStub(0, 0));
+    }
+
+    @Test
+    public void shouldBeAbleToConvertStandardBlocksToLookaheadBlocks() {
+        BlockStandard block1 = new BlockStandard(11, "Block 1".getBytes());
+        BlockStandard block2 = new BlockStandard(2, "Block 2".getBytes());
+        BlockStandard block3 = new BlockStandard(8, "Block 3".getBytes());
+        BlockStandard block4 = new BlockStandard(15, "Block 4".getBytes());
+        BlockStandard block5 = new BlockStandard(4, "Block 5".getBytes());
+        BlockStandard block6 = new BlockStandard(6, "Block 6".getBytes());
+        BlockStandard block7 = new BlockStandard(13, "Block 7".getBytes());
+        BlockStandard block8 = new BlockStandard(3, "Block 8".getBytes());
+        BlockStandard block9 = new BlockStandard(9, "Block 9".getBytes());
+        BlockStandard block10 = new BlockStandard(10, "Block 10".getBytes());
+        BlockStandard block11 = new BlockStandard(1, "Block 11".getBytes());
+        BlockStandard block12 = new BlockStandard(12, "Block 12".getBytes());
+        BlockStandard block13 = new BlockStandard(7, "Block 13".getBytes());
+        BlockStandard block14 = new BlockStandard(14, "Block 14".getBytes());
+        BlockStandard block15 = new BlockStandard(5, "Block 15".getBytes());
+        BlockStandard block16 = new BlockStandard(16, "Block 16".getBytes());
+        List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
+                block7, block8, block9, block10, block11, block12, block13, block14, block15, block16));
+
+        List<BlockLookahead> res = access.standardToLookaheadBlocksForSetup(blocks);
+        assertThat(res, hasSize(16));
+        assertThat(res.get(0), is(new BlockLookahead(block1.getAddress(), block1.getData(), 0, 0)));
+        assertThat(res.get(1), is(new BlockLookahead(block2.getAddress(), block2.getData(), 1, 0)));
+        assertThat(res.get(2), is(new BlockLookahead(block3.getAddress(), block3.getData(), 2, 0)));
+        assertThat(res.get(3), is(new BlockLookahead(block4.getAddress(), block4.getData(), 3, 0)));
+        assertThat(res.get(4), is(new BlockLookahead(block5.getAddress(), block5.getData(), 0, 1)));
+        assertThat(res.get(5), is(new BlockLookahead(block6.getAddress(), block6.getData(), 1, 1)));
+        assertThat(res.get(6), is(new BlockLookahead(block7.getAddress(), block7.getData(), 2, 1)));
+        assertThat(res.get(7), is(new BlockLookahead(block8.getAddress(), block8.getData(), 3, 1)));
+        assertThat(res.get(8), is(new BlockLookahead(block9.getAddress(), block9.getData(), 0, 2)));
+        assertThat(res.get(9), is(new BlockLookahead(block10.getAddress(), block10.getData(), 1, 2)));
+        assertThat(res.get(10), is(new BlockLookahead(block11.getAddress(), block11.getData(), 2, 2)));
+        assertThat(res.get(11), is(new BlockLookahead(block12.getAddress(), block12.getData(), 3, 2)));
+        assertThat(res.get(12), is(new BlockLookahead(block13.getAddress(), block13.getData(), 0, 3)));
+        assertThat(res.get(13), is(new BlockLookahead(block14.getAddress(), block14.getData(), 1, 3)));
+        assertThat(res.get(14), is(new BlockLookahead(block15.getAddress(), block15.getData(), 2, 3)));
+        assertThat(res.get(15), is(new BlockLookahead(block16.getAddress(), block16.getData(), 3, 3)));
     }
 
     @Test

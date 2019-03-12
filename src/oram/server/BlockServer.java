@@ -1,6 +1,6 @@
 package oram.server;
 
-import oram.path.BlockPath;
+import oram.path.BlockStandard;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -43,9 +43,9 @@ public class BlockServer {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BlockPath blockPath = (BlockPath) o;
-        return getAddress() == blockPath.getAddress() &&
-                Arrays.equals(getData(), blockPath.getData());
+        BlockStandard blockStandard = (BlockStandard) o;
+        return getAddress() == blockStandard.getAddress() &&
+                Arrays.equals(getData(), blockStandard.getData());
     }
 
     @Override
@@ -58,7 +58,7 @@ public class BlockServer {
 
     @Override
     public String toString() {
-        return "BlockPath{" +
+        return "BlockStandard{" +
                 "address=" + address +
                 ", data=" + Arrays.toString(data) +
                 '}';

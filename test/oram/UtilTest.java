@@ -1,6 +1,6 @@
 package oram;
 
-import oram.path.BlockPath;
+import oram.path.BlockStandard;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -18,7 +18,7 @@ public class UtilTest {
     public void shouldReturnTrueIffAllBytesOfAnArrayIsZero() {
         assertFalse(Util.isDummyBlock(null));
 
-        BlockPath block = new BlockPath();
+        BlockStandard block = new BlockStandard();
         assertFalse(Util.isDummyBlock(block));
 
         block.setData(new byte[0]);

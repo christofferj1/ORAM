@@ -20,13 +20,13 @@ public class ServerApplicationImpl implements ServerApplication {
     private final Logger logger = LogManager.getLogger("log");
 
     @Override
-    public List<BlockServer> read(List<Integer> addresses) {
+    public List<BlockServer> read(List<String> addresses) {
         List<BlockServer> res = new ArrayList<>();
-        for (Integer i : addresses) {
-            byte[] data = readFile(Integer.toString(i));
+        for (String address : addresses) {
+            byte[] data = readFile(address);
             if (data == null) return null;
 
-            res.add(new BlockServer(i, data));
+            res.add(new BlockServer(Integer.parseInt(address), data));
         }
         return res;
     }

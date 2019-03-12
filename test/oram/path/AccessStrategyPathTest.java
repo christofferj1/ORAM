@@ -179,10 +179,10 @@ public class AccessStrategyPathTest {
         byte[] bytes1 = Util.getRandomByteArray(15);
         byte[] bytes2 = Util.getRandomByteArray(16);
         byte[] bytes4 = Util.getRandomByteArray(18);
-        BlockPath block0 = new BlockPath(1, bytes1);
-        BlockPath block1 = new BlockPath(2, bytes2);
-        BlockPath block2 = new BlockPath(0, new byte[17]);
-        BlockPath block3 = new BlockPath(4, bytes4);
+        BlockStandard block0 = new BlockStandard(1, bytes1);
+        BlockStandard block1 = new BlockStandard(2, bytes2);
+        BlockStandard block2 = new BlockStandard(0, new byte[17]);
+        BlockStandard block3 = new BlockStandard(4, bytes4);
 
         byte[] key = "Some Key 6".getBytes();
 
@@ -199,7 +199,7 @@ public class AccessStrategyPathTest {
 
         AccessStrategyPath access = new AccessStrategyPath(4, new ServerStub(4, 1), 1, key,
                 new PermutationStrategyIdentity());
-        List<BlockPath> res = access.decryptBlockPaths(encryptedList);
+        List<BlockStandard> res = access.decryptBlockPaths(encryptedList);
         assertThat(res, hasSize(3));
         assertThat(res, hasItem(block0));
         assertThat(res, hasItem(block1));

@@ -1,6 +1,6 @@
 package oram;
 
-import oram.path.BlockPath;
+import oram.path.BlockStandard;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +28,7 @@ public class AES {
 //    TODO: test if it is faster to do non statically
 
     public static void main(String[] args) {
-        BlockPath block = new BlockPath(1337, new byte[]{0b01010, 42});
+        BlockStandard block = new BlockStandard(1337, new byte[]{0b01010, 42});
 
         byte[] bytesBefore = null;
         System.out.println(block);
@@ -45,10 +45,10 @@ public class AES {
 
         byte[] res = AES.decrypt(cipher, key);
 
-        BlockPath block2 = null;
+        BlockStandard block2 = null;
         try (ByteArrayInputStream bais = new ByteArrayInputStream(res);
              ObjectInputStream ois = new ObjectInputStream(bais)) {
-            block2 = (BlockPath) ois.readObject();
+            block2 = (BlockStandard) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

@@ -22,7 +22,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private final byte[] key;
     private final Server server;
     private final PermutationStrategy permutationStrategy;
-    private List<BlockPath> stash;
+    private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
     private boolean print;
     private int dummyCounter = 0;
@@ -125,7 +125,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (stash.get(i).getAddress() == address) {
                 endData = stash.get(i).getData();
                 if (op.equals(OperationType.WRITE)) {
-                    stash.set(i, new BlockPath(address, data));
+                    stash.set(i, new BlockStandard(address, data));
                     hasOverwrittenBlock = true;
                 }
                 break;
@@ -133,20 +133,20 @@ public class AccessStrategyPath implements AccessStrategy {
         }
 
         if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock)
-            stash.add(new BlockPath(address, data));
+            stash.add(new BlockStandard(address, data));
 
         return endData;
     }
 
     private void writeBackPath(int leafNode) {
         for (int l = L - 1; l >= 0; l--) {
-            List<BlockPath> blocksToWrite = new ArrayList<>();
+            List<BlockStandard> blocksToWrite = new ArrayList<>();
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
             List<Integer> indices = getSubTreeNodes(nodeNumber);
 
 //            Pick all the blocks from the stash which can be written to the current node
-            for (BlockPath s : stash) {
+            for (BlockStandard s : stash) {
                 if (indices.contains(positionMap.get(s.getAddress())))
                     blocksToWrite.add(s);
             }
@@ -169,7 +169,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
-            for (BlockPath block : blocksToWrite) {
+            for (BlockStandard block : blocksToWrite) {
                 byte[] addressCipher = AES.encrypt(Util.leIntToByteArray(block.getAddress()), key);
                 byte[] dataCipher = AES.encrypt(block.getData(), key);
                 encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
@@ -180,10 +180,10 @@ public class AccessStrategyPath implements AccessStrategy {
         }
     }
 
-    private List<BlockPath> fillWithDummy(List<BlockPath> temp) {
+    private List<BlockStandard> fillWithDummy(List<BlockStandard> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {
-            temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE]));
-//            temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
+            temp.add(new BlockStandard(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE]));
+//            temp.add(new BlockStandard(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
         }
         return temp;
     }
@@ -213,8 +213,8 @@ public class AccessStrategyPath implements AccessStrategy {
         return res;
     }
 
-    List<BlockPath> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
-        List<BlockPath> res = new ArrayList<>();
+    List<BlockStandard> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
+        List<BlockStandard> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
             if (block == null) continue;
             byte[] message = AES.decrypt(block.getData(), key);
@@ -225,7 +225,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
             if (message == null || Util.isDummyAddress(addressInt)) continue;
 
-            res.add(new BlockPath(addressInt, message));
+            res.add(new BlockStandard(addressInt, message));
         }
         return res;
     }

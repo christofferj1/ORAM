@@ -12,21 +12,21 @@ import java.util.Objects;
  */
 
 public class AccessEvent {
-    private List<byte[]> addresses;
+    private List<String> addresses;
     private List<byte[]> dataArrays;
     private OperationType operationType;
 
-    public AccessEvent(List<byte[]> addresses, List<byte[]> dataArrays, OperationType operationType) {
+    public AccessEvent(List<String> addresses, List<byte[]> dataArrays, OperationType operationType) {
         this.addresses = addresses;
         this.dataArrays = dataArrays;
         this.operationType = operationType;
     }
 
-    public List<byte[]> getAddresses() {
+    public List<String> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(List<byte[]> addresses) {
+    public void setAddresses(List<String> addresses) {
         this.addresses = addresses;
     }
 
@@ -49,7 +49,7 @@ public class AccessEvent {
     @Override
     public String toString() {
         return "AccessEvent{" +
-                "addresses=" +  addresses +
+                "addresses=" + addresses +
                 ", dataArrays=" + dataArrays +
                 ", operationType=" + operationType +
                 '}';

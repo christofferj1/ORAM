@@ -3,6 +3,7 @@ package oram.lookahead;
 
 import oram.*;
 import oram.clientcom.Server;
+import oram.path.BlockStandard;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +25,7 @@ import static oram.Util.byteArrayToLeInt;
 public class AccessStrategyLookahead implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
     private final int size;
-    private final int matrixHeight;
+    private final int matrixHeight; // Assumes to be equal to matrix width
     private final byte[] key;
     private final Server server;
     private Map<Integer, Index> positionMap;
@@ -41,6 +42,76 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessCounter = 0;
         futureSwapPartners = new ArrayList<>();
         positionMap = new HashMap<>();
+    }
+
+    boolean setup(List<BlockStandard> blocks) {
+        int blocksSize = blocks.size();
+        if (blocksSize > size) {
+            logger.error("Not possible to put: " + blocksSize + " blocks into a matrix of size: " + size);
+            return false;
+        }
+
+        SecureRandom randomness = new SecureRandom();
+        for (int i = blocksSize; i < size; i++) {
+            blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
+        }
+
+        List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
+//        TODO: this does not seem to work
+        Collections.shuffle(blocks, randomness);
+
+        List<BlockEncrypted> encryptedBlocks = encryptBlocks(blockLookaheads);
+
+        for (int i = 0; i < encryptedBlocks.size(); i++) {
+            System.out.println("Writing block to server: #" + i);
+            if (!server.write(i, encryptedBlocks.get(i)))
+                return false;
+        }
+
+//        TODO: swap partners should be chosen before we write to the matrix
+        for (int i = 0; i < matrixHeight; i++) {
+            System.out.println("Choose initial swap partner: #" + i);
+            Index index = null;
+            boolean indexIsNotUnique = true;
+            while (indexIsNotUnique) {
+                index = new Index(randomness.nextInt(matrixHeight), randomness.nextInt(matrixHeight));
+                Index finalIndex = index;
+                indexIsNotUnique = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(finalIndex));
+            }
+            BlockEncrypted blockRead = server.read(getFlatArrayIndex(index)); // TODO: handle the negative case
+
+            futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
+            server.write(size + matrixHeight + accessCounter, blockRead); // TODO: handle the negative case
+            accessCounter++;
+
+//            TODO: Create dummy block strategy
+            BlockEncrypted dummyBlock = new BlockEncrypted(
+                    AES.encrypt(Util.leIntToByteArray(0), key),
+                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
+            server.write(getFlatArrayIndex(index), dummyBlock); // TODO: handle the negative case
+        }
+
+        for (int i = 0; i < matrixHeight; i++) {
+            BlockEncrypted dummyBlock = new BlockEncrypted(
+                    AES.encrypt(Util.leIntToByteArray(0), key),
+                    AES.encrypt(new byte[Constants.BLOCK_SIZE], key));
+            server.write(size + i, dummyBlock); // TODO: handle the negative case
+        }
+
+        return true;
+    }
+
+    List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
+        List<BlockLookahead> res = new ArrayList<>();
+        for (int i = 0; i < matrixHeight; i++) { // Columns
+            for (int j = 0; j < matrixHeight; j++) { // Rows
+                Index index = new Index(j, i);
+                BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
+                res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
+                positionMap.put(blockStandard.getAddress(), index);
+            }
+        }
+        return res;
     }
 
     @Override

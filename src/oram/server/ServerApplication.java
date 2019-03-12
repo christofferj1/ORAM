@@ -9,7 +9,7 @@ import java.util.List;
  */
 
 public interface ServerApplication {
-    List<BlockServer> read(List<Integer> address);
+    List<BlockServer> read(List<String> address);
 
     boolean write(List<String> addresses, List<byte[]> dataArrays);
 }

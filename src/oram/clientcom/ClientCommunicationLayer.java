@@ -12,7 +12,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Scanner;
 
 /**
  * <p> ORAM <br>
@@ -26,6 +25,7 @@ public class ClientCommunicationLayer implements Server {
     private DataOutputStream dataOutputStream;
     private DataInputStream dataInputStream;
 
+    @Override
     public boolean start() {
         if (!setupConnection()) return false;
         return initializeStreams();
@@ -35,8 +35,18 @@ public class ClientCommunicationLayer implements Server {
     public BlockEncrypted read(int address) {
         BlockEncrypted res;
         try {
+            byte[] operationTypeBytes = Util.leIntToByteArray(0);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+            byte[] numberOfBlocks = Util.leIntToByteArray(1);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
             byte[] addressBytes = Util.leIntToByteArray(address);
-            int length = addressBytes.length;
+            length = addressBytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(addressBytes);
 
@@ -71,8 +81,18 @@ public class ClientCommunicationLayer implements Server {
     @Override
     public boolean write(int address, BlockEncrypted block) {
         try {
+            byte[] operationTypeBytes = Util.leIntToByteArray(1);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+            byte[] numberOfBlocks = Util.leIntToByteArray(1);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
             byte[] addressBytes = Util.leIntToByteArray(address);
-            int length = addressBytes.length;
+            length = addressBytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(addressBytes);
 
@@ -85,6 +105,17 @@ public class ClientCommunicationLayer implements Server {
             length = combinedData.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(combinedData);
+
+            dataOutputStream.flush();
+
+            byte[] statusBitArray = new byte[0];
+            length = dataInputStream.readInt();
+            if (length > 0) {
+                statusBitArray = new byte[length];
+                dataInputStream.readFully(statusBitArray, 0, length);
+            }
+            if (Util.byteArrayToLeInt(statusBitArray) == 0)
+                return false;
         } catch (IOException e) {
             logger.error("Error happened while writing block: " + e);
             logger.debug("Stacktrace", e);
@@ -94,13 +125,14 @@ public class ClientCommunicationLayer implements Server {
     }
 
     private boolean setupConnection() {
-        System.out.println("Enter IP");
-        Scanner scanner = new Scanner(System.in);
-        String hostname = scanner.nextLine();
-
+//        System.out.println("Enter IP");
+//        Scanner scanner = new Scanner(System.in);
+//        String hostname = scanner.nextLine();
+        String hostname = "10.192.98.202"; // TODO
         try {
+//            TODO: sleep and try over
             socket = new Socket(hostname, Constants.PORT);
-            System.out.println("Socket opened");
+            System.out.println("Socket opened, inet address: "+ socket.getInetAddress());
         } catch (IOException e) {
             logger.error("Error happened while initializing streams: " + e);
             logger.debug("Stacktrace", e);

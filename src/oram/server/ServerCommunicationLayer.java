@@ -10,6 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -39,18 +40,13 @@ public class ServerCommunicationLayer {
             AccessEvent accessEvent = receiveRequests();
             if (accessEvent == null || accessEvent.getOperationType() == null) break;
 
+            System.out.println("Received access event of type: " + accessEvent.getOperationType() +
+                    ", to addresses: " + Arrays.toString(accessEvent.getAddresses().toArray()));
+
             if (accessEvent.getOperationType().equals(OperationType.READ)) { // Handle a read event
-                List<Integer> addresses = new ArrayList<>();
-                for (byte[] arr : accessEvent.getAddresses())
-                    addresses.add(Util.byteArrayToLeInt(arr));
-
-                if (!sendBlocks(application.read(addresses))) break;
+                if (!sendBlocks(application.read(accessEvent.getAddresses()))) break;
             } else { // Handle a write event
-                List<String> addresses = new ArrayList<>();
-                for (byte[] arr : accessEvent.getAddresses())
-                    addresses.add(Integer.toString(Util.byteArrayToLeInt(arr)));
-
-                boolean statusBit = application.write(addresses, accessEvent.getDataArrays());
+                boolean statusBit = application.write(accessEvent.getAddresses(), accessEvent.getDataArrays());
                 boolean sendStatusBit = sendWritingStatusBit(statusBit);
 
                 if (!(statusBit && sendStatusBit)) break;
@@ -82,20 +78,20 @@ public class ServerCommunicationLayer {
         int numberOfRequests = Util.byteArrayToLeInt(numberOfRequestsBytes);
 
         if (op.equals(OperationType.READ)) {
-            List<byte[]> addresses = new ArrayList<>();
+            List<String> addresses = new ArrayList<>();
             for (int i = 0; i < numberOfRequests; i++) {
                 byte[] addressBytes = readBytes();
                 if (addressBytes == null) return null;
-                addresses.add(addressBytes);
+                addresses.add(Integer.toString(Util.byteArrayToLeInt(addressBytes)));
             }
             return new AccessEvent(addresses, null, op);
         } else {
-            List<byte[]> addresses = new ArrayList<>();
+            List<String> addresses = new ArrayList<>();
             List<byte[]> dataArrays = new ArrayList<>();
             for (int i = 0; i < numberOfRequests; i++) {
                 byte[] addressBytes = readBytes();
                 if (addressBytes == null) return null;
-                addresses.add(addressBytes);
+                addresses.add(Integer.toString(Util.byteArrayToLeInt(addressBytes)));
 
                 byte[] data = readBytes();
                 if (data == null) return null;
@@ -108,6 +104,8 @@ public class ServerCommunicationLayer {
     private boolean sendBlocks(List<BlockServer> blocks) {
         try {
             for (BlockServer block : blocks) {
+                System.out.println("Sending block with address: " + block.getAddress() + ", and data:\n" +
+                        Arrays.toString(block.getData()));
                 int length = block.getData().length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(block.getData());
@@ -123,6 +121,7 @@ public class ServerCommunicationLayer {
 
     private boolean sendWritingStatusBit(boolean status) {
         try {
+            System.out.println("Sending writing status: " + status);
             byte[] bytes = Util.leIntToByteArray(status ? 1 : 0);
             int length = bytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
