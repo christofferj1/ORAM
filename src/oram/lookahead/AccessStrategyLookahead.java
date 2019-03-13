@@ -133,12 +133,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         boolean blockFoundInMatrix = true;
         boolean blockFoundInAccessStash = true;
+        int swapCount = 0;
         if (Util.isDummyAddress(block.getAddress())) {
             blockFoundInMatrix = false;
             block = findBlockInAccessStash(accessStash, index.getRowIndex(), index.getRowIndex());
             if (block == null) {
                 blockFoundInAccessStash = false;
                 block = findBlockInSwapStash(swapStash, index);
+                for (int i = 0; i < matrixHeight; i++) {
+                    BlockLookahead b = swapStash[i];
+                    if (b.getIndex().equals(b.getIndex()))
+                        swapCount = i;
+                }
                 if (block == null) {
                     logger.error("Unable to locate block");
                     return null;
@@ -184,7 +190,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         if (encryptedSwapPartner == null) return null;
 
-        addToAccessStashMap(accessStash, block);
+        accessStash = addToAccessStashMap(accessStash, block);
         System.out.println("New access stash");
         for (Map.Entry<Integer, Map<Integer, BlockLookahead>> map : accessStash.entrySet()) {
             System.out.println("Column: " + map.getKey());
@@ -213,12 +219,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 return null;
             }
             System.out.println("Update swap stash");
-            for (int i = 0; i < swapStash.length; i++) {
+            for (int i = 0; i < swapStash.length; i++) {          // Iterate through the swap stash
                 BlockLookahead futureSwapPartner = swapStash[i];
                 if (futureSwapPartner == null) continue;
                 Index futureIndex = futureSwapPartner.getIndex();
                 if (futureIndex.equals(index)) {
-                    swapStash[i] = swapPartner;
+                    swapStash[swapCount] = swapPartner;
                     break;
                 }
             }
@@ -228,7 +234,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         pickNewFutureSwapPartner();
-        maintenanceJob(accessStash, swapStash);
+       if (!maintenanceJob(accessStash, swapStash))
+           return null;
 
         accessCounter++;
         return res;
@@ -429,7 +436,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
-        System.out.println("Move blocks to swat stash");
+        System.out.println("Move blocks to swap stash");
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
             System.out.println(swap.toString());
@@ -456,6 +463,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         for (BlockLookahead b : swapStash)
             System.out.println(b == null ? null : b.toString());
 
+//        Write back column
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(column);
         if (encryptedBlocks.size() != matrixHeight) {
             logger.error("Wrong number of encrypted blocks to write back: " + encryptedBlocks.size());
@@ -463,10 +471,49 @@ public class AccessStrategyLookahead implements AccessStrategy {
         for (int i = 0; i < matrixHeight; i++) {
             Index index = new Index(i, columnIndex);
             if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedBlocks.get(i))) {
-                logger.error("Unable to write block to communicationStrategy with index: " + index);
+                logger.error("Unable to write block to column with index: " + index);
+                System.out.println("Unable to write block to column with index: " + index);
                 return false;
             }
         }
+
+//        Write back access stash
+        encryptedBlocks = new ArrayList<>();
+        for (Map.Entry<Integer, Map<Integer, BlockLookahead>> innerMap : accessStash.entrySet()) {
+            for (Map.Entry<Integer, BlockLookahead> entry : innerMap.getValue().entrySet())
+                encryptedBlocks.add(encryptBlock(entry.getValue()));
+        }
+        for (int i = 0; i < matrixHeight; i++) {
+            int index = size + i;
+            BlockEncrypted block;
+            if (encryptedBlocks.size() <= i)
+                block = Util.getEncryptedDummy(secretKey, encryptionStrategy);
+            else
+                block = encryptedBlocks.get(i);
+            if (!communicationStrategy.write(index, block)) {
+                logger.error("Unable to write block to access stash with index: " + index);
+                System.out.println("Unable to write block to access stash with index: " + index);
+                return false;
+            }
+        }
+
+//        Write back swap stash
+        encryptedBlocks = new ArrayList<>();
+        for (BlockLookahead block : swapStash) {
+            if (block == null)
+                encryptedBlocks.add(Util.getEncryptedDummy(secretKey, encryptionStrategy));
+            else
+                encryptedBlocks.add(encryptBlock(block));
+        }
+        for (int i = 0; i < matrixHeight; i++) {
+            int index = size + matrixHeight + i;
+            if (!communicationStrategy.write(index, encryptedBlocks.get(i))) {
+                logger.error("Unable to write block to swap stash with index: " + index);
+                System.out.println("Unable to write block to swap stash with index: " + index);
+                return false;
+            }
+        }
+
         return true;
     }
 
