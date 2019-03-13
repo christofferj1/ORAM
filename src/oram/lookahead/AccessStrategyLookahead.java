@@ -65,7 +65,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
 //        TODO: this does not seem to work
-        Collections.shuffle(blocks, randomness);
+        Collections.shuffle(blockLookaheads, randomness);
 
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(blockLookaheads);
 
@@ -94,6 +94,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             communicationStrategy.write(getFlatArrayIndex(index), getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
         }
 
+//        Fill the access stash
         for (int i = 0; i < matrixHeight; i++) {
             communicationStrategy.write(size + i, getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
         }
@@ -108,7 +109,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 Index index = new Index(j, i);
                 BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
                 res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
-                positionMap.put(blockStandard.getAddress(), index);
+                positionMap.put(blockStandard.getAddress(), index); // TODO: address null is in position map, why?
             }
         }
         return res;
@@ -141,13 +142,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
             logger.info("Block found in matrix: " + block.toString());
 
 //        Get swap partner
-        BlockLookahead swapPartner = swapStash.remove(Math.floorMod(accessCounter, matrixHeight));
+        int swapIndex = Math.floorMod(accessCounter, matrixHeight);
+        BlockLookahead swapPartner = swapStash.remove(swapIndex);
 
 //        Set index to index of swap partner
         block.setIndex(swapPartner.getIndex());
-        positionMap.put(address, swapPartner.getIndex());
+        positionMap.put(address, swapPartner.getIndex()); // TODO: address null is in position map, why?
 
-        if (op.equals(OperationType.WRITE)) {block.setData(data);}
+        if (op.equals(OperationType.WRITE))
+            block.setData(data);
 
 //        Update swap partner index and encrypt it
 //        Index swapPartnerIndex = swapPartner.getIndex();
@@ -158,19 +161,19 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         addToAccessStashMap(accessStash, block);
 
+        int flatArrayIndex = getFlatArrayIndex(index);
         if (blockFoundInMatrix) {
-            if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
+            if (!communicationStrategy.write(flatArrayIndex, encryptedSwapPartner)) {
                 logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
             }
         } else if (blockFoundInAccessStash) {
-            if (!communicationStrategy.write(getFlatArrayIndex(index), encryptedSwapPartner)) {
+            if (!communicationStrategy.write(flatArrayIndex, encryptedSwapPartner)) {
                 logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
             }
 //            Remove old version of block
-//            accessStash.get(index.getColIndex()).remove(index.getRowIndex());
             accessStash = removeFromAccessStash(accessStash, index);
         } else {
-            if (!communicationStrategy.write(getFlatArrayIndex(index),
+            if (!communicationStrategy.write(flatArrayIndex,
                     getEncryptedDummy(secretKey, encryptionStrategy))) {
                 logger.error("Unable to write swap partner to communicationStrategy: dummy block");
             }
@@ -195,7 +198,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         Map<Integer, Map<Integer, BlockLookahead>> res = new HashMap<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            BlockLookahead blockLookahead = decryptToLookaheadBlock(communicationStrategy.read(i));
+            BlockEncrypted blockRead = communicationStrategy.read(i);
+            BlockLookahead blockLookahead = decryptToLookaheadBlock(blockRead);
             res = addToAccessStashMap(res, blockLookahead);
         }
 
@@ -204,6 +208,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap(Map<Integer, Map<Integer, BlockLookahead>> map,
                                                                    BlockLookahead block) {
+        if (block.getAddress() == 0)
+            return map;
         int rowIndex = block.getRowIndex();
         int colIndex = block.getColIndex();
         if (map.containsKey(colIndex)) {
@@ -323,6 +329,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
+//    TODO: make sure the stashes are filled with dummy blocks
     boolean maintenanceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, List<BlockLookahead> swapStash) {
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
         List<BlockLookahead> column = new ArrayList<>();

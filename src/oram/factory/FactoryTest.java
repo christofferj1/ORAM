@@ -3,7 +3,7 @@ package oram.factory;
 import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
-import oram.encryption.EncryptionStrategyImpl;
+import oram.encryption.EncryptionStrategyIdentity;
 
 /**
  * <p> ORAM <br>
@@ -23,7 +23,7 @@ public class FactoryTest implements Factory {
 
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
-        return new EncryptionStrategyImpl();
+        return new EncryptionStrategyIdentity();
     }
 
     @Override

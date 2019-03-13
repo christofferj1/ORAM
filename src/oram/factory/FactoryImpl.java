@@ -11,7 +11,7 @@ import oram.encryption.EncryptionStrategyImpl;
  * Master Thesis 2019 </p>
  */
 
-public class FactoryLookahead implements Factory {
+public class FactoryImpl implements Factory {
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
         return new EncryptionStrategyImpl();
