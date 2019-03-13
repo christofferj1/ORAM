@@ -1,11 +1,14 @@
 package oram.path;
 
-import oram.*;
+import oram.BlockEncrypted;
+import oram.CommunicationStrategyStub;
+import oram.OperationType;
+import oram.Util;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.permutation.PermutationStrategy;
+import oram.permutation.PermutationStrategyIdentity;
 import oram.util.FactoryStub;
-import oram.util.PermutationStrategyIdentity;
 import oram.util.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +37,7 @@ public class AccessStrategyPathTest {
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
         byte[] key = "Some key 0".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
 
         assertThat(accessStrategy.getNode(0, 2), is(3));
         assertThat(accessStrategy.getNode(1, 2), is(4));
@@ -56,7 +59,7 @@ public class AccessStrategyPathTest {
     public void shouldCalculateTheRightNodeIndexFor15Blocks() {
         byte[] key = "Some key 1".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
 
         assertThat(accessStrategy.getNode(0, 3), is(7));
         assertThat(accessStrategy.getNode(1, 3), is(8));
@@ -83,7 +86,7 @@ public class AccessStrategyPathTest {
     public void shouldFindTheRightSubTreePositionsSize7() {
         byte[] key = "Some key 2".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
 
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(4), is(Collections.singletonList(1)));
@@ -100,7 +103,7 @@ public class AccessStrategyPathTest {
     public void shouldFindTheRightSubTreePositionsSize15() {
         byte[] key = "Some key 3".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
 
         assertThat(accessStrategy.getSubTreeNodes(7), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(8), is(Collections.singletonList(1)));
@@ -126,7 +129,7 @@ public class AccessStrategyPathTest {
     public void shouldBeAbleToFillInBlocks() {
         byte[] key = "Some key 4".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes());
         accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes());
@@ -151,7 +154,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 5".getBytes();
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, BUCKET_SIZE);
         FactoryStub factoryStub = new FactoryStub(communicationStrategyStub);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, permutation, key, factoryStub);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes());
 //        System.out.println("###########################################\n" + server.getTreeString());
@@ -213,7 +216,7 @@ public class AccessStrategyPathTest {
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, 1);
         FactoryStub factory = new FactoryStub(communicationStrategyStub);
         factory.setEncryptionStrategy(encryptionStrategy);
-        AccessStrategyPath access = new AccessStrategyPath(4, 1, new PermutationStrategyIdentity(), key, factory);
+        AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory);
 
         List<BlockStandard> res = access.decryptBlockPaths(encryptedList);
         assertThat(res, hasSize(3));

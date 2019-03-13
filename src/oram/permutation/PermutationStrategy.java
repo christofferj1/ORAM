@@ -1,6 +1,7 @@
 package oram.permutation;
 
 import oram.BlockEncrypted;
+import oram.path.BlockStandard;
 
 import java.util.List;
 
@@ -11,5 +12,7 @@ import java.util.List;
  */
 
 public interface PermutationStrategy {
-    List<BlockEncrypted> permuteBlocks(List<BlockEncrypted> blocks);
+    List<BlockEncrypted> permuteEncryptedBlocks(List<BlockEncrypted> blocks);
+
+    List<BlockStandard> permuteStandardBlocks(List<BlockStandard> blocks);
 }

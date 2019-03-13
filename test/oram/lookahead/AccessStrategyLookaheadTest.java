@@ -8,7 +8,6 @@ import oram.encryption.EncryptionStrategyImpl;
 import oram.path.BlockStandard;
 import oram.util.FactoryStub;
 import org.apache.commons.lang3.ArrayUtils;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -111,15 +110,22 @@ public class AccessStrategyLookaheadTest {
     @Test
     public void shouldBeAbleToCreateSwatStash() {
         setStandardServer();
-        List<BlockLookahead> list = access.getSwapStash();
+        BlockLookahead[] list = access.getSwapStash();
 
-        assertThat(list, Matchers.<Collection<BlockLookahead>>allOf(
-                hasSize(4),
-                hasItem(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)),
-                hasItem(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)),
-                hasItem(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)),
-                hasItem(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3))
-        ));
+        assertThat(list, arrayWithSize(4));
+        assertThat(list, hasItemInArray(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)));
+        assertThat(list, hasItemInArray(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)));
+        assertThat(list, hasItemInArray(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)));
+        assertThat(list, hasItemInArray(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3)));
+
+
+//        assertThat(list, allOf(
+//                hasSize(4),
+//                hasItem(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)),
+//                hasItem(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)),
+//                hasItem(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)),
+//                hasItem(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3))
+//        ));
     }
 
     @Test

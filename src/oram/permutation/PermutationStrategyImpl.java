@@ -1,9 +1,10 @@
 package oram.permutation;
 
 import oram.BlockEncrypted;
+import oram.path.BlockStandard;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -14,17 +15,20 @@ import java.util.List;
 
 public class PermutationStrategyImpl implements PermutationStrategy {
     @Override
-    public List<BlockEncrypted> permuteBlocks(List<BlockEncrypted> blocks) {
+    public List<BlockEncrypted> permuteEncryptedBlocks(List<BlockEncrypted> blocks) {
         if (blocks == null || blocks.isEmpty()) return blocks;
 
         SecureRandom randomness = new SecureRandom();
+        Collections.shuffle(blocks, randomness);
+        return blocks;
+    }
 
-        List<BlockEncrypted> src = new ArrayList<>(blocks);
-        List<BlockEncrypted> res = new ArrayList<>();
+    @Override
+    public List<BlockStandard> permuteStandardBlocks(List<BlockStandard> blocks) {
+        if (blocks == null || blocks.isEmpty()) return blocks;
 
-        for (int i = blocks.size() - 1; i >= 0; i--)
-            res.add(i == 0 ? src.remove(0) : src.remove(randomness.nextInt(i)));
-
-        return res;
+        SecureRandom randomness = new SecureRandom();
+        Collections.shuffle(blocks, randomness);
+        return blocks;
     }
 }

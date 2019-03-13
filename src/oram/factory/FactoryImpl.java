@@ -4,6 +4,8 @@ import oram.clientcom.ClientCommunicationLayer;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
+import oram.permutation.PermutationStrategy;
+import oram.permutation.PermutationStrategyImpl;
 
 /**
  * <p> ORAM <br>
@@ -20,5 +22,10 @@ public class FactoryImpl implements Factory {
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
         return new ClientCommunicationLayer();
+    }
+
+    @Override
+    public PermutationStrategy getPermutationStrategy() {
+        return new PermutationStrategyImpl();
     }
 }

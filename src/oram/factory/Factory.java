@@ -2,6 +2,7 @@ package oram.factory;
 
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
+import oram.permutation.PermutationStrategy;
 
 /**
  * <p> ORAM <br>
@@ -13,4 +14,6 @@ public interface Factory {
     EncryptionStrategy getEncryptionStrategy();
 
     CommunicationStrategy getCommunicationStrategy();
+
+    PermutationStrategy getPermutationStrategy();
 }

@@ -31,8 +31,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean print;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, int bucketSize, PermutationStrategy permutationStrategy, byte[] key, Factory factory) {
-        this.permutationStrategy = permutationStrategy;
+    AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
@@ -40,6 +39,7 @@ public class AccessStrategyPath implements AccessStrategy {
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
+        this.permutationStrategy = factory.getPermutationStrategy();
 
         initializeServer();
     }
@@ -179,7 +179,7 @@ public class AccessStrategyPath implements AccessStrategy {
                 byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
                 encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
             }
-            encryptedBlocksToWrite = permutationStrategy.permuteBlocks(encryptedBlocksToWrite); // TODO: Can be done with Collections.shuffle
+            encryptedBlocksToWrite = permutationStrategy.permuteEncryptedBlocks(encryptedBlocksToWrite); // TODO: Can be done with Collections.shuffle
             for (int i = 0; i < blocksToWrite.size(); i++)
                 communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
         }

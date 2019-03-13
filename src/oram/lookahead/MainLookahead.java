@@ -48,12 +48,12 @@ public class MainLookahead {
         access.setup(blocks);
 
         byte[] res = access.access(OperationType.READ, 4, null);
-        System.out.println(new String(res));
+        System.out.println("Read block 4: " + new String(res));
 
         res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
-        System.out.println(Arrays.toString(res));
+        System.out.println("Written block 11: " + new String(res));
 
         res = access.access(OperationType.READ, 11, null);
-        System.out.println(new String(res));
+        System.out.println("Read block 11: " + new String(res));
     }
 }

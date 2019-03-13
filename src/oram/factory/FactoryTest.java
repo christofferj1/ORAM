@@ -4,6 +4,8 @@ import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyIdentity;
+import oram.permutation.PermutationStrategy;
+import oram.permutation.PermutationStrategyIdentity;
 
 /**
  * <p> ORAM <br>
@@ -29,5 +31,10 @@ public class FactoryTest implements Factory {
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
         return new CommunicationStrategyStub(columns, rows);
+    }
+
+    @Override
+    public PermutationStrategy getPermutationStrategy() {
+        return new PermutationStrategyIdentity();
     }
 }
