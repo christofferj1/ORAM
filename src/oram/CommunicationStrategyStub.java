@@ -1,6 +1,10 @@
 package oram;
 
 import oram.clientcom.CommunicationStrategy;
+import oram.factory.FactoryTest;
+import oram.lookahead.AccessStrategyLookahead;
+import oram.lookahead.BlockLookahead;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * <p> ORAM <br>
@@ -47,6 +51,76 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
 
     public String getTreeString() {
         return Util.printTree(blocks, bucketSize);
+    }
+
+    public String getMatrixAndStashString() {
+        AccessStrategyLookahead access = new AccessStrategyLookahead(0, 0, "bytes".getBytes(), new FactoryTest(0, 0));
+        BlockLookahead[] blocks = new BlockLookahead[this.blocks.length];
+        for (int i = 0; i < this.blocks.length; i++) {
+            blocks[i] = access.decryptToLookaheadBlock(this.blocks[i]);
+        }
+
+        StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
+        for (int row = 0; row < bucketSize; row++) {
+            for (int col = 0; col < bucketSize; col++) {
+                int index = col * 4 + row;
+                BlockLookahead block = blocks[index];
+                if (block != null) {
+                    if (Util.isDummyAddress(block.getAddress()))
+                        builder.append("dummy            ");
+                    else {
+                        String string = new String(block.getData()).trim();
+                        builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                        builder.append("; ");
+                        builder.append(StringUtils.rightPad(Integer.toString(block.getAddress()).trim(), 3));
+                    }
+                } else
+                    builder.append("       null");
+                builder.append(" : ");
+            }
+            builder.append("\n");
+        }
+
+        builder.append("Access              : Swap\n");
+        for (int i = 0; i < bucketSize; i++) {
+            int index = i + bucketSize * bucketSize;
+            BlockLookahead block = blocks[index];
+            if (block != null) {
+                if (Util.isDummyAddress(block.getAddress()))
+                    builder.append("dummy              ");
+                else {
+                    String string = new String(block.getData()).trim();
+                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                    builder.append("(");
+                    builder.append(StringUtils.rightPad(Integer.toString(block.getRowIndex()).trim(), 2));
+                    builder.append(", ");
+                    builder.append(StringUtils.rightPad(Integer.toString(block.getColIndex()).trim(), 2));
+                    builder.append(") ");
+                }
+            } else
+                builder.append("               null");
+            builder.append(" : ");
+            index += bucketSize;
+            block = blocks[index];
+            if (block != null) {
+                if (Util.isDummyAddress(block.getAddress()))
+                    builder.append("dummy");
+                else {
+                    String string = new String(block.getData()).trim();
+                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 10));
+                    builder.append("(");
+                    builder.append(StringUtils.rightPad(Integer.toString(block.getRowIndex()).trim(), 2));
+                    builder.append(", ");
+                    builder.append(StringUtils.rightPad(Integer.toString(block.getColIndex()).trim(), 2));
+                    builder.append(") ");
+                }
+            } else
+                builder.append("               null");
+
+            builder.append("\n");
+        }
+
+        return builder.toString();
     }
 
     public void setBlocks(BlockEncrypted[] blocks) {

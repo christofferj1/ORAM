@@ -40,7 +40,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private List<SwapPartnerData> futureSwapPartners;
 
 
-    AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
+    public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
         this.size = size;
         this.matrixHeight = matrixHeight;
         this.communicationStrategy = factory.getCommunicationStrategy();
@@ -109,71 +109,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         return true;
-    }
-
-    boolean setup2(List<BlockStandard> blocks) {
-        int blocksSize = blocks.size();
-        if (blocksSize > size) {
-            logger.error("Not possible to put: " + blocksSize + " blocks into a matrix of size: " + size);
-            return false;
-        }
-
-        SecureRandom randomness = new SecureRandom();
-        for (int i = blocksSize; i < size; i++) {
-            blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
-        }
-
-        List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
-//        TODO: this does not seem to work
-        Collections.shuffle(blockLookaheads, randomness);
-
-        List<BlockEncrypted> encryptedBlocks = encryptBlocks(blockLookaheads);
-
-        for (int i = 0; i < encryptedBlocks.size(); i++) {
-            System.out.println("Writing block to communicationStrategy: #" + i);
-            if (!communicationStrategy.write(i, encryptedBlocks.get(i)))
-                return false;
-        }
-
-//        TODO: swap partners should be chosen before we write to the matrix
-        for (int i = 0; i < matrixHeight; i++) {
-            System.out.println("Choose initial swap partner: #" + i);
-            Index index = null;
-            boolean indexIsNotUnique = true;
-            while (indexIsNotUnique) {
-                index = new Index(randomness.nextInt(matrixHeight), randomness.nextInt(matrixHeight));
-                Index finalIndex = index;
-                indexIsNotUnique = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(finalIndex));
-            }
-            BlockEncrypted blockRead = communicationStrategy.read(getFlatArrayIndex(index)); // TODO: handle the negative case
-
-            futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
-            communicationStrategy.write(size + matrixHeight + accessCounter, blockRead); // TODO: handle the negative case
-            accessCounter++;
-
-            communicationStrategy.write(getFlatArrayIndex(index), getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
-        }
-
-//        Fill the access stash
-        for (int i = 0; i < matrixHeight; i++) {
-            communicationStrategy.write(size + i, getEncryptedDummy(secretKey, encryptionStrategy)); // TODO: handle the negative case
-        }
-
-        return true;
-    }
-
-    List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
-        List<BlockLookahead> res = new ArrayList<>();
-        for (int i = 0; i < matrixHeight; i++) { // Columns
-            for (int j = 0; j < matrixHeight; j++) { // Rows
-                Index index = new Index(j, i);
-                BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
-                res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
-                if (blockStandard.getAddress() != 0)
-                    positionMap.put(blockStandard.getAddress(), index);
-            }
-        }
-        return res;
     }
 
     @Override
@@ -349,7 +284,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
     }
 
-    BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
+    public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
         int endOfDataIndex = blockEncrypted.getData().length - Constants.BLOCK_SIZE * 2;
         byte[] encryptedData = Arrays.copyOfRange(blockEncrypted.getData(), 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(blockEncrypted.getData(), endOfDataIndex, blockEncrypted.getData().length);
@@ -463,5 +398,19 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
         }
         return true;
+    }
+
+    List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
+        List<BlockLookahead> res = new ArrayList<>();
+        for (int i = 0; i < matrixHeight; i++) { // Columns
+            for (int j = 0; j < matrixHeight; j++) { // Rows
+                Index index = new Index(j, i);
+                BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
+                res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
+                if (blockStandard.getAddress() != 0)
+                    positionMap.put(blockStandard.getAddress(), index);
+            }
+        }
+        return res;
     }
 }

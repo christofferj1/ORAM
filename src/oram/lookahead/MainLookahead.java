@@ -1,7 +1,7 @@
 package oram.lookahead;
 
+import oram.CommunicationStrategyStub;
 import oram.OperationType;
-import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryTest;
 import oram.path.BlockStandard;
@@ -39,21 +39,26 @@ public class MainLookahead {
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14));
 
-        Factory factory = new FactoryTest(4, 6); // Sizes the server, matrix or tree
+        Factory factory = new FactoryTest(6, 4); // Sizes the server, matrix or tree
 //        Factory factory = new FactoryImpl();
 
-        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
+        CommunicationStrategyStub clientCommunicationLayer = (CommunicationStrategyStub) factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
         AccessStrategyLookahead access = new AccessStrategyLookahead(16, 4, key, factory);
         access.setup(blocks);
 
+        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+
         byte[] res = access.access(OperationType.READ, 4, null);
         System.out.println("Read block 4: " + new String(res));
+        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
 
         res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
         System.out.println("Written block 11: " + new String(res));
+        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
 
         res = access.access(OperationType.READ, 11, null);
         System.out.println("Read block 11: " + new String(res));
+        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
     }
 }

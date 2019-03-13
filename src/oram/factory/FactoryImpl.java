@@ -14,18 +14,28 @@ import oram.permutation.PermutationStrategyImpl;
  */
 
 public class FactoryImpl implements Factory {
+    private EncryptionStrategyImpl encryptionStrategy;
+    private ClientCommunicationLayer clientCommunicationLayer;
+    private PermutationStrategyImpl permutationStrategy;
+
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
-        return new EncryptionStrategyImpl();
+        if (encryptionStrategy == null)
+            encryptionStrategy = new EncryptionStrategyImpl();
+        return encryptionStrategy;
     }
 
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
-        return new ClientCommunicationLayer();
+        if (clientCommunicationLayer == null)
+            clientCommunicationLayer = new ClientCommunicationLayer();
+        return clientCommunicationLayer;
     }
 
     @Override
     public PermutationStrategy getPermutationStrategy() {
-        return new PermutationStrategyImpl();
+        if (permutationStrategy == null)
+            permutationStrategy = new PermutationStrategyImpl();
+        return permutationStrategy;
     }
 }

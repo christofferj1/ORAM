@@ -16,25 +16,33 @@ import oram.permutation.PermutationStrategyIdentity;
 public class FactoryTest implements Factory {
     private final int columns;
     private final int rows;
+    private EncryptionStrategyIdentity encryptionStrategy;
+    private CommunicationStrategyStub clientCommunicationLayer;
+    private PermutationStrategyIdentity permutationStrategy;
 
     public FactoryTest(int columns, int rows) {
         this.columns = columns;
         this.rows = rows;
     }
 
-
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
-        return new EncryptionStrategyIdentity();
+        if (encryptionStrategy == null)
+            encryptionStrategy = new EncryptionStrategyIdentity();
+        return encryptionStrategy;
     }
 
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
-        return new CommunicationStrategyStub(columns, rows);
+        if (clientCommunicationLayer == null)
+            clientCommunicationLayer = new CommunicationStrategyStub(columns, rows);
+        return clientCommunicationLayer;
     }
 
     @Override
     public PermutationStrategy getPermutationStrategy() {
-        return new PermutationStrategyIdentity();
+        if (permutationStrategy == null)
+            permutationStrategy = new PermutationStrategyIdentity();
+        return permutationStrategy;
     }
 }
