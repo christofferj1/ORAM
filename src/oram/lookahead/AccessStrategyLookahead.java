@@ -114,10 +114,22 @@ public class AccessStrategyLookahead implements AccessStrategy {
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
         Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash();
-        BlockLookahead[] swapStash = getSwapStash(); // TODO: sort by swap counter
+        BlockLookahead[] swapStash = getSwapStash();
+
+        System.out.println("Fetched access stash");
+        for (Map.Entry<Integer, Map<Integer, BlockLookahead>> map : accessStash.entrySet()) {
+            System.out.println("Column: " + map.getKey());
+            for (Map.Entry<Integer, BlockLookahead> entry : map.getValue().entrySet())
+                System.out.println("Row: " + entry.getKey() + ", block: \n" + entry.getValue());
+        }
+        System.out.println("Fetches swap stash");
+        for (BlockLookahead b : swapStash)
+            System.out.println(b);
 
         Index index = positionMap.get(address);
+        System.out.println("Position: " + address + " -> " + index);
         BlockLookahead block = fetchBlockFromMatrix(index);
+        System.out.println("Fetched block: \n" + block.toString());
 
         boolean blockFoundInMatrix = true;
         boolean blockFoundInAccessStash = true;
@@ -130,12 +142,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 if (block == null) {
                     logger.error("Unable to locate block");
                     return null;
-                } else
+                } else {
                     logger.info("Block found in swap stash: " + block.toString());
-            } else
+                    System.out.println("Block found in swap stash: \n" + block.toString());
+                }
+            } else {
                 logger.info("Block found in access stash: " + block.toString());
-        } else
+                System.out.println("Block found in access stash: \n" + block.toString());
+            }
+        } else {
             logger.info("Block found in matrix: " + block.toString());
+            System.out.println("Block found in matrix: \n" + block.toString());
+        }
 
         byte[] res = block.getData();
 
@@ -143,10 +161,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
         int swapIndex = Math.floorMod(accessCounter, matrixHeight);
         BlockLookahead swapPartner = swapStash[swapIndex];
         swapStash[swapIndex] = null;
+        System.out.println("Swap index: " + swapIndex);
+        System.out.println("Swap partner: \n" + swapPartner.toString());
+        System.out.println("Swap stash after removing");
+        for (BlockLookahead b : swapStash)
+            System.out.println(b);
 
 //        Set index to index of swap partner
         block.setIndex(swapPartner.getIndex()); // TODO: does this work?
         positionMap.put(address, swapPartner.getIndex());
+        System.out.println("New index for block read: " + block.getIndex().toString());
+        System.out.println("Position map updated: " + address + " -> " + positionMap.get(address));
 
         if (op.equals(OperationType.WRITE))
             block.setData(data);
@@ -154,23 +179,32 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Update swap partner index and encrypt it
 //        Index swapPartnerIndex = swapPartner.getIndex();
         swapPartner.setIndex(index);
+        System.out.println("Swap partner new index: " + swapPartner.getIndex().toString());
         BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
 
         if (encryptedSwapPartner == null) return null;
 
         addToAccessStashMap(accessStash, block);
+        System.out.println("New access stash");
+        for (Map.Entry<Integer, Map<Integer, BlockLookahead>> map : accessStash.entrySet()) {
+            System.out.println("Column: " + map.getKey());
+            for (Map.Entry<Integer, BlockLookahead> entry : map.getValue().entrySet())
+                System.out.println("Row: " + entry.getKey() + ", block: \n" + entry.getValue());
+        }
 
         int flatArrayIndex = getFlatArrayIndex(index);
         if (blockFoundInMatrix) {
             if (!communicationStrategy.write(flatArrayIndex, encryptedSwapPartner)) {
-                logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
+                logger.error("Unable to write swap partner to communicationStrategy: \n" + swapPartner.toString());
                 return null;
             }
+            System.out.println("Simply but swap partner back into matrix");
         } else if (blockFoundInAccessStash) {
             if (!communicationStrategy.write(flatArrayIndex, encryptedSwapPartner)) {
-                logger.error("Unable to write swap partner to communicationStrategy: " + swapPartner.toString());
+                logger.error("Unable to write swap partner to communicationStrategy: \n" + swapPartner.toString());
                 return null;
             }
+            System.out.println("Removed old version from access stash");
 //            Remove old version of block
             accessStash = removeFromAccessStash(accessStash, index);
         } else {
@@ -178,6 +212,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 logger.error("Unable to write swap partner to communicationStrategy: dummy block");
                 return null;
             }
+            System.out.println("Update swap stash");
             for (int i = 0; i < swapStash.length; i++) {
                 BlockLookahead futureSwapPartner = swapStash[i];
                 if (futureSwapPartner == null) continue;
@@ -187,6 +222,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     break;
                 }
             }
+            System.out.println("Swap stash after update");
+            for (BlockLookahead b : swapStash)
+                System.out.println(b);
         }
 
         pickNewFutureSwapPartner();
@@ -229,9 +267,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                                                                      Index index) {
         if (stash.containsKey(index.getColIndex())) {
             Map<Integer, BlockLookahead> map = stash.get(index.getColIndex());
+            System.out.println("Removed from access stash: " + map.get(index.getRowIndex()));
             map.remove(index.getRowIndex());
-            if (map.isEmpty())
+            if (map.isEmpty()) {
                 stash.remove(index.getColIndex());
+                System.out.println("Entire column removed");
+            }
         }
         return stash;
     }
@@ -273,6 +314,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     private void pickNewFutureSwapPartner() {
+        System.out.println("Current future swap partners");
+        for (SwapPartnerData s : futureSwapPartners)
+            System.out.println(s.toString());
         SecureRandom randomness = new SecureRandom();
         boolean futureSwapsContainsIndex = true;
         Index index = null;
@@ -282,6 +326,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
             futureSwapsContainsIndex = futureSwapPartners.stream().anyMatch(f -> f.getIndex().equals(finalIndex));
         }
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
+        System.out.println("New future swap partners");
+        for (SwapPartnerData s : futureSwapPartners)
+            System.out.println(s.toString());
     }
 
     public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
@@ -344,7 +391,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     //    TODO: make sure the stashes are filled with dummy blocks
     boolean maintenanceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, BlockLookahead[] swapStash) {
+        System.out.println("\n   Maintenance job");
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
+        System.out.println("Column index: " + columnIndex);
         List<BlockLookahead> column = new ArrayList<>();
 
 //        Retrieve column from matrix
@@ -357,10 +406,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
             BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
             column.add(block);
         }
+        System.out.println("Blocks retrieved");
+        for (BlockLookahead b : column)
+            System.out.println(b.toString());
 
 //        Move blocks from access stash to column
+        System.out.println("Move blocks from access stash");
         Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
         for (Map.Entry<Integer, BlockLookahead> entry : map.entrySet()) {
+            System.out.println("Row: " + entry.getKey() + ", block: \n" + entry.getValue());
             if (!Util.isDummyAddress(column.get(entry.getKey()).getAddress())) {
                 logger.error("Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
                         columnIndex + "), but place were not filled with dummy block");
@@ -368,13 +422,20 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
             column.set(entry.getKey(), entry.getValue());
         }
+        System.out.println("Column after access stash update");
+        for (BlockLookahead b : column)
+            System.out.println(b.toString());
+
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
+        System.out.println("Move blocks to swat stash");
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
+            System.out.println(swap.toString());
             if (swap.getIndex().getColIndex() == columnIndex) {
                 int rowIndex = swap.getIndex().getRowIndex();
+                System.out.println("Placing at: (" + rowIndex + ", " + swap.getIndex().getColIndex() + ")");
                 BlockLookahead swapPartner = column.get(rowIndex);
                 if (Util.isDummyAddress(swapPartner.getAddress())) {
                     logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
@@ -385,6 +446,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 column.set(rowIndex, new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
             }
         }
+        System.out.println("Column after access stash update");
+        for (BlockLookahead b : column)
+            System.out.println(b.toString());
+        System.out.println("Future swap partners after access stash update");
+        for (SwapPartnerData b : futureSwapPartners)
+            System.out.println(b.toString());
+        System.out.println("Swap stash after access stash update");
+        for (BlockLookahead b : swapStash)
+            System.out.println(b == null ? null : b.toString());
 
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(column);
         if (encryptedBlocks.size() != matrixHeight) {

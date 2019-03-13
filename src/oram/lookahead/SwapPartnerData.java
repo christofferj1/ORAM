@@ -36,7 +36,7 @@ public class SwapPartnerData {
     @Override
     public String toString() {
         return "SwapPartnerData{" +
-                "index=" + index +
+                "index=" + (index != null ? index.toString() : null) +
                 ", swapNumber=" + swapNumber +
                 '}';
     }

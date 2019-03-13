@@ -77,7 +77,7 @@ public class BlockLookahead implements Block {
     @Override
     public String toString() {
         return "BlockLookahead{" +
-                "address=" + address +
+                "address=" + (address < 10 ? " " + address : address) +
                 ", data=" + Util.printByteArray(data) +
                 ", rowIndex=" + rowIndex +
                 ", colIndex=" + colIndex +
