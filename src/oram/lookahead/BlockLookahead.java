@@ -79,8 +79,8 @@ public class BlockLookahead implements Block {
         return "BlockLookahead{" +
                 "address=" + address +
                 ", data=" + Util.printByteArray(data) +
-                ", colIndex=" + colIndex +
                 ", rowIndex=" + rowIndex +
+                ", colIndex=" + colIndex +
                 '}';
     }
 

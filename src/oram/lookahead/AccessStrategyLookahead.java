@@ -52,6 +52,79 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     boolean setup(List<BlockStandard> blocks) {
+//        Fill with dummy blocks
+        for (int i = blocks.size(); i < size; i++) {
+            blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
+        }
+
+//        Shuffle and convert
+        Collections.shuffle(blocks);
+        List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
+
+//        Pick swap partners
+        SecureRandom randomness = new SecureRandom();
+        List<BlockLookahead> swapPartners = new ArrayList<>();
+        for (int i = 0; i < matrixHeight; i++) {
+            Index index = null;
+            boolean indexIsNotUnique = true;
+            while (indexIsNotUnique) {
+                index = new Index(randomness.nextInt(matrixHeight), randomness.nextInt(matrixHeight));
+                Index finalIndex = index;
+                indexIsNotUnique = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(finalIndex));
+            }
+            futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
+            accessCounter++;
+            int flatArrayIndex = getFlatArrayIndex(index);
+            swapPartners.add(blockLookaheads.get(flatArrayIndex));
+        }
+
+//        Add blocks to the right place in the flattened array
+
+//        List<BlockLookahead> res = new ArrayList<>();
+//        for (int i = 0; i < (size + matrixHeight * 2); i++) {
+//            if (i < size) {
+//                BlockLookahead block = blockLookaheads.get(i);
+//                Index index = block.getIndex();
+//                boolean isSwapPartner = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(index));
+//                if (isSwapPartner)
+//                    res.add(new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
+//                else
+//                    res.add(blockLookaheads.get(i));
+//
+//            } else if (i < size + matrixHeight) {
+//                res.add(new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
+//            } else {
+//                res.add(swapPartners.get(i - (size + matrixHeight)));
+//            }
+//        }
+        List<BlockLookahead> res = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            BlockLookahead block = blockLookaheads.get(i);
+            Index index = block.getIndex();
+            boolean isSwapPartner = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(index));
+            if (isSwapPartner)
+                res.add(new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
+            else
+                res.add(blockLookaheads.get(i));
+
+        }
+        for (int i = size; i < size + matrixHeight; i++)
+            res.add(new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
+
+        for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++)
+            res.add(swapPartners.get(i - (size + matrixHeight)));
+
+//        Encrypt and write blocks to server
+        List<BlockEncrypted> encryptedList = encryptBlocks(res);
+        for (int i = 0; i < (size + matrixHeight * 2); i++) {
+            if (!communicationStrategy.write(i, encryptedList.get(i)))
+                return false;
+        }
+
+        return true;
+    }
+
+    boolean setup2(List<BlockStandard> blocks) {
         int blocksSize = blocks.size();
         if (blocksSize > size) {
             logger.error("Not possible to put: " + blocksSize + " blocks into a matrix of size: " + size);
@@ -109,7 +182,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 Index index = new Index(j, i);
                 BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
                 res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
-                positionMap.put(blockStandard.getAddress(), index); // TODO: address null is in position map, why?
+                if (blockStandard.getAddress() != 0)
+                    positionMap.put(blockStandard.getAddress(), index);
             }
         }
         return res;
@@ -329,7 +403,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
-//    TODO: make sure the stashes are filled with dummy blocks
+    //    TODO: make sure the stashes are filled with dummy blocks
     boolean maintenanceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, List<BlockLookahead> swapStash) {
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
         List<BlockLookahead> column = new ArrayList<>();
