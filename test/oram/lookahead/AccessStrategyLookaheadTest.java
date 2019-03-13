@@ -96,16 +96,16 @@ public class AccessStrategyLookaheadTest {
 
         Map<Integer, BlockLookahead> map0 = map.get(0);
         assertThat(map0, aMapWithSize(2));
-        assertThat(map0, hasEntry(0, new BlockLookahead(0, Util.leIntToByteArray(0), 0, 0)));
-        assertThat(map0, hasEntry(3, new BlockLookahead(3, Util.leIntToByteArray(3), 3, 0)));
+        assertThat(map0, hasEntry(0, new BlockLookahead(1, Util.leIntToByteArray(0), 0, 0)));
+        assertThat(map0, hasEntry(3, new BlockLookahead(4, Util.leIntToByteArray(3), 3, 0)));
 
         Map<Integer, BlockLookahead> map2 = map.get(2);
         assertThat(map2, aMapWithSize(1));
-        assertThat(map2, hasEntry(2, new BlockLookahead(10, Util.leIntToByteArray(10), 2, 2)));
+        assertThat(map2, hasEntry(2, new BlockLookahead(11, Util.leIntToByteArray(10), 2, 2)));
 
         Map<Integer, BlockLookahead> map3 = map.get(3);
         assertThat(map3, aMapWithSize(1));
-        assertThat(map3, hasEntry(0, new BlockLookahead(12, Util.leIntToByteArray(12), 0, 3)));
+        assertThat(map3, hasEntry(0, new BlockLookahead(13, Util.leIntToByteArray(12), 0, 3)));
     }
 
     @Test
@@ -115,10 +115,10 @@ public class AccessStrategyLookaheadTest {
 
         assertThat(list, Matchers.<Collection<BlockLookahead>>allOf(
                 hasSize(4),
-                hasItem(new BlockLookahead(7, Util.leIntToByteArray(7), 3, 1)),
-                hasItem(new BlockLookahead(8, Util.leIntToByteArray(8), 0, 2)),
-                hasItem(new BlockLookahead(9, Util.leIntToByteArray(9), 1, 2)),
-                hasItem(new BlockLookahead(14, Util.leIntToByteArray(14), 2, 3))
+                hasItem(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)),
+                hasItem(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)),
+                hasItem(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)),
+                hasItem(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3))
         ));
     }
 
@@ -162,13 +162,13 @@ public class AccessStrategyLookaheadTest {
     public void shouldBeAbleToReadCorrectIndexInMatrix() {
         setStandardServer();
         BlockLookahead block = access.fetchBlockFromMatrix(new Index(3, 2));
-        assertThat(block, equalTo(new BlockLookahead(11, Util.leIntToByteArray(11), 3, 2)));
+        assertThat(block, equalTo(new BlockLookahead(12, Util.leIntToByteArray(11), 3, 2)));
 
         block = access.fetchBlockFromMatrix(new Index(1, 0));
-        assertThat(block, equalTo(new BlockLookahead(1, Util.leIntToByteArray(1), 1, 0)));
+        assertThat(block, equalTo(new BlockLookahead(2, Util.leIntToByteArray(1), 1, 0)));
 
         block = access.fetchBlockFromMatrix(new Index(0, 1));
-        assertThat(block, equalTo(new BlockLookahead(4, Util.leIntToByteArray(4), 0, 1)));
+        assertThat(block, equalTo(new BlockLookahead(5, Util.leIntToByteArray(4), 0, 1)));
     }
 
     @Test
@@ -231,17 +231,19 @@ public class AccessStrategyLookaheadTest {
 
         byte[] rowBytes = Util.leIntToByteArray(rowIndex);
         byte[] colBytes = Util.leIntToByteArray(colIndex);
-        byte[] data = ArrayUtils.addAll(ArrayUtils.addAll(blockData, rowBytes), colBytes);
+        byte[] encryptedIndex = encryptionStrategy.encrypt(ArrayUtils.addAll(rowBytes, colBytes), secretKey);
+        byte[] encryptedData = encryptionStrategy.encrypt(blockData, secretKey);
         byte[] address = Util.leIntToByteArray(addressInt);
-        BlockEncrypted blockEncrypted = new BlockEncrypted(encryptionStrategy.encrypt(address, secretKey),
-                encryptionStrategy.encrypt(data, secretKey));
+        byte[] encryptedAddress = encryptionStrategy.encrypt(address, secretKey);
+
+        BlockEncrypted blockEncrypted = new BlockEncrypted(encryptedAddress,
+                ArrayUtils.addAll(encryptedData, encryptedIndex));
 
         BlockLookahead blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));
         assertThat("Correct col index", blockLookahead.getColIndex(), is(colIndex));
-
 
         blockData = Util.getRandomByteArray(1000);
         addressInt = 0;
@@ -250,10 +252,20 @@ public class AccessStrategyLookaheadTest {
 
         rowBytes = Util.leIntToByteArray(rowIndex);
         colBytes = Util.leIntToByteArray(colIndex);
-        data = ArrayUtils.addAll(ArrayUtils.addAll(blockData, rowBytes), colBytes);
+        encryptedIndex = encryptionStrategy.encrypt(ArrayUtils.addAll(rowBytes, colBytes), secretKey);
+        encryptedData = encryptionStrategy.encrypt(blockData, secretKey);
         address = Util.leIntToByteArray(addressInt);
-        blockEncrypted = new BlockEncrypted(encryptionStrategy.encrypt(address, secretKey),
-                encryptionStrategy.encrypt(data, secretKey));
+        encryptedAddress = encryptionStrategy.encrypt(address, secretKey);
+
+        blockEncrypted = new BlockEncrypted(encryptedAddress,
+                ArrayUtils.addAll(encryptedData, encryptedIndex));
+
+//        rowBytes = Util.leIntToByteArray(rowIndex);
+//        colBytes = Util.leIntToByteArray(colIndex);
+//        data = ArrayUtils.addAll(ArrayUtils.addAll(blockData, rowBytes), colBytes);
+//        address = Util.leIntToByteArray(addressInt);
+//        blockEncrypted = new BlockEncrypted(encryptionStrategy.encrypt(address, secretKey),
+//                encryptionStrategy.encrypt(data, secretKey));
 
         blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
@@ -277,13 +289,35 @@ public class AccessStrategyLookaheadTest {
 
         List<BlockEncrypted> encryptedBlocks = access.encryptBlocks(Arrays.asList(block0, null, block2));
         assertThat(encryptedBlocks, hasSize(3));
-        assertThat(encryptionStrategy.decrypt(encryptedBlocks.get(0).getData(), secretKey),
-                equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes0, Util.leIntToByteArray(2)),
-                        Util.leIntToByteArray(4))));
+
+//        First block
+        byte[] encryptedData = encryptedBlocks.get(0).getData();
+        byte[] dataPart = Arrays.copyOf(encryptedData, 32);
+        byte[] indexPart = Arrays.copyOfRange(encryptedData, 32, 64);
+
+        byte[] address = encryptionStrategy.decrypt(encryptedBlocks.get(0).getAddress(), secretKey);
+        byte[] data = encryptionStrategy.decrypt(dataPart, secretKey);
+        byte[] indices = encryptionStrategy.decrypt(indexPart, secretKey);
+
+        assertThat(address, is(Util.leIntToByteArray(41)));
+        assertThat(data, is(bytes0));
+        assertThat(indices, is(ArrayUtils.addAll(Util.leIntToByteArray(2), Util.leIntToByteArray(4))));
+
+//        Second block
         assertNull(encryptedBlocks.get(1));
-        assertThat(encryptionStrategy.decrypt(encryptedBlocks.get(2).getData(), secretKey),
-                equalTo(ArrayUtils.addAll(ArrayUtils.addAll(bytes2, Util.leIntToByteArray(4)),
-                        Util.leIntToByteArray(6))));
+
+//        Third block
+        encryptedData = encryptedBlocks.get(2).getData();
+        dataPart = Arrays.copyOf(encryptedData, encryptedData.length - 32);
+        indexPart = Arrays.copyOfRange(encryptedData, encryptedData.length - 32, encryptedData.length);
+
+        address = encryptionStrategy.decrypt(encryptedBlocks.get(2).getAddress(), secretKey);
+        data = encryptionStrategy.decrypt(dataPart, secretKey);
+        indices = encryptionStrategy.decrypt(indexPart, secretKey);
+
+        assertThat(address, is(Util.leIntToByteArray(43)));
+        assertThat(data, is(bytes2));
+        assertThat(indices, is(ArrayUtils.addAll(Util.leIntToByteArray(4), Util.leIntToByteArray(6))));
     }
 
     private void setStandardServer() {
@@ -291,25 +325,25 @@ public class AccessStrategyLookaheadTest {
         BlockLookahead[] blocks = new BlockLookahead[24];
 
 //        Column 0
-        BlockLookahead block0 = new BlockLookahead(0, Util.leIntToByteArray(0), 0, 0);
-        BlockLookahead block1 = new BlockLookahead(1, Util.leIntToByteArray(1), 1, 0);
-        BlockLookahead block2 = new BlockLookahead(2, Util.leIntToByteArray(2), 2, 0);
-        BlockLookahead block3 = new BlockLookahead(3, Util.leIntToByteArray(3), 3, 0);
+        BlockLookahead block0 = new BlockLookahead(1, Util.leIntToByteArray(0), 0, 0);
+        BlockLookahead block1 = new BlockLookahead(2, Util.leIntToByteArray(1), 1, 0);
+        BlockLookahead block2 = new BlockLookahead(3, Util.leIntToByteArray(2), 2, 0);
+        BlockLookahead block3 = new BlockLookahead(4, Util.leIntToByteArray(3), 3, 0);
 //        Column 1
-        BlockLookahead block4 = new BlockLookahead(4, Util.leIntToByteArray(4), 0, 1);
-        BlockLookahead block5 = new BlockLookahead(5, Util.leIntToByteArray(5), 1, 1);
-        BlockLookahead block6 = new BlockLookahead(6, Util.leIntToByteArray(6), 2, 1);
-        BlockLookahead block7 = new BlockLookahead(7, Util.leIntToByteArray(7), 3, 1);
+        BlockLookahead block4 = new BlockLookahead(5, Util.leIntToByteArray(4), 0, 1);
+        BlockLookahead block5 = new BlockLookahead(6, Util.leIntToByteArray(5), 1, 1);
+        BlockLookahead block6 = new BlockLookahead(7, Util.leIntToByteArray(6), 2, 1);
+        BlockLookahead block7 = new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1);
 //        Column 2
-        BlockLookahead block8 = new BlockLookahead(8, Util.leIntToByteArray(8), 0, 2);
-        BlockLookahead block9 = new BlockLookahead(9, Util.leIntToByteArray(9), 1, 2);
-        BlockLookahead block10 = new BlockLookahead(10, Util.leIntToByteArray(10), 2, 2);
-        BlockLookahead block11 = new BlockLookahead(11, Util.leIntToByteArray(11), 3, 2);
+        BlockLookahead block8 = new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2);
+        BlockLookahead block9 = new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2);
+        BlockLookahead block10 = new BlockLookahead(11, Util.leIntToByteArray(10), 2, 2);
+        BlockLookahead block11 = new BlockLookahead(12, Util.leIntToByteArray(11), 3, 2);
 //        Column 3
-        BlockLookahead block12 = new BlockLookahead(12, Util.leIntToByteArray(12), 0, 3);
-        BlockLookahead block13 = new BlockLookahead(13, Util.leIntToByteArray(13), 1, 3);
-        BlockLookahead block14 = new BlockLookahead(14, Util.leIntToByteArray(14), 2, 3);
-        BlockLookahead block15 = new BlockLookahead(15, Util.leIntToByteArray(15), 3, 3);
+        BlockLookahead block12 = new BlockLookahead(13, Util.leIntToByteArray(12), 0, 3);
+        BlockLookahead block13 = new BlockLookahead(14, Util.leIntToByteArray(13), 1, 3);
+        BlockLookahead block14 = new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3);
+        BlockLookahead block15 = new BlockLookahead(16, Util.leIntToByteArray(15), 3, 3);
 
 //        Access stash
         blocks[16] = block0;

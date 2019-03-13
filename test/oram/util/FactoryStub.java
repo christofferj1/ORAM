@@ -3,7 +3,7 @@ package oram.util;
 import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
-import oram.encryption.EncryptionStrategyIdentity;
+import oram.encryption.EncryptionStrategyImpl;
 import oram.factory.Factory;
 
 /**
@@ -18,7 +18,7 @@ public class FactoryStub implements Factory {
 
     public FactoryStub(CommunicationStrategyStub communicationStrategyStub) {
         this.communicationStrategyStub = communicationStrategyStub;
-        encryptionStrategy = new EncryptionStrategyIdentity(); // Used as default
+        encryptionStrategy = new EncryptionStrategyImpl(); // Used as default
     }
 
     @Override

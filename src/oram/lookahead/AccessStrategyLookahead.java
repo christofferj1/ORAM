@@ -353,20 +353,26 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
-        byte[] data = encryptionStrategy.decrypt(blockEncrypted.getData(), secretKey);
+        int endOfDataIndex = blockEncrypted.getData().length - Constants.BLOCK_SIZE * 2;
+        byte[] encryptedData = Arrays.copyOfRange(blockEncrypted.getData(), 0, endOfDataIndex);
+        byte[] encryptedIndex = Arrays.copyOfRange(blockEncrypted.getData(), endOfDataIndex, blockEncrypted.getData().length);
+        byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
+        byte[] indices = encryptionStrategy.decrypt(encryptedIndex, secretKey);
         if (data == null) {
             logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
         }
-        int rowDataIndex = data.length - (INTEGER_BYTE_ARRAY_SIZE * 2);
-        int colDataIndex = data.length - INTEGER_BYTE_ARRAY_SIZE;
-        byte[] blockData = Arrays.copyOfRange(data, 0, rowDataIndex);
-        byte[] rowIndexBytes = Arrays.copyOfRange(data, rowDataIndex, colDataIndex);
-        byte[] colIndexBytes = Arrays.copyOfRange(data, colDataIndex, data.length);
+
+
+        int rowDataIndex = 0;
+        int colDataIndex = INTEGER_BYTE_ARRAY_SIZE;
+//        byte[] blockData = Arrays.copyOfRange(data, 0, rowDataIndex);
+        byte[] rowIndexBytes = Arrays.copyOfRange(indices, rowDataIndex, colDataIndex);
+        byte[] colIndexBytes = Arrays.copyOfRange(indices, colDataIndex, INTEGER_BYTE_ARRAY_SIZE * 2);
 
         BlockLookahead blockLookahead = new BlockLookahead();
         blockLookahead.setAddress(byteArrayToLeInt(encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey)));
-        blockLookahead.setData(blockData);
+        blockLookahead.setData(data);
         blockLookahead.setRowIndex(byteArrayToLeInt(rowIndexBytes));
         blockLookahead.setColIndex(byteArrayToLeInt(colIndexBytes));
         return blockLookahead;
@@ -389,10 +395,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
             byte[] rowIndexBytes = Util.leIntToByteArray(block.getRowIndex());
             byte[] colIndexBytes = Util.leIntToByteArray(block.getColIndex());
-            res.add(new BlockEncrypted(
-                    encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey),
-                    encryptionStrategy.encrypt(ArrayUtils.addAll(
-                            ArrayUtils.addAll(block.getData(), rowIndexBytes), colIndexBytes), secretKey)));
+            byte[] encryptedAddress = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
+            byte[] encryptedData = encryptionStrategy.encrypt(block.getData(), secretKey);
+            byte[] encryptedIndex = encryptionStrategy.encrypt(ArrayUtils.addAll(rowIndexBytes, colIndexBytes),
+                    secretKey);
+            res.add(new BlockEncrypted(encryptedAddress, ArrayUtils.addAll(encryptedData, encryptedIndex)));
         }
         return res;
     }
