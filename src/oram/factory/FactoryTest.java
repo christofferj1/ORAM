@@ -3,7 +3,7 @@ package oram.factory;
 import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
-import oram.encryption.EncryptionStrategyIdentity;
+import oram.encryption.EncryptionStrategyImpl;
 import oram.permutation.PermutationStrategy;
 import oram.permutation.PermutationStrategyIdentity;
 
@@ -16,7 +16,7 @@ import oram.permutation.PermutationStrategyIdentity;
 public class FactoryTest implements Factory {
     private final int columns;
     private final int rows;
-    private EncryptionStrategyIdentity encryptionStrategy;
+    private EncryptionStrategy encryptionStrategy;
     private CommunicationStrategyStub clientCommunicationLayer;
     private PermutationStrategyIdentity permutationStrategy;
 
@@ -28,7 +28,7 @@ public class FactoryTest implements Factory {
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
         if (encryptionStrategy == null)
-            encryptionStrategy = new EncryptionStrategyIdentity();
+            encryptionStrategy = new EncryptionStrategyImpl();
         return encryptionStrategy;
     }
 

@@ -47,7 +47,7 @@ public class MainLookahead {
         AccessStrategyLookahead access = new AccessStrategyLookahead(16, 4, key, factory);
         access.setup(blocks);
 
-        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
         SecureRandom randomness = new SecureRandom();
         for (int i = 0; i < 10000; i++) {
@@ -62,7 +62,7 @@ public class MainLookahead {
                 System.exit(-1);
             String s = new String(res);
             System.out.println("Read block " + address + ": " + s + ", in round: " + i);
-            System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
             if (!s.contains(Integer.toString(address))) {
                 System.out.println("SHIT WENT WRONG!!!");
                 break;

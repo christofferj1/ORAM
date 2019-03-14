@@ -1,10 +1,11 @@
 package oram;
 
 import oram.clientcom.CommunicationStrategy;
-import oram.factory.FactoryTest;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.BlockLookahead;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Arrays;
 
 /**
  * <p> ORAM <br>
@@ -53,11 +54,17 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         return Util.printTree(blocks, bucketSize);
     }
 
-    public String getMatrixAndStashString() {
-        AccessStrategyLookahead access = new AccessStrategyLookahead(0, 0, "bytes".getBytes(), new FactoryTest(0, 0));
+    public String getMatrixAndStashString(AccessStrategyLookahead accessStrategy) {
+        System.out.println(Arrays.toString(accessStrategy.secretKey.getEncoded()));
+//        AccessStrategyLookahead access = new AccessStrategyLookahead(0, 0, "bytes".getBytes(), new FactoryTest(0, 0));
         BlockLookahead[] blocks = new BlockLookahead[this.blocks.length];
         for (int i = 0; i < this.blocks.length; i++) {
-            blocks[i] = access.decryptToLookaheadBlock(this.blocks[i]);
+//            if (this.blocks[i] == null || this.blocks[i].getAddress() == 0)
+//                System.out.println("WHAAAAAT??!?");
+            BlockLookahead blockLookahead = accessStrategy.decryptToLookaheadBlock(this.blocks[i]);
+            if (blockLookahead == null)
+                System.out.println("Sheeeeeiit");
+            blocks[i] = blockLookahead;
         }
 
         StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");

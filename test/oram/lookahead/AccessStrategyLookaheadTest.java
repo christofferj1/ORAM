@@ -1,8 +1,6 @@
 package oram.lookahead;
 
-import oram.BlockEncrypted;
-import oram.CommunicationStrategyStub;
-import oram.Util;
+import oram.*;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.path.BlockStandard;
@@ -14,6 +12,7 @@ import org.junit.Test;
 import javax.crypto.SecretKey;
 import java.util.*;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsMapContaining.hasEntry;
@@ -59,7 +58,7 @@ public class AccessStrategyLookaheadTest {
         BlockStandard block13 = new BlockStandard(7, "Block 13".getBytes());
         BlockStandard block14 = new BlockStandard(14, "Block 14".getBytes());
         BlockStandard block15 = new BlockStandard(5, "Block 15".getBytes());
-        BlockStandard block16 = new BlockStandard(16, "Block 16".getBytes());
+        BlockStandard block16 = new BlockStandard(0, new byte[]{Constants.BLOCK_SIZE});
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14, block15, block16));
 
@@ -278,6 +277,12 @@ public class AccessStrategyLookaheadTest {
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));
         assertThat("Correct col index", blockLookahead.getColIndex(), is(colIndex));
+
+        BlockLookahead block = new BlockLookahead(23, new byte[]{21, 23, 65, 23, 65, 32, 65, 87, 23, 65, 8, 79, 3, 4, 66, 54, 34, 56, 7, 89, 0, 8, 76, 54, 32});
+        block.setIndex(new Index(52, 93));
+        BlockEncrypted blockEncryptedSimple = access.encryptBlock(block);
+        BlockLookahead blockDecryptedSimple = access.decryptToLookaheadBlock(blockEncryptedSimple);
+        assertThat(block, is(blockDecryptedSimple));
     }
 
     @Test
@@ -381,5 +386,22 @@ public class AccessStrategyLookaheadTest {
 
         access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey,
                 new FactoryStub(communicationStrategyStub));
+    }
+
+    @Test
+    public void shouldBeAbleToCreateALookaheadDummyBlock() {
+        BlockLookahead block = access.getLookaheadDummyBlock();
+        assertNotNull(block);
+        assertThat(block.getAddress(), is(0));
+        assertThat(block.getData(), is(new byte[Constants.BLOCK_SIZE]));
+        assertThat(block.getIndex(), is(new Index(0, 0)));
+    }
+
+    @Test
+    public void shouldBeAbleToEncryptAndDecryptDummyBlocks() {
+        BlockLookahead block = access.getLookaheadDummyBlock();
+        BlockEncrypted encryptedBlock = access.encryptBlock(block);
+        BlockLookahead decryptedBlock = access.decryptToLookaheadBlock(encryptedBlock);
+        assertThat(decryptedBlock, is(block));
     }
 }

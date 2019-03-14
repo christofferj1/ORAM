@@ -1,6 +1,7 @@
 package oram.lookahead;
 
 import oram.Block;
+import oram.Util;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -77,7 +78,7 @@ public class BlockLookahead implements Block {
     public String toString() {
         return "Lookahead{" +
                 "add=" + (address < 10 ? " " + address : address) +
-                ", data=" + (data == null ? null : new String(data)) +
+                ", data=" + Util.printByteArray(data, false) +
                 ", row=" + rowIndex +
                 ", col=" + colIndex +
                 '}';
