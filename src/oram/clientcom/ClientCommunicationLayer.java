@@ -132,7 +132,7 @@ public class ClientCommunicationLayer implements CommunicationStrategy {
         try {
 //            TODO: sleep and try over
             socket = new Socket(hostname, Constants.PORT);
-            System.out.println("Socket opened, inet address: "+ socket.getInetAddress());
+            System.out.println("Socket opened, inet address: " + socket.getInetAddress());
         } catch (IOException e) {
             logger.error("Error happened while initializing streams: " + e);
             logger.debug("Stacktrace", e);

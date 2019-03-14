@@ -5,8 +5,6 @@ import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.BlockLookahead;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 25-02-2019. <br>
@@ -55,17 +53,9 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     public String getMatrixAndStashString(AccessStrategyLookahead accessStrategy) {
-        System.out.println(Arrays.toString(accessStrategy.secretKey.getEncoded()));
-//        AccessStrategyLookahead access = new AccessStrategyLookahead(0, 0, "bytes".getBytes(), new FactoryTest(0, 0));
         BlockLookahead[] blocks = new BlockLookahead[this.blocks.length];
-        for (int i = 0; i < this.blocks.length; i++) {
-//            if (this.blocks[i] == null || this.blocks[i].getAddress() == 0)
-//                System.out.println("WHAAAAAT??!?");
-            BlockLookahead blockLookahead = accessStrategy.decryptToLookaheadBlock(this.blocks[i]);
-            if (blockLookahead == null)
-                System.out.println("Sheeeeeiit");
-            blocks[i] = blockLookahead;
-        }
+        for (int i = 0; i < this.blocks.length; i++)
+            blocks[i] = accessStrategy.decryptToLookaheadBlock(this.blocks[i]);
 
         StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
         for (int row = 0; row < bucketSize; row++) {
@@ -73,14 +63,10 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                 int index = col * 4 + row;
                 BlockLookahead block = blocks[index];
                 if (block != null) {
-//                    if (Util.isDummyAddress(block.getAddress()))
-//                        builder.append("dummy            ");
-//                    else {
-                        String string = new String(block.getData()).trim();
-                        builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                        builder.append(";");
-                        builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
-//                    }
+                    String string = new String(block.getData()).trim();
+                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                    builder.append(";");
+                    builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
                 } else
                     builder.append("       null");
                 builder.append(" : ");
@@ -93,36 +79,28 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
             int index = i + bucketSize * bucketSize + bucketSize;
             BlockLookahead block = blocks[index];
             if (block != null) {
-//                if (Util.isDummyAddress(block.getAddress()))
-//                    builder.append("dummy                ");
-//                else {
-                    String string = new String(block.getData()).trim();
-                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()),2)).append(" ");
-                    builder.append("(");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 2));
-                    builder.append(", ");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
-                    builder.append(")");
-//                }
+                String string = new String(block.getData()).trim();
+                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
+                builder.append("(");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 2));
+                builder.append(", ");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
+                builder.append(")");
             } else
                 builder.append("                     null");
             builder.append(" : ");
             index -= bucketSize;
             block = blocks[index];
             if (block != null) {
-//                if (Util.isDummyAddress(block.getAddress()))
-//                    builder.append("dummy");
-//                else {
-                    String string = new String(block.getData()).trim();
-                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                    builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()),2)).append(" ");
-                    builder.append("(");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 1));
-                    builder.append(", ");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 1));
-                    builder.append(") ");
-//                }
+                String string = new String(block.getData()).trim();
+                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
+                builder.append("(");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 1));
+                builder.append(", ");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 1));
+                builder.append(") ");
             } else
                 builder.append("               null");
 

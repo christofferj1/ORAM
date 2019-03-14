@@ -5,6 +5,7 @@ import oram.OperationType;
 import oram.factory.Factory;
 import oram.factory.FactoryTest;
 import oram.path.BlockStandard;
+import org.apache.commons.lang3.StringUtils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -55,14 +56,14 @@ public class MainLookahead {
 //            Scanner scanner = new Scanner(System.in);
 //            String addressString = scanner.nextLine();
 //            int address = Integer.parseInt(addressString);
-        int address = randomness.nextInt(14) + 1;
+            int address = randomness.nextInt(14) + 1;
 
             byte[] res = access.access(OperationType.READ, address, null);
             if (res == null)
                 System.exit(-1);
             String s = new String(res);
-            System.out.println("Read block " + address + ": " + s + ", in round: " + i);
-            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
+            System.out.println("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
             if (!s.contains(Integer.toString(address))) {
                 System.out.println("SHIT WENT WRONG!!!");
                 break;
