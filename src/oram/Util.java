@@ -7,6 +7,7 @@ import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 /**
  * <p> ORAM <br>
@@ -72,8 +73,11 @@ public class Util {
     }
 
     //    TODO: Test, and for bytes with negative values
-    public static String printByteArray(byte[] array) {
+    public static String printByteArray(byte[] array, boolean trimEnd) {
         if (array == null) return null;
+
+        if (trimEnd)
+            array = removeTrailingZerores(array);
 
         Range<Integer> oneCipher = Range.between(0, 9);
         Range<Integer> twoCiphers = Range.between(10, 99);
@@ -95,6 +99,14 @@ public class Util {
         }
         builder.deleteCharAt(builder.length() - 1);
         return builder.append("]").toString();
+    }
+
+    private static byte[] removeTrailingZerores(byte[] array) {
+        int i = array.length - 1;
+        while (i >= 0 && array[i] == 0)
+            --i;
+
+        return Arrays.copyOf(array, i + 1);
     }
 
     public static String printTree(BlockEncrypted[] array, int bucketSize) {

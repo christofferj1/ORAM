@@ -49,22 +49,36 @@ public class MainLookahead {
 
         System.out.println(clientCommunicationLayer.getMatrixAndStashString());
 
-        byte[] res = access.access(OperationType.READ, 4, null);
-        if (res == null)
-            System.exit(-1);
-        System.out.println("Read block 4: " + new String(res));
-        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+        SecureRandom randomness = new SecureRandom();
+        for (int i = 0; i < 10000; i++) {
+//            System.out.println("Enter address");
+//            Scanner scanner = new Scanner(System.in);
+//            String addressString = scanner.nextLine();
+//            int address = Integer.parseInt(addressString);
+        int address = randomness.nextInt(14) + 1;
 
-        res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
-        if (res == null)
-            System.exit(-1);
-        System.out.println("Written block 11: " + new String(res));
-        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+            byte[] res = access.access(OperationType.READ, address, null);
+            if (res == null)
+                System.exit(-1);
+            String s = new String(res);
+            System.out.println("Read block " + address + ": " + s + ", in round: " + i);
+            System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+            if (!s.contains(Integer.toString(address))) {
+                System.out.println("SHIT WENT WRONG!!!");
+                break;
+            }
+        }
 
-        res = access.access(OperationType.READ, 11, null);
-        if (res == null)
-            System.exit(-1);
-        System.out.println("Read block 11: " + new String(res));
-        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+//        byte[] res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
+//        if (res == null)
+//            System.exit(-1);
+//        System.out.println("Written block 11: " + new String(res));
+//        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
+//
+//        res = access.access(OperationType.READ, 11, null);
+//        if (res == null)
+//            System.exit(-1);
+//        System.out.println("Read block 11: " + new String(res));
+//        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
     }
 }

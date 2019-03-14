@@ -66,14 +66,14 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                 int index = col * 4 + row;
                 BlockLookahead block = blocks[index];
                 if (block != null) {
-                    if (Util.isDummyAddress(block.getAddress()))
-                        builder.append("dummy            ");
-                    else {
+//                    if (Util.isDummyAddress(block.getAddress()))
+//                        builder.append("dummy            ");
+//                    else {
                         String string = new String(block.getData()).trim();
                         builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                        builder.append("; ");
+                        builder.append(";");
                         builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
-                    }
+//                    }
                 } else
                     builder.append("       null");
                 builder.append(" : ");
@@ -81,14 +81,14 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
             builder.append("\n");
         }
 
-        builder.append("Access                : Swap\n");
+        builder.append("Access                      : Swap\n");
         for (int i = 0; i < bucketSize; i++) {
             int index = i + bucketSize * bucketSize;
             BlockLookahead block = blocks[index];
             if (block != null) {
-                if (Util.isDummyAddress(block.getAddress()))
-                    builder.append("dummy                ");
-                else {
+//                if (Util.isDummyAddress(block.getAddress()))
+//                    builder.append("dummy                ");
+//                else {
                     String string = new String(block.getData()).trim();
                     builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
                     builder.append("(");
@@ -96,24 +96,25 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                     builder.append(", ");
                     builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
                     builder.append(") ");
-                }
+//                }
             } else
-                builder.append("               null");
+                builder.append("                     null");
             builder.append(" : ");
             index += bucketSize;
             block = blocks[index];
             if (block != null) {
-                if (Util.isDummyAddress(block.getAddress()))
-                    builder.append("dummy");
-                else {
+//                if (Util.isDummyAddress(block.getAddress()))
+//                    builder.append("dummy");
+//                else {
                     String string = new String(block.getData()).trim();
                     builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                    builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()),2)).append(" ");
                     builder.append("(");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 2));
+                    builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 1));
                     builder.append(", ");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
+                    builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 1));
                     builder.append(") ");
-                }
+//                }
             } else
                 builder.append("               null");
 

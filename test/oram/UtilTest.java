@@ -95,13 +95,13 @@ public class UtilTest {
     @Test
     public void shouldPrettyPrintByteArrays() {
         byte[] array = null;
-        assertNull(Util.printByteArray(array));
+        assertNull(Util.printByteArray(array, false));
 
         array = new byte[]{0, 1, 10, 100};
-        assertThat(Util.printByteArray(array), is("[   0,   1,  10, 100]"));
+        assertThat(Util.printByteArray(array, false), is("[   0,   1,  10, 100]"));
 
         array = new byte[]{0, 31, 127, -0, -1, -10, -128};
-        assertThat(Util.printByteArray(array), is("[   0,  31, 127,   0,  -1, -10,-128]"));
+        assertThat(Util.printByteArray(array, false), is("[   0,  31, 127,   0,  -1, -10,-128]"));
     }
 
     @Test
