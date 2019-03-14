@@ -179,7 +179,7 @@ public class AccessStrategyLookaheadTest {
 
     @Test
     public void shouldBeAbleToLookUpInAccessStash() {
-        BlockLookahead block0 = new BlockLookahead(0, null);
+        BlockLookahead block0 = new BlockLookahead(5, null);
         BlockLookahead block1 = new BlockLookahead(1, null);
         BlockLookahead block2 = new BlockLookahead(2, null);
         BlockLookahead block3 = new BlockLookahead(3, null);
@@ -202,24 +202,24 @@ public class AccessStrategyLookaheadTest {
         map.put(3, map3);
 
 //        Should be able to look up the blocks in the map
-        assertThat(access.findBlockInAccessStash(map, 3, 0), is(block0));
-        assertThat(access.findBlockInAccessStash(map, 0, 1), is(block1));
-        assertThat(access.findBlockInAccessStash(map, 1, 1), is(block2));
-        assertThat(access.findBlockInAccessStash(map, 0, 3), is(block3));
-        assertThat(access.findBlockInAccessStash(map, 2, 3), is(block4));
+        assertThat(access.findBlockInAccessStash(map, new Index(3, 0)), is(block0));
+        assertThat(access.findBlockInAccessStash(map, new Index(0, 1)), is(block1));
+        assertThat(access.findBlockInAccessStash(map, new Index(1, 1)), is(block2));
+        assertThat(access.findBlockInAccessStash(map, new Index(0, 3)), is(block3));
+        assertThat(access.findBlockInAccessStash(map, new Index(2, 3)), is(block4));
 
 //        All other should return null
-        assertNull(access.findBlockInAccessStash(map, 0, 0));
-        assertNull(access.findBlockInAccessStash(map, 1, 0));
-        assertNull(access.findBlockInAccessStash(map, 2, 0));
-        assertNull(access.findBlockInAccessStash(map, 2, 1));
-        assertNull(access.findBlockInAccessStash(map, 3, 1));
-        assertNull(access.findBlockInAccessStash(map, 0, 2));
-        assertNull(access.findBlockInAccessStash(map, 1, 2));
-        assertNull(access.findBlockInAccessStash(map, 2, 2));
-        assertNull(access.findBlockInAccessStash(map, 3, 2));
-        assertNull(access.findBlockInAccessStash(map, 1, 3));
-        assertNull(access.findBlockInAccessStash(map, 3, 3));
+        assertNull(access.findBlockInAccessStash(map, new Index(0, 0)));
+        assertNull(access.findBlockInAccessStash(map, new Index(1, 0)));
+        assertNull(access.findBlockInAccessStash(map, new Index(2, 0)));
+        assertNull(access.findBlockInAccessStash(map, new Index(2, 1)));
+        assertNull(access.findBlockInAccessStash(map, new Index(3, 1)));
+        assertNull(access.findBlockInAccessStash(map, new Index(0, 2)));
+        assertNull(access.findBlockInAccessStash(map, new Index(1, 2)));
+        assertNull(access.findBlockInAccessStash(map, new Index(2, 2)));
+        assertNull(access.findBlockInAccessStash(map, new Index(3, 2)));
+        assertNull(access.findBlockInAccessStash(map, new Index(1, 3)));
+        assertNull(access.findBlockInAccessStash(map, new Index(3, 3)));
     }
 
     @Test
