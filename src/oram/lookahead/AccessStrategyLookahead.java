@@ -144,9 +144,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     BlockLookahead b = swapStash[i];
                     if (b.getIndex().equals(b.getIndex()))
                         swapCount = i;
+                    System.out.println("Swap count: " + swapCount);
                 }
                 if (block == null) {
                     logger.error("Unable to locate block");
+                    System.out.println("Unable to locate block");
                     return null;
                 } else {
                     logger.info("Block found in swap stash: " + block.toString());
@@ -444,10 +446,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 int rowIndex = swap.getIndex().getRowIndex();
                 System.out.println("Placing at: (" + rowIndex + ", " + swap.getIndex().getColIndex() + ")");
                 BlockLookahead swapPartner = column.get(rowIndex);
-                if (Util.isDummyAddress(swapPartner.getAddress())) {
-                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
-                    return false;
-                }
+//                if (Util.isDummyAddress(swapPartner.getAddress())) { // TODO: this could actually be applied if #blocks = size, test that
+//                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
+//                    return false;
+//                }
                 swapStash[Math.floorMod(swap.getSwapNumber(), matrixHeight)] = swapPartner;
                 futureSwapPartners.remove(i);
                 column.set(rowIndex, new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]));
