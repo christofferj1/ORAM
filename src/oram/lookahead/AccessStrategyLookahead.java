@@ -146,7 +146,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             block = findBlockInAccessStash(accessStash, index.getRowIndex(), index.getColIndex());
             if (block == null) {
                 blockFoundInAccessStash = false;
-                block = findBlockInSwapStash(swapStash, index);
+                block = findBlockInSwapStash(swapStash, address);
                 if (block == null) {
                     logger.error("Unable to locate block");
                     System.out.println("Unable to locate block");
@@ -156,8 +156,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     System.out.println("Block found in swap stash: \n" + block.toString());
                     for (int i = 0; i < matrixHeight; i++) {
                         BlockLookahead b = swapStash[i];
-                        if (b.getIndex().equals(block.getIndex())) {
+                        if (b.getAddress() == block.getAddress()) {
                             swapCount = i;
+                            break;
 //                            swapStash[i] = null;
                         }
                     }
@@ -334,14 +335,16 @@ public class AccessStrategyLookahead implements AccessStrategy {
                                           int colIndex) {
         if (stash.containsKey(colIndex)) {
             Map<Integer, BlockLookahead> columnMap = stash.get(colIndex);
-            return columnMap.getOrDefault(rowIndex, null);
+            BlockLookahead res = columnMap.getOrDefault(rowIndex, null);
+            if (res == null || Util.isDummyAddress(res.getAddress())) return null;
+            return res;
         }
         return null;
     }
 
-    private BlockLookahead findBlockInSwapStash(BlockLookahead[] stash, Index index) {
+    private BlockLookahead findBlockInSwapStash(BlockLookahead[] stash, int address) {
         for (BlockLookahead block : stash) {
-            if (block != null && block.getIndex().equals(index))
+            if (block != null && block.getAddress() == address)
                 return block;
         }
         return null;
