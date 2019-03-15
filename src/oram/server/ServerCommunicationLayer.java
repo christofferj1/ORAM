@@ -2,6 +2,7 @@ package oram.server;
 
 import oram.OperationType;
 import oram.Util;
+import oram.path.BlockStandard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -101,9 +102,9 @@ public class ServerCommunicationLayer {
         }
     }
 
-    private boolean sendBlocks(List<BlockServer> blocks) {
+    private boolean sendBlocks(List<BlockStandard> blocks) {
         try {
-            for (BlockServer block : blocks) {
+            for (BlockStandard block : blocks) {
                 System.out.println("Sending block with address: " + block.getAddress() + ", and data:\n" +
                         Arrays.toString(block.getData()));
                 int length = block.getData().length;

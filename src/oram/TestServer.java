@@ -56,9 +56,9 @@ public class TestServer {
             System.exit(-5);
 
         byte[] address = new byte[32];
-        byte[] data = new byte[Constants.BYTES_OF_RANDOMNESS * 8 + 16];
+        byte[] data = new byte[Constants.BLOCK_SIZE * 8 + 16];
         System.arraycopy(bytesFromFile, 0, address, 0, 32);
-        System.arraycopy(bytesFromFile, 32, data, 0, Constants.BYTES_OF_RANDOMNESS * 8 + 16);
+        System.arraycopy(bytesFromFile, 32, data, 0, Constants.BLOCK_SIZE * 8 + 16);
 
         if (!sendBlock(data, address))
             System.exit(-6);

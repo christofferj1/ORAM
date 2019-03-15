@@ -1,9 +1,9 @@
 package oram.lookahead;
 
-import oram.CommunicationStrategyStub;
 import oram.OperationType;
+import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
-import oram.factory.FactoryTest;
+import oram.factory.FactoryCustom;
 import oram.path.BlockStandard;
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,6 +11,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static oram.factory.FactoryCustom.*;
 
 /**
  * <p> ORAM <br>
@@ -40,18 +42,17 @@ public class MainLookahead {
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14));
 
-        Factory factory = new FactoryTest(6, 4); // Sizes the server, matrix or tree
-//        Factory factory = new FactoryImpl();
+        Factory factory = new FactoryCustom(Enc.IDEN, Com.IMPL, Per.IDEN, 6, 4);
 
-        CommunicationStrategyStub clientCommunicationLayer = (CommunicationStrategyStub) factory.getCommunicationStrategy();
+        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
         AccessStrategyLookahead access = new AccessStrategyLookahead(16, 4, key, factory);
         access.setup(blocks);
 
-        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
+//        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
         SecureRandom randomness = new SecureRandom();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100; i++) {
 //            System.out.println("Enter address");
 //            Scanner scanner = new Scanner(System.in);
 //            String addressString = scanner.nextLine();

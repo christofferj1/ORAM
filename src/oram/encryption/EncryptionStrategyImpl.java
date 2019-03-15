@@ -30,7 +30,7 @@ public class EncryptionStrategyImpl implements EncryptionStrategy {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-1");
             randomBytes = sha.digest(randomBytes);
-            randomBytes = Arrays.copyOf(randomBytes, Constants.BYTES_OF_RANDOMNESS);
+            randomBytes = Arrays.copyOf(randomBytes, Constants.AES_KEY_SIZE);
             res = new SecretKeySpec(randomBytes, "AES");
         } catch (NoSuchAlgorithmException e) {
             logger.error("Error happened generating a key");
@@ -45,7 +45,7 @@ public class EncryptionStrategyImpl implements EncryptionStrategy {
     public byte[] encrypt(byte[] message, SecretKey key) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
+            byte[] iv = Util.getRandomByteArray(Constants.AES_BLOCK_SIZE);
             cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
 
             return ArrayUtils.addAll(iv, cipher.doFinal(message));
@@ -61,10 +61,11 @@ public class EncryptionStrategyImpl implements EncryptionStrategy {
     @Override
     public byte[] decrypt(byte[] cipherText, SecretKey key) {
         try {
+            byte[] iv = Arrays.copyOf(cipherText, Constants.AES_BLOCK_SIZE);
+            byte[] valueCipher = Arrays.copyOfRange(cipherText, Constants.AES_BLOCK_SIZE, cipherText.length);
+
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            byte[] iv = Arrays.copyOf(cipherText, Constants.AES_BLOCK_BYTES);
             cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
-            byte[] valueCipher = Arrays.copyOfRange(cipherText, Constants.AES_BLOCK_BYTES, cipherText.length);
 
             return cipher.doFinal(valueCipher);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |

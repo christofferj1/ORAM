@@ -19,7 +19,8 @@ import java.util.Arrays;
  * Master Thesis 2019 </p>
  */
 
-public class ClientCommunicationLayer implements CommunicationStrategy {
+public class CommunicationStrategyImpl implements CommunicationStrategy {
+    private static final int ENCRYPTED_INTEGER_SIZE = 32;
     private final Logger logger = LogManager.getLogger("log");
     private Socket socket;
     private DataOutputStream dataOutputStream;
@@ -66,8 +67,8 @@ public class ClientCommunicationLayer implements CommunicationStrategy {
                 dataInputStream.readFully(data, 0, length);
             }
 
-            byte[] blockAddress = Arrays.copyOfRange(data, 0, Constants.ENCRYPTED_INTEGER_SIZE);
-            byte[] blockData = Arrays.copyOfRange(data, Constants.ENCRYPTED_INTEGER_SIZE, length);
+            byte[] blockAddress = Arrays.copyOfRange(data, 0, ENCRYPTED_INTEGER_SIZE);
+            byte[] blockData = Arrays.copyOfRange(data, ENCRYPTED_INTEGER_SIZE, length);
 
             res = new BlockEncrypted(blockAddress, blockData);
         } catch (IOException e) {
@@ -96,7 +97,7 @@ public class ClientCommunicationLayer implements CommunicationStrategy {
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(addressBytes);
 
-            if (block.getAddress().length != Constants.ENCRYPTED_INTEGER_SIZE) {
+            if (block.getAddress().length != ENCRYPTED_INTEGER_SIZE) {
                 logger.error("Address byte array has wrong size: " + block.getAddress().length);
                 return false;
             }
@@ -128,7 +129,7 @@ public class ClientCommunicationLayer implements CommunicationStrategy {
 //        System.out.println("Enter IP");
 //        Scanner scanner = new Scanner(System.in);
 //        String hostname = scanner.nextLine();
-        String hostname = "10.192.98.202"; // TODO
+        String hostname = "10.192.104.172"; // TODO
         try {
 //            TODO: sleep and try over
             socket = new Socket(hostname, Constants.PORT);

@@ -34,12 +34,12 @@ public class TestClient {
         if (!openSocket(args))
             System.exit(-1);
 
-        byte[] data = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS * 8 - 1);
+        byte[] data = Util.getRandomByteArray(Constants.AES_BLOCK_SIZE * 8 - 1);
         byte[] address = Util.leIntToByteArray(1337);
         BlockEncrypted block = new BlockEncrypted(address, data);
         System.out.println(block);
 
-        byte[] key = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS);
+        byte[] key = Util.getRandomByteArray(Constants.BLOCK_SIZE);
 
         EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(key);
@@ -72,7 +72,7 @@ public class TestClient {
 
     private static boolean createBlockFile() {
         int address = 1337;
-        byte[] data = Util.getRandomByteArray(Constants.BYTES_OF_RANDOMNESS * 8);
+        byte[] data = Util.getRandomByteArray(Constants.AES_BLOCK_SIZE * 8);
         byte[] res = new byte[4 + data.length];
 
         try (FileOutputStream fos = new FileOutputStream("pathname")) {

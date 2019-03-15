@@ -21,7 +21,7 @@ public class EncryptionStrategyIdentity implements EncryptionStrategy {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-1");
             randomBytes = sha.digest(randomBytes);
-            randomBytes = Arrays.copyOf(randomBytes, Constants.BYTES_OF_RANDOMNESS);
+            randomBytes = Arrays.copyOf(randomBytes, Constants.AES_KEY_SIZE);
             res = new SecretKeySpec(randomBytes, "AES");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

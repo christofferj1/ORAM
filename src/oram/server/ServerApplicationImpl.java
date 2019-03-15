@@ -1,5 +1,6 @@
 package oram.server;
 
+import oram.path.BlockStandard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,13 +21,13 @@ public class ServerApplicationImpl implements ServerApplication {
     private final Logger logger = LogManager.getLogger("log");
 
     @Override
-    public List<BlockServer> read(List<String> addresses) {
-        List<BlockServer> res = new ArrayList<>();
+    public List<BlockStandard> read(List<String> addresses) {
+        List<BlockStandard> res = new ArrayList<>();
         for (String address : addresses) {
             byte[] data = readFile(address);
             if (data == null) return null;
 
-            res.add(new BlockServer(Integer.parseInt(address), data));
+            res.add(new BlockStandard(Integer.parseInt(address), data));
         }
         return res;
     }
@@ -48,6 +49,7 @@ public class ServerApplicationImpl implements ServerApplication {
     private byte[] readFile(String fileName) {
         byte[] res;
         try {
+            fileName += "files/" + fileName;
             res = Files.readAllBytes(Paths.get(fileName));
         } catch (IOException e) {
             logger.error("Error happened while reading file: " + fileName + ", " + e);
@@ -58,6 +60,7 @@ public class ServerApplicationImpl implements ServerApplication {
     }
 
     private boolean writeFile(byte[] bytesForFile, String fileName) {
+        fileName += "files/" + fileName;
         try (FileOutputStream fos = new FileOutputStream(fileName)) {
             fos.write(bytesForFile);
         } catch (IOException e) {

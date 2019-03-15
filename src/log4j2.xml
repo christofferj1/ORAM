@@ -23,6 +23,12 @@
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
             </Policies>
+            <Filters>
+            <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <ThresholdFilter level="fatal" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
         </RollingFile>
 
     </Appenders>
@@ -30,7 +36,7 @@
         <Logger name="log" level="debug" additivity="true">
             <appender-ref ref="fileLogger" level="info"/>
         </Logger>
-        <Root level="debug" additivity="false">
+        <Root name="debug_log" level="debug" additivity="false">
             <appender-ref ref="fileLoggerDebug"/>
         </Root>
     </Loggers>
