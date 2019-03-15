@@ -77,7 +77,7 @@ public class Util {
         if (array == null) return null;
 
         if (trimEnd)
-            array = removeTrailingZerores(array);
+            array = removeTrailingZeroes(array);
 
         Range<Integer> oneCipher = Range.between(0, 9);
         Range<Integer> twoCiphers = Range.between(10, 99);
@@ -101,7 +101,8 @@ public class Util {
         return builder.append("]").toString();
     }
 
-    private static byte[] removeTrailingZerores(byte[] array) {
+    public static byte[] removeTrailingZeroes(byte[] array) {
+        if (array == null) return null;
         int i = array.length - 1;
         while (i >= 0 && array[i] == 0)
             --i;

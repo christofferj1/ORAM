@@ -129,7 +129,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
 //        System.out.println("Enter IP");
 //        Scanner scanner = new Scanner(System.in);
 //        String hostname = scanner.nextLine();
-        String hostname = "10.192.104.172"; // TODO
+        String hostname = "192.168.1.137"; // TODO
         try {
 //            TODO: sleep and try over
             socket = new Socket(hostname, Constants.PORT);
