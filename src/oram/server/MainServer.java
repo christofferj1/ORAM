@@ -18,6 +18,8 @@ public class MainServer {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
+        logger.debug("######### INITIALIZED SERVER #########");
+        logger.info("######### INITIALIZED SERVER #########");
         ServerApplication serverApplication = new ServerApplicationImpl();
 
         System.out.println(getIPAddress());

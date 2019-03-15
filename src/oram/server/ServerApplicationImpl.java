@@ -49,7 +49,7 @@ public class ServerApplicationImpl implements ServerApplication {
     private byte[] readFile(String fileName) {
         byte[] res;
         try {
-            fileName += "files/" + fileName;
+            fileName = System.getProperty("user.dir") + "/files/" + fileName;
             res = Files.readAllBytes(Paths.get(fileName));
         } catch (IOException e) {
             logger.error("Error happened while reading file: " + fileName + ", " + e);
@@ -60,7 +60,7 @@ public class ServerApplicationImpl implements ServerApplication {
     }
 
     private boolean writeFile(byte[] bytesForFile, String fileName) {
-        fileName += "files/" + fileName;
+        fileName = System.getProperty("user.dir") + "/files/" + fileName;
         try (FileOutputStream fos = new FileOutputStream(fileName)) {
             fos.write(bytesForFile);
         } catch (IOException e) {
