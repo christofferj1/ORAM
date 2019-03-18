@@ -1,5 +1,7 @@
 package oram;
 
+import oram.block.Block;
+import oram.block.BlockEncrypted;
 import oram.encryption.EncryptionStrategy;
 import org.apache.commons.lang3.Range;
 

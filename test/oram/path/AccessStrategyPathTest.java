@@ -1,9 +1,10 @@
 package oram.path;
 
-import oram.BlockEncrypted;
+import oram.block.BlockEncrypted;
 import oram.CommunicationStrategyStub;
 import oram.OperationType;
 import oram.Util;
+import oram.block.BlockStandard;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.permutation.PermutationStrategy;
@@ -38,6 +39,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 0".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         assertThat(accessStrategy.getNode(0, 2), is(3));
         assertThat(accessStrategy.getNode(1, 2), is(4));
@@ -60,6 +62,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 1".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         assertThat(accessStrategy.getNode(0, 3), is(7));
         assertThat(accessStrategy.getNode(1, 3), is(8));
@@ -87,6 +90,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 2".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(4), is(Collections.singletonList(1)));
@@ -104,6 +108,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 3".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         assertThat(accessStrategy.getSubTreeNodes(7), is(Collections.singletonList(0)));
         assertThat(accessStrategy.getSubTreeNodes(8), is(Collections.singletonList(1)));
@@ -130,6 +135,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 4".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes());
         accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes());
@@ -155,6 +161,7 @@ public class AccessStrategyPathTest {
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, BUCKET_SIZE);
         FactoryStub factoryStub = new FactoryStub(communicationStrategyStub);
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub);
+        accessStrategy.initializeServer();
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes());
 //        System.out.println("###########################################\n" + server.getTreeString());

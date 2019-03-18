@@ -1,4 +1,4 @@
-package oram;
+package oram.block;
 
 /**
  * <p> ORAM <br>

@@ -1,7 +1,7 @@
-package oram.lookahead;
+package oram.block;
 
-import oram.Block;
 import oram.Util;
+import oram.lookahead.Index;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -21,7 +21,7 @@ public class BlockLookahead implements Block {
     public BlockLookahead() {
     }
 
-    BlockLookahead(int address, byte[] data) {
+    public BlockLookahead(int address, byte[] data) {
         this.address = address;
         this.data = data;
     }

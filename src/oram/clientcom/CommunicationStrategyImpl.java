@@ -1,6 +1,6 @@
 package oram.clientcom;
 
-import oram.BlockEncrypted;
+import oram.block.BlockEncrypted;
 import oram.Constants;
 import oram.Util;
 import org.apache.commons.lang3.ArrayUtils;

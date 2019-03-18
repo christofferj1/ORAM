@@ -1,6 +1,8 @@
 package oram.path;
 
 import oram.*;
+import oram.block.BlockEncrypted;
+import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -22,13 +24,14 @@ public class AccessStrategyPath implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
     private final int L;
     private final int bucketSize;
+    private final int leafCount;
     private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print;
+    private boolean print = true;
     private int dummyCounter = 0;
 
     AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
@@ -36,15 +39,14 @@ public class AccessStrategyPath implements AccessStrategy {
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
         this.L = (int) Math.ceil(Math.log(size) / Math.log(2));
+        leafCount = (int) (Math.pow(2, L - 1));
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
         this.permutationStrategy = factory.getPermutationStrategy();
-
-        initializeServer();
     }
 
-    private void initializeServer() {
+    public void initializeServer() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
 //            System.out.println("Round: " + i + "\n" + communicationStrategy.getTreeString());
@@ -56,6 +58,43 @@ public class AccessStrategyPath implements AccessStrategy {
 //        print = true;
     }
 
+    public boolean initializeServer(List<BlockStandard> blocks) {
+        SecureRandom randomness = new SecureRandom();
+        for (int i = 0; i < blocks.size(); i++) {
+            positionMap.put(blocks.get(i).getAddress(), randomness.nextInt(leafCount));
+        }
+
+        List<BlockEncrypted> res = new ArrayList<>();
+        List<Integer> nodesHandled = new ArrayList<>();
+        for (int l = L - 1; l >= 0; l++) {
+            for (int leafNodeIndex = leafCount -1; leafNodeIndex >= 0; leafNodeIndex--) {
+                int nodeIndex = getNode(leafNodeIndex, l);
+                if (nodesHandled.contains(nodeIndex)) continue;
+                List<BlockStandard> bucketOfBlocks = getBlocksForNode(nodeIndex);
+                bucketOfBlocks = fillBucketWithDummyBlocks(bucketOfBlocks);
+
+                removeBlocksFromStash(bucketOfBlocks);
+
+                List<BlockEncrypted> bucketOfEncryptedBlocks = encryptBucketOfBlocks(bucketOfBlocks);
+
+                if (bucketOfEncryptedBlocks == null)
+                    return false;
+
+                nodesHandled.add(nodeIndex);
+                res.addAll(bucketOfEncryptedBlocks);
+            }
+            nodesHandled = new ArrayList<>();
+        }
+
+        Collections.reverse(res);
+
+        for (int i = 0; i < res.size(); i++) {
+            boolean writeSuccess = communicationStrategy.write(i, res.get(i));
+            if (!writeSuccess)
+                return false;
+        }
+        return true;
+    }
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
@@ -93,7 +132,9 @@ public class AccessStrategyPath implements AccessStrategy {
         byte[] res = retrieveDataOverwriteBlock(address, op, data);
 
 //        Line 10 to 15 in pseudo code.
-        writeBackPath(leafNodeIndex);
+        boolean writeBack = writeBackPath(leafNodeIndex);
+        if (!writeBack)
+            return null;
 
         return res;
     }
@@ -143,47 +184,77 @@ public class AccessStrategyPath implements AccessStrategy {
         return endData;
     }
 
-    private void writeBackPath(int leafNode) {
+    private boolean writeBackPath(int leafNode) {
         for (int l = L - 1; l >= 0; l--) {
-            List<BlockStandard> blocksToWrite = new ArrayList<>();
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
-            List<Integer> indices = getSubTreeNodes(nodeNumber);
 
 //            Pick all the blocks from the stash which can be written to the current node
-            for (BlockStandard s : stash) {
-                if (indices.contains(positionMap.get(s.getAddress())))
-                    blocksToWrite.add(s);
-            }
+            List<BlockStandard> blocksToWrite = getBlocksForNode(nodeNumber);
 
 //            Make sure there are exactly Z blocks to write to the node
-            if (blocksToWrite.size() > bucketSize) {
-                System.out.println("Bucket size: " + bucketSize);
-                System.out.println("Blocks to right size: " + blocksToWrite.size());
-                for (int i = blocksToWrite.size(); i > bucketSize; i--)
-                    blocksToWrite.remove(i - 1);
-            } else if (blocksToWrite.size() < bucketSize) {
-                blocksToWrite = fillWithDummy(blocksToWrite);
-            }
+            blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite);
 
 //            Remove the blocks from the stash, before they are written to the node
-            for (int i = stash.size() - 1; i >= 0; i--) {
-                if (blocksToWrite.contains(stash.get(i)))
-                    stash.remove(i);
-            }
+            removeBlocksFromStash(blocksToWrite);
 
 //            Encrypts all pairs
-            List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
-            for (BlockStandard block : blocksToWrite) {
-                byte[] addressCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
-                byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
-                encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
+            List<BlockEncrypted> encryptedBlocksToWrite = encryptBucketOfBlocks(blocksToWrite);
+            if (encryptedBlocksToWrite == null)
+                return false;
+            for (int i = 0; i < blocksToWrite.size(); i++) {
+                boolean writeSuccess = communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
+                if (!writeSuccess)
+                    return false;
             }
-            encryptedBlocksToWrite = permutationStrategy.permuteEncryptedBlocks(encryptedBlocksToWrite); // TODO: Can be done with Collections.shuffle
-            for (int i = 0; i < blocksToWrite.size(); i++)
-                communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
+        }
+        return true;
+    }
+
+    private List<BlockStandard> getBlocksForNode(int nodeIndex) {
+        List<Integer> indices = getSubTreeNodes(nodeIndex);
+        List<BlockStandard> res = new ArrayList<>();
+        for (BlockStandard s : stash) {
+            if (indices.contains(positionMap.get(s.getAddress())))
+                res.add(s);
+        }
+        return res;
+    }
+
+    private List<BlockStandard> fillBucketWithDummyBlocks(List<BlockStandard> blocksToWrite) {
+        if (blocksToWrite.size() > bucketSize) {
+            System.out.println("Bucket size: " + bucketSize);
+            System.out.println("Blocks to right size: " + blocksToWrite.size());
+            for (int i = blocksToWrite.size(); i > bucketSize; i--)
+                blocksToWrite.remove(i - 1);
+        } else if (blocksToWrite.size() < bucketSize) {
+            blocksToWrite = fillWithDummy(blocksToWrite);
+        }
+        return blocksToWrite;
+    }
+
+    private void removeBlocksFromStash(List<BlockStandard> blocksToWrite) {
+        for (int i = stash.size() - 1; i >= 0; i--) {
+            if (blocksToWrite.contains(stash.get(i)))
+                stash.remove(i);
         }
     }
+
+    private List<BlockEncrypted> encryptBucketOfBlocks(List<BlockStandard> blocksToWrite) {
+        List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
+        for (BlockStandard block : blocksToWrite) {
+            byte[] addressCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
+            byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
+            if (addressCipher == null || dataCipher == null) {
+                logger.error("Unable to encrypt address: " + block.getAddress() + " or data");
+                return null;
+            }
+            encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, dataCipher));
+        }
+        encryptedBlocksToWrite = permutationStrategy.permuteEncryptedBlocks(encryptedBlocksToWrite);
+        return encryptedBlocksToWrite;
+    }
+
 
     private List<BlockStandard> fillWithDummy(List<BlockStandard> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {

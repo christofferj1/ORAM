@@ -1,9 +1,11 @@
 package oram.lookahead;
 
 import oram.*;
+import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
-import oram.path.BlockStandard;
+import oram.block.BlockStandard;
 import oram.util.FactoryStub;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;

@@ -3,10 +3,12 @@ package oram.lookahead;
 
 import javafx.util.Pair;
 import oram.*;
+import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
-import oram.path.BlockStandard;
+import oram.block.BlockStandard;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;

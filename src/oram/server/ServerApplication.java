@@ -1,6 +1,6 @@
 package oram.server;
 
-import oram.path.BlockStandard;
+import oram.block.BlockStandard;
 
 import java.util.List;
 

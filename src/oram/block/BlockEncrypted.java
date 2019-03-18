@@ -1,4 +1,6 @@
-package oram;
+package oram.block;
+
+import oram.Util;
 
 import java.io.Serializable;
 import java.util.Arrays;

@@ -1,6 +1,6 @@
 package oram.clientcom;
 
-import oram.BlockEncrypted;
+import oram.block.BlockEncrypted;
 
 /**
  * <p> ORAM <br>

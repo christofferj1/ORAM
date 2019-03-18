@@ -1,8 +1,9 @@
 package oram;
 
+import oram.block.BlockEncrypted;
 import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
-import oram.lookahead.BlockLookahead;
+import oram.block.BlockLookahead;
 import org.apache.commons.lang3.StringUtils;
 
 /**

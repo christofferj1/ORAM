@@ -1,6 +1,7 @@
 package oram;
 
-import oram.path.BlockStandard;
+import oram.block.BlockEncrypted;
+import oram.block.BlockStandard;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;

@@ -4,16 +4,14 @@ import oram.OperationType;
 import oram.Util;
 import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
-import oram.factory.FactoryCustom;
-import oram.path.BlockStandard;
+import oram.factory.FactoryImpl;
+import oram.block.BlockStandard;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static oram.factory.FactoryCustom.*;
 
 /**
  * <p> ORAM <br>
@@ -43,7 +41,8 @@ public class MainLookahead {
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14));
 
-        Factory factory = new FactoryCustom(Enc.IDEN, Com.IMPL, Per.IDEN, 6, 4);
+        Factory factory = new FactoryImpl();
+//        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IDEN, 6, 4);
 
         CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
         clientCommunicationLayer.start();

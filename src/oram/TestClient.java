@@ -1,5 +1,6 @@
 package oram;
 
+import oram.block.BlockEncrypted;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import org.apache.commons.lang3.tuple.MutablePair;

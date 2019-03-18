@@ -1,7 +1,7 @@
 package oram.permutation;
 
-import oram.BlockEncrypted;
-import oram.path.BlockStandard;
+import oram.block.BlockEncrypted;
+import oram.block.BlockStandard;
 
 import java.security.SecureRandom;
 import java.util.Collections;
