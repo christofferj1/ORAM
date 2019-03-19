@@ -1,10 +1,13 @@
 package oram;
 
 import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
 import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
-import oram.block.BlockLookahead;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p> ORAM <br>
@@ -50,8 +53,8 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     @Override
-    public BlockEncrypted[] readArray(int[] addresses) {
-        return new BlockEncrypted[0];
+    public List<BlockEncrypted> readArray(List<Integer> addresses) {
+        return new ArrayList<>();
     }
 
     @Override

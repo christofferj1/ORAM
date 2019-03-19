@@ -51,7 +51,7 @@ public class MainPath {
 //        printTreeFromServer(bucketSize, com);
 //        System.out.println(com.getTreeString());
 
-        int numberOfRounds = 10;
+        int numberOfRounds = 100;
         logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
         for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;

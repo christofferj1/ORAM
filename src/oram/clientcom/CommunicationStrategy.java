@@ -2,6 +2,8 @@ package oram.clientcom;
 
 import oram.block.BlockEncrypted;
 
+import java.util.List;
+
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 20-02-2019. <br>
@@ -15,7 +17,7 @@ public interface CommunicationStrategy {
 
     boolean write(int address, BlockEncrypted block);
 
-    BlockEncrypted[] readArray(int[] addresses);
+    List<BlockEncrypted> readArray(List<Integer> addresses);
 
     boolean writeArray(int[] addresses, BlockEncrypted[] blocks);
 }

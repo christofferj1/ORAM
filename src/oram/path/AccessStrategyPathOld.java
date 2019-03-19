@@ -11,8 +11,6 @@ import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,7 +24,7 @@ import java.util.*;
  * Copyright (C) Lind Invest 2019 </p>
  */
 
-public class AccessStrategyPath implements AccessStrategy {
+public class AccessStrategyPathOld implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
     private final int L;
     private final int bucketSize;
@@ -42,7 +40,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean print = false;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
+    AccessStrategyPathOld(int size, int bucketSize, byte[] key, Factory factory) {
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
@@ -94,7 +92,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
                 List<BlockEncrypted> bucketOfEncryptedBlocks = encryptBucketOfBlocks(bucketOfBlocks);
 
-                if (bucketOfEncryptedBlocks == null) {
+                if (bucketOfEncryptedBlocks == null){
                     logger.error("Returned null when trying to encrypt blocks when initializing the ORAM");
                     return false;
                 }
@@ -108,20 +106,14 @@ public class AccessStrategyPath implements AccessStrategy {
         Collections.reverse(blocksToWrite);
 
         boolean res = true;
-
-        int[] addresses = new int[blocksToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            addresses[i] = i;
-        BlockEncrypted[] blockArray = new BlockEncrypted[blocksToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            blockArray[i] = blocksToWrite.get(i);
-
-        boolean writeSuccess = communicationStrategy.writeArray(addresses, blockArray);
-        if (!writeSuccess) {
-            logger.error("Writing blocks were unsuccessful when initializing the ORAM");
-            res = false;
+        for (int i = 0; i < blocksToWrite.size(); i++) {
+            boolean writeSuccess = communicationStrategy.write(i, blocksToWrite.get(i));
+            if (!writeSuccess) {
+                logger.error("Writing blocks were unsuccessful when initializing the ORAM");
+                res = false;
+                break;
+            }
         }
-
         return res;
     }
 
@@ -157,7 +149,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
-        if (!readPath) {
+        if (!readPath){
             logger.error("Unable to read path doing access");
             return null;
         }
@@ -169,7 +161,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //        Line 10 to 15 in pseudo code.
         boolean writeBack = writeBackPath(leafNodeIndex);
-        if (!writeBack) {
+        if (!writeBack){
             logger.error("Unable to write back path with doing access");
             return null;
         }
@@ -185,32 +177,28 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean readPathToStash(int leafNodeIndex) {
         if (print) System.out.println("Read path");
         boolean res = true;
-        List<Integer> positionsToRead = new ArrayList<>();
         for (int l = 0; l < L; l++) {
             int nodeNumber = getNode(leafNodeIndex, l);
             int position = nodeNumber * bucketSize;
+            List<BlockEncrypted> bucket = new ArrayList<>();
+
+            for (int i = 0; i < bucketSize; i++) {
+                BlockEncrypted blockRead = communicationStrategy.read(position + i);
+                if (blockRead == null) {
+                    logger.error("Received null when trying to read address: " + (position + i));
+                    return false;
+                }
+                bucket.add(blockRead);
+            }
             if (print) System.out.println("    Read node: " + nodeNumber);
 
-            for (int i = 0; i < bucketSize; i++)
-                positionsToRead.add(position + i);
-
-        }
-
-        List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(positionsToRead);
-
-        if (encryptedBlocks == null || bucketSize * L != encryptedBlocks.size()) {
-            logger.error("Did not fetch the right amount of blocks");
-            res = false;
-        } else {
-            List<BlockStandard> blocksDecrypted = decryptBlockPaths(encryptedBlocks);
-            if (blocksDecrypted == null) {
-                logger.error("Unable to decrypt path of blocks");
-                res = false;
-            } else {
+            if (bucket.size() == bucketSize) {
+                List<BlockStandard> blocksDecrypted = decryptBlockPaths(bucket);
 
                 if (print) {
-                    System.out.print("    Found blocks: ");
-                    for (BlockStandard b : blocksDecrypted) System.out.println("        " + b.toStringShort());
+                    System.out.print("        Found blocks: ");
+                    for (BlockStandard b : blocksDecrypted) System.out.print(b.toStringShort() + ", ");
+                    System.out.println(" ");
                 }
 
                 stash.addAll(blocksDecrypted);
@@ -219,6 +207,10 @@ public class AccessStrategyPath implements AccessStrategy {
                     logger.info("Max stash size: " + maxStashSize);
                     System.out.println("Max stash size: " + maxStashSize);
                 }
+            } else {
+                logger.error("Reading bucket for position: " + leafNodeIndex + ", in layer: " + l + " failed");
+                res = false;
+                break;
             }
         }
         return res;
@@ -263,7 +255,6 @@ public class AccessStrategyPath implements AccessStrategy {
             System.out.println(" ");
         }
 
-        List<Pair<Integer, BlockEncrypted>> blockPairsToWrite = new ArrayList<>();
         for (int l = L - 1; l >= 0; l--) {
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
@@ -298,25 +289,17 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = encryptBucketOfBlocks(blocksToWrite);
-            if (encryptedBlocksToWrite == null) {
+            if (encryptedBlocksToWrite == null){
                 logger.error("Returned null when trying to encrypt blocks");
                 return false;
             }
             for (int i = 0; i < blocksToWrite.size(); i++) {
-                blockPairsToWrite.add(new ImmutablePair<>(arrayPosition + i, encryptedBlocksToWrite.get(i)));
+                boolean writeSuccess = communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
+                if (!writeSuccess){
+                    logger.error("Writing returned unsuccessful");
+                    return false;
+                }
             }
-        }
-
-        int[] addresses = new int[blockPairsToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            addresses[i] = blockPairsToWrite.get(i).getKey();
-        BlockEncrypted[] blockArray = new BlockEncrypted[blockPairsToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            blockArray[i] = blockPairsToWrite.get(i).getValue();
-
-        if (!communicationStrategy.writeArray(addresses, blockArray)) {
-            logger.error("Writing returned unsuccessful");
-            return false;
         }
         return true;
     }

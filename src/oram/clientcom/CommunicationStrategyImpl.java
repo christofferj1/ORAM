@@ -11,7 +11,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p> ORAM <br>
@@ -121,13 +123,14 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     }
 
     @Override
-    public BlockEncrypted[] readArray(int[] addresses) {
-        if (addresses == null || addresses.length == 0) {
+    public List<BlockEncrypted> readArray(List<Integer> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
             logger.error("Cannot read empty array of addresses");
             return null;
         }
 
-        BlockEncrypted[] res = new BlockEncrypted[addresses.length];
+        int addressSize = addresses.size();
+        List<BlockEncrypted> res = new ArrayList<>();
         try {
 //            Send operation type
             byte[] operationTypeBytes = Util.leIntToByteArray(0);
@@ -136,7 +139,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             dataOutputStream.write(operationTypeBytes);
 
 //            Send number of blocks
-            byte[] numberOfBlocks = Util.leIntToByteArray(addresses.length);
+            byte[] numberOfBlocks = Util.leIntToByteArray(addressSize);
             length = numberOfBlocks.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(numberOfBlocks);
@@ -151,7 +154,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             }
             dataOutputStream.flush();
 
-            for (int i = 0; i < addresses.length; i++) {
+            for (int i = 0; i < addressSize; i++) {
                 byte[] data = new byte[0];
                 length = dataInputStream.readInt();
                 if (length > 0) {
@@ -162,7 +165,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
                 byte[] blockAddress = Arrays.copyOfRange(data, 0, ENCRYPTED_INTEGER_SIZE);
                 byte[] blockData = Arrays.copyOfRange(data, ENCRYPTED_INTEGER_SIZE, length);
 
-                res[i] = new BlockEncrypted(blockAddress, blockData);
+                res.add(new BlockEncrypted(blockAddress, blockData));
             }
         } catch (IOException e) {
             logger.error("Error happened while reading block: " + e);
