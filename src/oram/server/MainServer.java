@@ -52,6 +52,7 @@ public class MainServer {
         try {
             socket = serverSocket.accept();
             System.out.println("Client accepted, inet address: " + socket.getInetAddress());
+            logger.info("Client accepted, inet address: " + socket.getInetAddress());
         } catch (IOException e) {
             logger.error("Unable to create socket" + e);
             logger.debug("Stacktrace", e);

@@ -54,7 +54,7 @@ public class ServerCommunicationLayer {
 
                 if (!(statusBit && sendStatusBit)) break;
             }
-            logger.info("Handled a: " + accessEvent.getOperationType() + " event, addresses: " + Arrays.toString(addresses.toArray()));
+//            logger.info("Handled a: " + accessEvent.getOperationType() + " event, addresses: " + Arrays.toString(addresses.toArray()));
         }
 //        TODO: close session
     }

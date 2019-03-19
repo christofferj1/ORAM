@@ -53,8 +53,8 @@ public class AccessStrategyPath implements AccessStrategy {
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
-        logger.info("#### Initialized Path ORAM strategy ####");
-        logger.debug("#### Initialized Path ORAM strategy ####");
+        logger.info("######### Initialized Path ORAM strategy #########");
+        logger.debug("######### Initialized Path ORAM strategy #########");
     }
 
     public void initializeServer() {

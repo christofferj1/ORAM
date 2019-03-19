@@ -54,6 +54,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessCounter = 0;
         futureSwapPartners = new ArrayList<>();
         positionMap = new HashMap<>();
+
+        logger.info("######### Initialized Lookahead ORAM strategy #########");
+        logger.debug("######### Initialized Lookahead ORAM strategy #########");
     }
 
     boolean setup(List<BlockStandard> blocks) {
