@@ -4,6 +4,7 @@ import oram.block.Block;
 import oram.block.BlockEncrypted;
 import oram.encryption.EncryptionStrategy;
 import org.apache.commons.lang3.Range;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
@@ -130,10 +131,14 @@ public class Util {
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < bucketSize; i++) {
-            int i2 = index * bucketSize;
-            int i1 = i2 + i;
-            if (array.length > i1)
-                builder.append(prefix).append(array[i1]);
+            int firstIndexInBucket = index * bucketSize;
+            int currentIndex = firstIndexInBucket + i;
+            if (i == 0)
+                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
+            else
+                builder.append(prefix).append("    ");
+            if (array.length > currentIndex)
+                builder.append(array[currentIndex].toStringShort());
             builder.append("\n");
         }
 

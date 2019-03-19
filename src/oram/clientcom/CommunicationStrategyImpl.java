@@ -129,10 +129,10 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
 //        System.out.println("Enter IP");
 //        Scanner scanner = new Scanner(System.in);
 //        String hostname = scanner.nextLine();
-        String hostname = "192.168.1.137"; // TODO
+        String ipAddress = "10.192.105.71"; // TODO
         try {
 //            TODO: sleep and try over
-            socket = new Socket(hostname, Constants.PORT);
+            socket = new Socket(ipAddress, Constants.PORT);
             System.out.println("Socket opened, inet address: " + socket.getInetAddress());
         } catch (IOException e) {
             logger.error("Error happened while initializing streams: " + e);

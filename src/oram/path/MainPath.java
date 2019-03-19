@@ -2,6 +2,7 @@ package oram.path;
 
 import oram.OperationType;
 import oram.Util;
+import oram.block.BlockEncrypted;
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
@@ -56,18 +57,22 @@ public class MainPath {
         AccessStrategyPath access = new AccessStrategyPath(15, bucketSize, key, factory);
         access.initializeServer(blocks);
 
+//        printTreeFromServer(bucketSize, com);
 //        System.out.println(com.getTreeString());
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10000; i++) {
             int address = randomness.nextInt(14) + 1;
 
             byte[] res = access.access(OperationType.READ, address, null);
 
-            if (res == null) {System.exit(-1);}
+            if (res == null) System.exit(-1);
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
             System.out.println("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
             logger.info("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+
+//            printTreeFromServer(bucketSize, com);
+
 //            System.out.println(com.getTreeString());
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
             if (!s.contains(Integer.toString(address))) {
@@ -76,5 +81,15 @@ public class MainPath {
             }
         }
         System.out.println("Max stash size: " + access.maxStashSize);
+        logger.info("Max stash size: " + access.maxStashSize);
+        System.out.println("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
+        logger.info("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
+    }
+
+    private static void printTreeFromServer(int bucketSize, CommunicationStrategy com) {
+        BlockEncrypted[] array = new BlockEncrypted[15 * bucketSize];
+        for (int j = 0; j < array.length; j++)
+            array[j] = com.read(j);
+        System.out.println(Util.printTree(array, bucketSize));
     }
 }

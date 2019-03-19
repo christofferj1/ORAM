@@ -33,11 +33,12 @@ public class AccessStrategyPath implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
+    public int maxStashSize;
+    public int maxStashSizeBetweenAccesses;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print = true;
+    private boolean print = false;
     private int dummyCounter = 0;
-    public int maxStashSize;
 
     AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
         this.stash = new ArrayList<>();
@@ -50,6 +51,7 @@ public class AccessStrategyPath implements AccessStrategy {
         this.secretKey = encryptionStrategy.generateSecretKey(key);
         this.permutationStrategy = factory.getPermutationStrategy();
         maxStashSize = 0;
+        maxStashSizeBetweenAccesses = 0;
 
         logger.info("#### Initialized Path ORAM strategy ####");
         logger.debug("#### Initialized Path ORAM strategy ####");
@@ -104,8 +106,10 @@ public class AccessStrategyPath implements AccessStrategy {
         boolean res = true;
         for (int i = 0; i < blocksToWrite.size(); i++) {
             boolean writeSuccess = communicationStrategy.write(i, blocksToWrite.get(i));
-            if (!writeSuccess)
+            if (!writeSuccess) {
                 res = false;
+                break;
+            }
         }
         return res;
     }
@@ -122,7 +126,7 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Return a random position if the block does not have one already
         int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
         if (print) {
-            System.out.println("Address: " + address + ", leaf node index: " + leafNodeIndex + ", data: " + (data == null ? null : new String(data)));
+            System.out.println("Access op: " + op.toString() + ", address: " + address + ", data: " + Arrays.toString(data));
             System.out.println("MAP BEFORE");
             for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
                 System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
@@ -137,6 +141,7 @@ public class AccessStrategyPath implements AccessStrategy {
                 System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
                         StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
             System.out.println(" ");
+            System.out.println("Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(address));
         }
 
 //        Line 3 to 5 in pseudo code.
@@ -152,22 +157,43 @@ public class AccessStrategyPath implements AccessStrategy {
         if (!writeBack)
             return null;
 
+        if (stash.size() > maxStashSizeBetweenAccesses) {
+            maxStashSizeBetweenAccesses = stash.size();
+            logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
+            System.out.println("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
+        }
         return res;
     }
 
     private boolean readPathToStash(int leafNodeIndex) {
+        if (print) System.out.println("Read path");
         boolean res = true;
         for (int l = 0; l < L; l++) {
-            int position = getNode(leafNodeIndex, l) * bucketSize;
+            int nodeNumber = getNode(leafNodeIndex, l);
+            int position = nodeNumber * bucketSize;
             List<BlockEncrypted> bucket = new ArrayList<>();
             for (int i = 0; i < bucketSize; i++) {
-                bucket.add(communicationStrategy.read(position + i));
+                BlockEncrypted blockRead = communicationStrategy.read(position + i);
+                if (blockRead == null) return false;
+                bucket.add(blockRead);
             }
+            if (print) System.out.println("    Read node: " + nodeNumber);
 
             if (bucket.size() == bucketSize) {
-                stash.addAll(decryptBlockPaths(bucket));
-                if (stash.size() > maxStashSize)
+                List<BlockStandard> blocksDecrypted = decryptBlockPaths(bucket);
+
+                if (print) {
+                    System.out.print("        Found blocks: ");
+                    for (BlockStandard b : blocksDecrypted) System.out.print(b.toStringShort() + ", ");
+                    System.out.println(" ");
+                }
+
+                stash.addAll(blocksDecrypted);
+                if (stash.size() > maxStashSize) {
                     maxStashSize = stash.size();
+                    logger.info("Max stash size: " + maxStashSize);
+                    System.out.println("Max stash size: " + maxStashSize);
+                }
             } else {
                 logger.error("Reading bucket for position: " + leafNodeIndex + ", in layer: " + l + " failed");
                 res = false;
@@ -198,25 +224,55 @@ public class AccessStrategyPath implements AccessStrategy {
 
         if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock)
             stash.add(new BlockStandard(address, data));
-        if (stash.size() > maxStashSize)
+        if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
+            logger.info("Max stash size: " + maxStashSize);
+            System.out.println("Max stash size: " + maxStashSize);
+        }
 
         return endData;
     }
 
     private boolean writeBackPath(int leafNode) {
+        if (print) {
+            System.out.println("Write back path");
+            System.out.println("    Stash:");
+            System.out.print("        ");
+            for (BlockStandard b : stash) System.out.print(b.toStringShort() + ", ");
+            System.out.println(" ");
+        }
+
         for (int l = L - 1; l >= 0; l--) {
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
+            if (print) System.out.println("    Node number: " + nodeNumber + ", array position: " + arrayPosition);
 
 //            Pick all the blocks from the stash which can be written to the current node
             List<BlockStandard> blocksToWrite = getBlocksForNode(nodeNumber);
+            if (print) {
+                System.out.println("    Blocks to write to node number: " + nodeNumber);
+                System.out.print("        ");
+                for (BlockStandard b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
+                System.out.println(" ");
+            }
 
 //            Make sure there are exactly Z blocks to write to the node
-            blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite);
+            blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite); // TODO: permute
+            if (print) {
+                System.out.println("    Blocks actually written:");
+                System.out.print("        ");
+                for (BlockStandard b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
+                System.out.println(" ");
+            }
 
 //            Remove the blocks from the stash, before they are written to the node
             removeBlocksFromStash(blocksToWrite);
+            if (print) {
+                System.out.println("    Stash:");
+                System.out.print("        ");
+                for (BlockStandard b : stash) System.out.print(b.toStringShort() + ", ");
+                System.out.println(" ");
+            }
 
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = encryptBucketOfBlocks(blocksToWrite);
@@ -243,8 +299,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
     private List<BlockStandard> fillBucketWithDummyBlocks(List<BlockStandard> blocksToWrite) {
         if (blocksToWrite.size() > bucketSize) {
-            System.out.println("Bucket size: " + bucketSize);
-            System.out.println("Blocks to right size: " + blocksToWrite.size());
+//            System.out.println("Bucket size: " + bucketSize + ", blocks to right size: " + blocksToWrite.size());
             for (int i = blocksToWrite.size(); i > bucketSize; i--)
                 blocksToWrite.remove(i - 1);
         } else if (blocksToWrite.size() < bucketSize) {

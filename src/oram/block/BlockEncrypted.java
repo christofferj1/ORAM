@@ -46,6 +46,21 @@ public class BlockEncrypted implements Serializable {
                 '}';
     }
 
+    public String toStringShort() {
+        String dataString;
+        if (data.length > 10) {
+            String arrayString = Util.printByteArray(Arrays.copyOf(data, 10), false);
+            arrayString = arrayString.substring(0, arrayString.length() - 1);
+            arrayString += ", ...";
+            dataString = arrayString;
+        } else
+            dataString = Util.printByteArray(data, false);
+        return "Block{" +
+                "add=" + Util.printByteArray(address, true) +
+                ", data=" + dataString +
+                '}';
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
