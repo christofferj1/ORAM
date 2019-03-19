@@ -1,5 +1,7 @@
 package oram.block;
 
+import oram.Util;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
@@ -60,6 +62,21 @@ public class BlockStandard implements Block, Serializable {
         return "BlockStandard{" +
                 "address=" + address +
                 ", data=" + Arrays.toString(data) +
+                '}';
+    }
+
+    public String toStringShort() {
+        String dataString;
+        if (data.length > 10) {
+            String arrayString = Util.printByteArray(Arrays.copyOf(data, 10), false);
+            arrayString = arrayString.substring(0, arrayString.length() - 1);
+            arrayString += ", ...";
+            dataString = arrayString;
+        } else
+            dataString = Util.printByteArray(data, false);
+        return "Block{" +
+                "add=" + address +
+                ", data=" + dataString +
                 '}';
     }
 }

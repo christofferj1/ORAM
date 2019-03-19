@@ -20,6 +20,9 @@ public class MainServer {
     public static void main(String[] args) {
         logger.debug("######### INITIALIZED SERVER #########");
         logger.info("######### INITIALIZED SERVER #########");
+
+//        TODO: check that the files directory exists
+
         ServerApplication serverApplication = new ServerApplicationImpl();
 
         System.out.println(getIPAddress());
