@@ -11,7 +11,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,8 +41,8 @@ public class ServerCommunicationLayer {
             if (accessEvent == null || accessEvent.getOperationType() == null) break;
 
             List<String> addresses = accessEvent.getAddresses();
-            System.out.println("Received access event of type: " + accessEvent.getOperationType() +
-                    ", to addresses: " + Arrays.toString(addresses.toArray()));
+//            System.out.println("Received access event of type: " + accessEvent.getOperationType() +
+//                    ", to addresses: " + Arrays.toString(addresses.toArray()));
 
             if (accessEvent.getOperationType().equals(OperationType.READ)) { // Handle a read event
                 if (!sendBlocks(application.read(addresses))) break;
@@ -108,7 +107,7 @@ public class ServerCommunicationLayer {
     private boolean sendBlocks(List<BlockStandard> blocks) {
         try {
             for (BlockStandard block : blocks) {
-                System.out.println("Sending block: " + block.toStringShort());
+//                System.out.println("Sending block: " + block.toStringShort());
                 int length = block.getData().length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(block.getData());
@@ -124,7 +123,7 @@ public class ServerCommunicationLayer {
 
     private boolean sendWritingStatusBit(boolean status) {
         try {
-            System.out.println("Sending writing status: " + status);
+//            System.out.println("Sending writing status: " + status);
             byte[] bytes = Util.leIntToByteArray(status ? 1 : 0);
             int length = bytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
