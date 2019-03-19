@@ -11,8 +11,6 @@ import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -109,14 +107,11 @@ public class AccessStrategyPath implements AccessStrategy {
 
         boolean res = true;
 
-        int[] addresses = new int[blocksToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            addresses[i] = i;
-        BlockEncrypted[] blockArray = new BlockEncrypted[blocksToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            blockArray[i] = blocksToWrite.get(i);
+        List<Integer> addresses = new ArrayList<>();
+        for (int i = 0; i < blocksToWrite.size(); i++)
+            addresses.add(i);
 
-        boolean writeSuccess = communicationStrategy.writeArray(addresses, blockArray);
+        boolean writeSuccess = communicationStrategy.writeArray(addresses, blocksToWrite);
         if (!writeSuccess) {
             logger.error("Writing blocks were unsuccessful when initializing the ORAM");
             res = false;
@@ -263,7 +258,8 @@ public class AccessStrategyPath implements AccessStrategy {
             System.out.println(" ");
         }
 
-        List<Pair<Integer, BlockEncrypted>> blockPairsToWrite = new ArrayList<>();
+        List<Integer> addressesToWrite = new ArrayList<>();
+        List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
         for (int l = L - 1; l >= 0; l--) {
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
@@ -297,24 +293,18 @@ public class AccessStrategyPath implements AccessStrategy {
             }
 
 //            Encrypts all pairs
-            List<BlockEncrypted> encryptedBlocksToWrite = encryptBucketOfBlocks(blocksToWrite);
-            if (encryptedBlocksToWrite == null) {
+            List<BlockEncrypted> encryptedBlocksToWriteTmp = encryptBucketOfBlocks(blocksToWrite);
+            if (encryptedBlocksToWriteTmp == null) {
                 logger.error("Returned null when trying to encrypt blocks");
                 return false;
             }
             for (int i = 0; i < blocksToWrite.size(); i++) {
-                blockPairsToWrite.add(new ImmutablePair<>(arrayPosition + i, encryptedBlocksToWrite.get(i)));
+                addressesToWrite.add(arrayPosition + i);
+                encryptedBlocksToWrite.add(encryptedBlocksToWriteTmp.get(i));
             }
         }
 
-        int[] addresses = new int[blockPairsToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            addresses[i] = blockPairsToWrite.get(i).getKey();
-        BlockEncrypted[] blockArray = new BlockEncrypted[blockPairsToWrite.size()];
-        for (int i = 0; i < addresses.length; i++)
-            blockArray[i] = blockPairsToWrite.get(i).getValue();
-
-        if (!communicationStrategy.writeArray(addresses, blockArray)) {
+        if (!communicationStrategy.writeArray(addressesToWrite, encryptedBlocksToWrite)) {
             logger.error("Writing returned unsuccessful");
             return false;
         }

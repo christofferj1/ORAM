@@ -177,7 +177,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     }
 
     @Override
-    public boolean writeArray(int[] addresses, BlockEncrypted[] blocks) {
+    public boolean writeArray(List<Integer> addresses, List<BlockEncrypted> blocks) {
         boolean res = true;
         try {
 //            Send operation type
@@ -187,25 +187,25 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             dataOutputStream.write(operationTypeBytes);
 
 //            Send number of blocks
-            byte[] numberOfBlocks = Util.leIntToByteArray(blocks.length);
+            byte[] numberOfBlocks = Util.leIntToByteArray(blocks.size());
             length = numberOfBlocks.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(numberOfBlocks);
 
 //            Send blocks
-            for (int i = 0; i < blocks.length; i++) {
-                byte[] addressBytes = Util.leIntToByteArray(addresses[i]);
+            for (int i = 0; i < blocks.size(); i++) {
+                byte[] addressBytes = Util.leIntToByteArray(addresses.get(i));
                 length = addressBytes.length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(addressBytes);
 
-                if (blocks[i].getAddress().length != ENCRYPTED_INTEGER_SIZE) {
-                    logger.error("Address byte array has wrong size: " + blocks[i].getAddress().length);
+                if (blocks.get(i).getAddress().length != ENCRYPTED_INTEGER_SIZE) {
+                    logger.error("Address byte array has wrong size: " + blocks.get(i).getAddress().length);
                     res = false;
                     break;
                 }
 
-                byte[] combinedData = ArrayUtils.addAll(blocks[i].getAddress(), blocks[i].getData());
+                byte[] combinedData = ArrayUtils.addAll(blocks.get(i).getAddress(), blocks.get(i).getData());
                 length = combinedData.length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(combinedData);

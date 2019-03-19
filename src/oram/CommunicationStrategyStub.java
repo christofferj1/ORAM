@@ -58,7 +58,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     @Override
-    public boolean writeArray(int[] addresses, BlockEncrypted[] blocks) {
+    public boolean writeArray(List<Integer> addresses, List<BlockEncrypted> blocks) {
         return false;
     }
 
