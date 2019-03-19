@@ -141,12 +141,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 } else {
                     block = pair.getKey();
                     swapCount = pair.getValue();
-                    logger.info("Block found in swap stash: " + block.toString());
+                    logger.info("Block found in swap stash: " + block.toStringShort());
                 }
             } else
-                logger.info("Block found in access stash: " + block.toString());
+                logger.info("Block found in access stash: " + block.toStringShort());
         } else
-            logger.info("Block found in matrix: " + block.toString());
+            logger.info("Block found in matrix: " + block.toStringShort());
 
 //        Get swap partner
         int accessCounterMod = Math.floorMod(accessCounter, matrixHeight);

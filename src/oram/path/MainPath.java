@@ -1,12 +1,14 @@
 package oram.path;
 
-import oram.CommunicationStrategyStub;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockStandard;
+import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ import static oram.factory.FactoryCustom.*;
  */
 
 public class MainPath {
+    private static final Logger logger = LogManager.getLogger("log");
+
     public static void main(String[] args) {
         byte[] key = new byte[16];
         SecureRandom randomness = new SecureRandom();
@@ -44,29 +48,33 @@ public class MainPath {
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14));
 
-        Factory factory = new FactoryCustom(Enc.IDEN, Com.STUB, Per.IDEN, 15, 4);
+        int bucketSize = 2;
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, 15, bucketSize);
 
-        CommunicationStrategyStub com = (CommunicationStrategyStub) factory.getCommunicationStrategy();
+        CommunicationStrategy com = factory.getCommunicationStrategy();
         com.start();
-        AccessStrategyPath access = new AccessStrategyPath(15, 4, key, factory);
+        AccessStrategyPath access = new AccessStrategyPath(15, bucketSize, key, factory);
         access.initializeServer(blocks);
 
-        System.out.println(com.getTreeString());
+//        System.out.println(com.getTreeString());
 
         for (int i = 0; i < 10; i++) {
             int address = randomness.nextInt(14) + 1;
 
             byte[] res = access.access(OperationType.READ, address, null);
-            if (res == null)
-                System.exit(-1);
+
+            if (res == null) {System.exit(-1);}
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
             System.out.println("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+            logger.info("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println(com.getTreeString());
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
             if (!s.contains(Integer.toString(address))) {
                 System.out.println("SHIT WENT WRONG!!!");
                 break;
             }
         }
+        System.out.println("Max stash size: " + access.maxStashSize);
     }
 }

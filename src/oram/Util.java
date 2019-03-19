@@ -99,7 +99,8 @@ public class Util {
             builder.append(b);
             builder.append(",");
         }
-        builder.deleteCharAt(builder.length() - 1);
+        if (builder.length() > 1)
+            builder.deleteCharAt(builder.length() - 1);
         return builder.append("]").toString();
     }
 

@@ -1,12 +1,16 @@
 package oram.path;
 
-import oram.*;
+import oram.AccessStrategy;
+import oram.Constants;
+import oram.OperationType;
+import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +37,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private Map<Integer, Integer> positionMap;
     private boolean print = true;
     private int dummyCounter = 0;
+    public int maxStashSize;
 
     AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
         this.stash = new ArrayList<>();
@@ -44,6 +49,10 @@ public class AccessStrategyPath implements AccessStrategy {
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
         this.permutationStrategy = factory.getPermutationStrategy();
+        maxStashSize = 0;
+
+        logger.info("#### Initialized Path ORAM strategy ####");
+        logger.debug("#### Initialized Path ORAM strategy ####");
     }
 
     public void initializeServer() {
@@ -60,16 +69,20 @@ public class AccessStrategyPath implements AccessStrategy {
 
     public boolean initializeServer(List<BlockStandard> blocks) {
         SecureRandom randomness = new SecureRandom();
+
         for (int i = 0; i < blocks.size(); i++) {
             positionMap.put(blocks.get(i).getAddress(), randomness.nextInt(leafCount));
         }
+        stash.addAll(blocks);
 
-        List<BlockEncrypted> res = new ArrayList<>();
+        List<BlockEncrypted> blocksToWrite = new ArrayList<>();
         List<Integer> nodesHandled = new ArrayList<>();
-        for (int l = L - 1; l >= 0; l++) {
-            for (int leafNodeIndex = leafCount -1; leafNodeIndex >= 0; leafNodeIndex--) {
+        for (int l = L - 1; l >= 0; l--) {
+            for (int leafNodeIndex = leafCount - 1; leafNodeIndex >= 0; leafNodeIndex--) {
                 int nodeIndex = getNode(leafNodeIndex, l);
-                if (nodesHandled.contains(nodeIndex)) continue;
+                if (nodesHandled.contains(nodeIndex))
+                    continue;
+
                 List<BlockStandard> bucketOfBlocks = getBlocksForNode(nodeIndex);
                 bucketOfBlocks = fillBucketWithDummyBlocks(bucketOfBlocks);
 
@@ -81,19 +94,20 @@ public class AccessStrategyPath implements AccessStrategy {
                     return false;
 
                 nodesHandled.add(nodeIndex);
-                res.addAll(bucketOfEncryptedBlocks);
+                blocksToWrite.addAll(bucketOfEncryptedBlocks);
             }
             nodesHandled = new ArrayList<>();
         }
 
-        Collections.reverse(res);
+        Collections.reverse(blocksToWrite);
 
-        for (int i = 0; i < res.size(); i++) {
-            boolean writeSuccess = communicationStrategy.write(i, res.get(i));
+        boolean res = true;
+        for (int i = 0; i < blocksToWrite.size(); i++) {
+            boolean writeSuccess = communicationStrategy.write(i, blocksToWrite.get(i));
             if (!writeSuccess)
-                return false;
+                res = false;
         }
-        return true;
+        return res;
     }
 
     @Override
@@ -108,19 +122,21 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Return a random position if the block does not have one already
         int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
         if (print) {
+            System.out.println("Address: " + address + ", leaf node index: " + leafNodeIndex + ", data: " + (data == null ? null : new String(data)));
             System.out.println("MAP BEFORE");
-            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet()) {
-                System.out.println(entry.getKey() + " -> " + entry.getValue());
-            }
+            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
+                System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
+                        StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
+            System.out.println(" ");
         }
         positionMap.put(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
 
         if (print) {
-            System.out.println("Address: " + address + ", leaf node index: " + leafNodeIndex + ", data: " + (data == null ? null : new String(data)));
             System.out.println("MAP AFTER");
-            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet()) {
-                System.out.println(entry.getKey() + " -> " + entry.getValue());
-            }
+            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
+                System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
+                        StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
+            System.out.println(" ");
         }
 
 //        Line 3 to 5 in pseudo code.
@@ -150,6 +166,8 @@ public class AccessStrategyPath implements AccessStrategy {
 
             if (bucket.size() == bucketSize) {
                 stash.addAll(decryptBlockPaths(bucket));
+                if (stash.size() > maxStashSize)
+                    maxStashSize = stash.size();
             } else {
                 logger.error("Reading bucket for position: " + leafNodeIndex + ", in layer: " + l + " failed");
                 res = false;
@@ -180,6 +198,8 @@ public class AccessStrategyPath implements AccessStrategy {
 
         if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock)
             stash.add(new BlockStandard(address, data));
+        if (stash.size() > maxStashSize)
+            maxStashSize = stash.size();
 
         return endData;
     }

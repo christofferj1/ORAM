@@ -1,8 +1,8 @@
 package oram.clientcom;
 
-import oram.block.BlockEncrypted;
 import oram.Constants;
 import oram.Util;
+import oram.block.BlockEncrypted;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -84,6 +84,19 @@ public class BlockLookahead implements Block {
                 '}';
     }
 
+    public String toStringShort() {
+        String dataString;
+        if (data.length > 10)
+            dataString = Util.printByteArray(Arrays.copyOf(data, 10), false);
+        else
+            dataString = Util.printByteArray(data, false);
+        return "Lookahead{" +
+                "add=" + (address < 10 ? " " + address : address) +
+                ", (" + rowIndex + ", " + colIndex + ")" +
+                 ", data=" + dataString +
+                '}';
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
