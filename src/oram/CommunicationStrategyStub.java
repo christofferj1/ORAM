@@ -49,6 +49,16 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         return true;
     }
 
+    @Override
+    public BlockEncrypted[] readArray(int[] addresses) {
+        return new BlockEncrypted[0];
+    }
+
+    @Override
+    public boolean writeArray(int[] addresses, BlockEncrypted[] blocks) {
+        return false;
+    }
+
     public String getTreeString() {
         return Util.printTree(blocks, bucketSize);
     }

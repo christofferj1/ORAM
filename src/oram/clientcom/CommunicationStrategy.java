@@ -14,4 +14,8 @@ public interface CommunicationStrategy {
     BlockEncrypted read(int address);
 
     boolean write(int address, BlockEncrypted block);
+
+    BlockEncrypted[] readArray(int[] addresses);
+
+    boolean writeArray(int[] addresses, BlockEncrypted[] blocks);
 }

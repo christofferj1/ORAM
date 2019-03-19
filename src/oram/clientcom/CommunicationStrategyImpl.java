@@ -53,13 +53,6 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
 
             dataOutputStream.flush();
 
-//            byte[] receivedAddressBytes = new byte[0];
-//            length = dataInputStream.readInt();
-//            if (length > 0) {
-//                receivedAddressBytes = new byte[length];
-//                dataInputStream.readFully(receivedAddressBytes, 0, length);
-//            }
-
             byte[] data = new byte[0];
             length = dataInputStream.readInt();
             if (length > 0) {
@@ -115,14 +108,127 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
                 statusBitArray = new byte[length];
                 dataInputStream.readFully(statusBitArray, 0, length);
             }
-            if (Util.byteArrayToLeInt(statusBitArray) == 0)
+            if (Util.byteArrayToLeInt(statusBitArray) == 0) {
+                logger.error("Status bit received was 0");
                 return false;
+            }
         } catch (IOException e) {
             logger.error("Error happened while writing block: " + e);
             logger.debug("Stacktrace", e);
             return false;
         }
         return true;
+    }
+
+    @Override
+    public BlockEncrypted[] readArray(int[] addresses) {
+        if (addresses == null || addresses.length == 0) {
+            logger.error("Cannot read empty array of addresses");
+            return null;
+        }
+
+        BlockEncrypted[] res = new BlockEncrypted[addresses.length];
+        try {
+//            Send operation type
+            byte[] operationTypeBytes = Util.leIntToByteArray(0);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+//            Send number of blocks
+            byte[] numberOfBlocks = Util.leIntToByteArray(addresses.length);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
+//            Send addresses
+            byte[] addressBytes;
+            for (int i : addresses) {
+                addressBytes = Util.leIntToByteArray(i);
+                length = addressBytes.length;
+                dataOutputStream.write(Util.beIntToByteArray(length));
+                dataOutputStream.write(addressBytes);
+            }
+            dataOutputStream.flush();
+
+            for (int i = 0; i < addresses.length; i++) {
+                byte[] data = new byte[0];
+                length = dataInputStream.readInt();
+                if (length > 0) {
+                    data = new byte[length];
+                    dataInputStream.readFully(data, 0, length);
+                }
+
+                byte[] blockAddress = Arrays.copyOfRange(data, 0, ENCRYPTED_INTEGER_SIZE);
+                byte[] blockData = Arrays.copyOfRange(data, ENCRYPTED_INTEGER_SIZE, length);
+
+                res[i] = new BlockEncrypted(blockAddress, blockData);
+            }
+        } catch (IOException e) {
+            logger.error("Error happened while reading block: " + e);
+            logger.debug("Stacktrace", e);
+            return null;
+        }
+        return res;
+
+    }
+
+    @Override
+    public boolean writeArray(int[] addresses, BlockEncrypted[] blocks) {
+        boolean res = true;
+        try {
+//            Send operation type
+            byte[] operationTypeBytes = Util.leIntToByteArray(1);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+//            Send number of blocks
+            byte[] numberOfBlocks = Util.leIntToByteArray(blocks.length);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
+//            Send blocks
+            for (int i = 0; i < blocks.length; i++) {
+                byte[] addressBytes = Util.leIntToByteArray(addresses[i]);
+                length = addressBytes.length;
+                dataOutputStream.write(Util.beIntToByteArray(length));
+                dataOutputStream.write(addressBytes);
+
+                if (blocks[i].getAddress().length != ENCRYPTED_INTEGER_SIZE) {
+                    logger.error("Address byte array has wrong size: " + blocks[i].getAddress().length);
+                    res = false;
+                    break;
+                }
+
+                byte[] combinedData = ArrayUtils.addAll(blocks[i].getAddress(), blocks[i].getData());
+                length = combinedData.length;
+                dataOutputStream.write(Util.beIntToByteArray(length));
+                dataOutputStream.write(combinedData);
+            }
+
+            byte[] statusBitArray = new byte[0];
+            if (res) {
+                dataOutputStream.flush();
+
+                statusBitArray = new byte[0];
+                length = dataInputStream.readInt();
+                if (length > 0) {
+                    statusBitArray = new byte[length];
+                    dataInputStream.readFully(statusBitArray, 0, length);
+                }
+            }
+            if (Util.byteArrayToLeInt(statusBitArray) == 0) {
+                logger.error("Status bit received was 0");
+                res = false;
+            }
+        } catch (IOException e) {
+            logger.error("Error happened while writing block: " + e);
+            logger.debug("Stacktrace", e);
+            res = false;
+        }
+        return res;
     }
 
     private boolean setupConnection() {

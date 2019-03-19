@@ -167,4 +167,12 @@ public class Util {
         byte[] encryptedData = encryptionStrategy.encrypt(new byte[Constants.BLOCK_SIZE], key);
         return new BlockEncrypted(encryptedAddress, encryptedData);
     }
+
+    public static String getTimeString(long milliseconds) {
+        int hours = (int) (milliseconds / 3600000);
+        int minutes = (int) (milliseconds % 3600000) / 60000;
+        int seconds = (int) (milliseconds % 60000) / 1000;
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
 }

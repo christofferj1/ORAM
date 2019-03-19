@@ -32,15 +32,15 @@ public class MainPath {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        int numberOfBlocks = 103;
+        int numberOfBlocks = 15;
         List<BlockStandard> blocks = new ArrayList<>();
         for (int i = 0; i < numberOfBlocks; i++) {
             int blockNumber = i + 1;
             blocks.add(new BlockStandard(blockNumber, ("Block " + blockNumber).getBytes()));
         }
 
-        int bucketSize = 2;
-        int size = 127;
+        int bucketSize = 4;
+        int size = 15;
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, bucketSize);
 
         CommunicationStrategy com = factory.getCommunicationStrategy();
@@ -51,16 +51,17 @@ public class MainPath {
 //        printTreeFromServer(bucketSize, com);
 //        System.out.println(com.getTreeString());
 
-        for (int i = 0; i < 1000; i++) {
+        int numberOfRounds = 10;
+        logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
+        for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;
 
             byte[] res = access.access(OperationType.READ, address, null);
-
             if (res == null) System.exit(-1);
+
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
             System.out.println("Read block " + StringUtils.leftPad(String.valueOf(address), 3) + ": " + StringUtils.leftPad(s, 9) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
-//            logger.info("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            printTreeFromServer(bucketSize, com);
 
@@ -76,7 +77,9 @@ public class MainPath {
         System.out.println("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
         logger.info("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
 
-        System.out.println(((System.nanoTime() - startTime) / 1000000) + " milliseconds");
+        long timeElapsed = (System.nanoTime() - startTime) / 1000000;
+
+        System.out.println(timeElapsed + " milliseconds, " + Util.getTimeString(timeElapsed));
     }
 
     private static void printTreeFromServer(int bucketSize, CommunicationStrategy com) {
