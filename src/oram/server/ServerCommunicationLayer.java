@@ -41,17 +41,20 @@ public class ServerCommunicationLayer {
             AccessEvent accessEvent = receiveRequests();
             if (accessEvent == null || accessEvent.getOperationType() == null) break;
 
-            System.out.println("Received access event of type: " + accessEvent.getOperationType() +
-                    ", to addresses: " + Arrays.toString(accessEvent.getAddresses().toArray()));
+            List<String> addresses = accessEvent.getAddresses();
+//            System.out.println("Received access event of type: " + accessEvent.getOperationType() +
+//                    ", to addresses: " + Arrays.toString(addresses.toArray()));
 
             if (accessEvent.getOperationType().equals(OperationType.READ)) { // Handle a read event
-                if (!sendBlocks(application.read(accessEvent.getAddresses()))) break;
+                if (!sendBlocks(application.read(addresses))) break;
             } else { // Handle a write event
-                boolean statusBit = application.write(accessEvent.getAddresses(), accessEvent.getDataArrays());
-                boolean sendStatusBit = sendWritingStatusBit(statusBit);
+                List<byte[]> dataArrays = accessEvent.getDataArrays();
+                boolean statusBit = application.write(addresses, dataArrays);
+                boolean sendStatusBit = sendWritingStatusBit(statusBit); // TODO: test the workflow if status = 0
 
                 if (!(statusBit && sendStatusBit)) break;
             }
+            logger.info("Handled a: " + accessEvent.getOperationType() + " event, addresses: " + Arrays.toString(addresses.toArray()));
         }
 //        TODO: close session
     }
@@ -105,8 +108,8 @@ public class ServerCommunicationLayer {
     private boolean sendBlocks(List<BlockStandard> blocks) {
         try {
             for (BlockStandard block : blocks) {
-                System.out.println("Sending block with address: " + block.getAddress() + ", and data:\n" +
-                        Arrays.toString(block.getData()));
+//                System.out.println("Sending block with address: " + block.getAddress() + ", and data:\n" +
+//                        Arrays.toString(block.getData()));
                 int length = block.getData().length;
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(block.getData());
@@ -122,7 +125,7 @@ public class ServerCommunicationLayer {
 
     private boolean sendWritingStatusBit(boolean status) {
         try {
-            System.out.println("Sending writing status: " + status);
+//            System.out.println("Sending writing status: " + status);
             byte[] bytes = Util.leIntToByteArray(status ? 1 : 0);
             int length = bytes.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
