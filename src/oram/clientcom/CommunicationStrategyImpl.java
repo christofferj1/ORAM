@@ -134,6 +134,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
 //            TODO: sleep and try over
             socket = new Socket(ipAddress, Constants.PORT);
             System.out.println("Socket opened, inet address: " + socket.getInetAddress());
+            logger.info("Socket opened, inet address: " + socket.getInetAddress());
         } catch (IOException e) {
             logger.error("Error happened while initializing streams: " + e);
             logger.debug("Stacktrace", e);

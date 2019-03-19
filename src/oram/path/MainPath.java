@@ -60,7 +60,7 @@ public class MainPath {
 //        printTreeFromServer(bucketSize, com);
 //        System.out.println(com.getTreeString());
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100; i++) {
             int address = randomness.nextInt(14) + 1;
 
             byte[] res = access.access(OperationType.READ, address, null);
@@ -69,7 +69,7 @@ public class MainPath {
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
             System.out.println("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
-            logger.info("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            logger.info("Read block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            printTreeFromServer(bucketSize, com);
 
