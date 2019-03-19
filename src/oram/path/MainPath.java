@@ -79,7 +79,7 @@ public class MainPath {
 
         long timeElapsed = (System.nanoTime() - startTime) / 1000000;
 
-        System.out.println(timeElapsed + " milliseconds, " + Util.getTimeString(timeElapsed));
+        System.out.println("Time: " + Util.getTimeString(timeElapsed));
     }
 
     private static void printTreeFromServer(int bucketSize, CommunicationStrategy com) {

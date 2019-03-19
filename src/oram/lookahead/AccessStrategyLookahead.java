@@ -2,13 +2,16 @@ package oram.lookahead;
 
 
 import javafx.util.Pair;
-import oram.*;
+import oram.AccessStrategy;
+import oram.Constants;
+import oram.OperationType;
+import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
+import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
-import oram.block.BlockStandard;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -111,9 +114,16 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Encrypt and write blocks to server
         List<BlockEncrypted> encryptedList = encryptBlocks(res);
+        if (encryptedList.isEmpty()) {
+            logger.error("Unable to decrypt when initializing the ORAM");
+            return false;
+        }
+
         for (int i = 0; i < (size + matrixHeight * 2); i++) {
-            if (!communicationStrategy.write(i, encryptedList.get(i)))
+            if (!communicationStrategy.write(i, encryptedList.get(i))) {
+                logger.error("Writing blocks were unsuccessful when initializing the ORAM");
                 return false;
+            }
         }
 
         return true;
@@ -139,7 +149,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 blockFoundInAccessStash = false;
                 Pair<BlockLookahead, Integer> pair = findBlockInSwapStash(swapStash, address);
                 if (pair == null) {
-                    logger.error("Unable to locate block");
+                    logger.error("Unable to locate block, address: " + address);
                     return null;
                 } else {
                     block = pair.getKey();
@@ -163,7 +173,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Update swap partner index and encrypt it
         swapPartner.setIndex(indexOfCurrentAddress);
         BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
-        if (encryptedSwapPartner == null) return null;
+        if (encryptedSwapPartner == null) {
+            logger.error("Encrypting swap partner failed");
+            return null;
+        }
 
 //        Save data and overwrite if operation is a write
         byte[] res = block.getData();
@@ -184,6 +197,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
             accessStash = removeFromAccessStash(accessStash, indexOfCurrentAddress);
         } else {
             blockToWriteBackToMatrix = encryptBlock(getLookaheadDummyBlock());
+            if (blockToWriteBackToMatrix == null) {
+                logger.error("Unable to encrypt dummy block");
+                return null;
+            }
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
@@ -197,8 +214,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         pickNewFutureSwapPartner(swapStash);
-        if (!maintenanceJob(accessStash, swapStash))
+        if (!maintenanceJob(accessStash, swapStash)) {
+            logger.error("Failed doing maintenance");
             return null;
+        }
 
         accessCounter++;
 
@@ -266,8 +285,14 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Write back access stash
         encryptedBlocks = new ArrayList<>();
         for (Map.Entry<Integer, Map<Integer, BlockLookahead>> innerMap : accessStash.entrySet()) {
-            for (Map.Entry<Integer, BlockLookahead> entry : innerMap.getValue().entrySet())
-                encryptedBlocks.add(encryptBlock(entry.getValue()));
+            for (Map.Entry<Integer, BlockLookahead> entry : innerMap.getValue().entrySet()) {
+                BlockEncrypted block = encryptBlock(entry.getValue());
+                if (block == null) {
+                    logger.error("Unable to encrypt block");
+                    return false;
+                }
+                encryptedBlocks.add(block);
+            }
         }
         for (int i = 0; i < matrixHeight; i++) {
             int index = size + i;
@@ -276,6 +301,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 block = encryptBlock(getLookaheadDummyBlock());
             else
                 block = encryptedBlocks.get(i);
+
+            if (block == null) {
+                logger.error("Unable to encrypt block");
+                return false;
+            }
 
             if (!communicationStrategy.write(index, block)) {
                 logger.error("Unable to write block to access stash with index: " + index);
@@ -286,10 +316,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Write back swap stash
         encryptedBlocks = new ArrayList<>();
         for (BlockLookahead block : swapStash) {
+            BlockEncrypted encryptedBlock;
             if (block == null)
-                encryptedBlocks.add(encryptBlock(getLookaheadDummyBlock()));
+                encryptedBlock = encryptBlock(getLookaheadDummyBlock());
             else
-                encryptedBlocks.add(encryptBlock(block));
+                encryptedBlock = encryptBlock(block);
+
+            if (encryptedBlock == null) {
+                logger.error("Unable to encrypt block");
+                return false;
+            }
+            encryptedBlocks.add(encryptedBlock);
         }
         for (int i = 0; i < matrixHeight; i++) {
             int index = size + matrixHeight + i;
@@ -316,8 +353,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap(Map<Integer, Map<Integer, BlockLookahead>> map,
-                                                                   BlockLookahead block) {
+    Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap
+            (Map<Integer, Map<Integer, BlockLookahead>> map,
+             BlockLookahead block) {
         if (block.getAddress() == 0)
             return map;
         int rowIndex = block.getRowIndex();
@@ -331,8 +369,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return map;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> removeFromAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash,
-                                                                     Index index) {
+    Map<Integer, Map<Integer, BlockLookahead>> removeFromAccessStash
+            (Map<Integer, Map<Integer, BlockLookahead>> stash,
+             Index index) {
         if (stash.containsKey(index.getColIndex())) {
             Map<Integer, BlockLookahead> map = stash.get(index.getColIndex());
             map.remove(index.getRowIndex());
@@ -449,6 +488,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
             byte[] encryptedData = encryptionStrategy.encrypt(block.getData(), secretKey);
             byte[] encryptedIndex = encryptionStrategy.encrypt(ArrayUtils.addAll(rowIndexBytes, colIndexBytes),
                     secretKey);
+
+            if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
+                logger.error("Unable to encrypt block: " + block.toStringShort());
+                return new ArrayList<>();
+            }
+
             byte[] encryptedDataPlus = ArrayUtils.addAll(encryptedData, encryptedIndex);
 
             res.add(new BlockEncrypted(encryptedAddress, encryptedDataPlus));

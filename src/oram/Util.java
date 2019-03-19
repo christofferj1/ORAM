@@ -172,7 +172,8 @@ public class Util {
         int hours = (int) (milliseconds / 3600000);
         int minutes = (int) (milliseconds % 3600000) / 60000;
         int seconds = (int) (milliseconds % 60000) / 1000;
+        int millisecondsMod = (int) (milliseconds % 1000);
 
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        return String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millisecondsMod);
     }
 }
