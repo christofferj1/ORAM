@@ -2,6 +2,7 @@ package oram;
 
 import oram.block.Block;
 import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
 import oram.encryption.EncryptionStrategy;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
@@ -175,5 +176,59 @@ public class Util {
         int millisecondsMod = (int) (milliseconds % 1000);
 
         return String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millisecondsMod);
+    }
+
+    public static String getMatrixString(BlockLookahead[] blocks, int matrixHeight) {
+        StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
+        for (int row = 0; row < matrixHeight; row++) {
+            for (int col = 0; col < matrixHeight; col++) {
+                int index = col * 4 + row;
+                BlockLookahead block = blocks[index];
+                if (block != null) {
+                    String string = new String(block.getData()).trim();
+                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                    builder.append(";");
+                    builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
+                } else
+                    builder.append("       null");
+                builder.append(" : ");
+            }
+            builder.append("\n");
+        }
+
+        builder.append("Swap                         : Access\n");
+        for (int i = 0; i < matrixHeight; i++) {
+            int index = i + matrixHeight * matrixHeight + matrixHeight;
+            BlockLookahead block = blocks[index];
+            if (block != null) {
+                String string = new String(block.getData()).trim();
+                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
+                builder.append("(");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 2));
+                builder.append(", ");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
+                builder.append(")");
+            } else
+                builder.append("                     null");
+            builder.append(" : ");
+            index -= matrixHeight;
+            block = blocks[index];
+            if (block != null) {
+                String string = new String(block.getData()).trim();
+                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
+                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
+                builder.append("(");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 1));
+                builder.append(", ");
+                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 1));
+                builder.append(") ");
+            } else
+                builder.append("               null");
+
+            builder.append("\n");
+        }
+
+        return builder.toString();
     }
 }

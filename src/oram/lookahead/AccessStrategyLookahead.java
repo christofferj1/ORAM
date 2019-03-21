@@ -138,6 +138,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
     public byte[] access(OperationType op, int address, byte[] data) {
         Index indexOfCurrentAddress = positionMap.get(address);
         int maintenanceColumnIndex = Math.floorMod(accessCounter, matrixHeight);
+
+        logger.info("Access op: " + op.toString() + ", address: " + address + ", index: ("
+                + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
+                "), maintenance column: " + maintenanceColumnIndex);
+
+        System.out.println("Access op: " + op.toString() + ", address: " + address + ", index: ("
+                + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
+                "), maintenance column: " + maintenanceColumnIndex);
+
 //        This tells if the block we fetch is in the column used for maintenance
         boolean blockInColumn = indexOfCurrentAddress.getColIndex() == maintenanceColumnIndex;
 
@@ -213,7 +222,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         positionMap.put(block.getAddress(), block.getIndex());
 
 //        Handle the switch around of the blocks
-        int flatArrayIndex = getFlatArrayIndex(indexOfCurrentAddress);
         BlockLookahead blockToWriteBackToMatrix;
         if (blockFoundInMatrix)
             blockToWriteBackToMatrix = swapPartner;
@@ -223,10 +231,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
             accessStash = removeFromAccessStash(accessStash, indexOfCurrentAddress);
         } else {
             blockToWriteBackToMatrix = getLookaheadDummyBlock();
-            if (blockToWriteBackToMatrix == null) {
-                logger.error("Unable to encrypt dummy block");
-                return null;
-            }
+//            if (blockToWriteBackToMatrix == null) {
+//                logger.error("Unable to encrypt dummy block");
+//                return null;
+//            }
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
@@ -250,18 +258,34 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return null;
         }
 
-        if (!blockInColumn)
-            blocksFromMaintenance.add(blockToWriteBackToMatrix);
-
         List<Integer> addresses = new ArrayList<>();
-        for (BlockLookahead b : blocksFromMaintenance) {
-            addresses.add(getFlatArrayIndex(b.getIndex()));
+//        Add addresses for maintenance column
+        for (int i = 0; i < matrixHeight; i++)
+            addresses.add(getFlatArrayIndex(new Index(i, maintenanceColumnIndex)));
+
+//        Add addresses for access stash
+        for (int i = 0; i < matrixHeight; i++)
+            addresses.add(size + i);
+
+//        Add addresses for swap stash
+        for (int i = 0; i < matrixHeight; i++)
+            addresses.add(size + matrixHeight + i);
+
+        if (!blockInColumn) {
+            blocksFromMaintenance.add(blockToWriteBackToMatrix);
+            addresses.add(getFlatArrayIndex(indexOfCurrentAddress));
         }
+
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(blocksFromMaintenance);
         if (encryptedBlocks == null) {
             logger.error("Unable to encrypt blocks");
             return null;
         }
+
+        System.out.println("Addresses size: " + addresses.size() + ", blocks size: " + blocksFromMaintenance.size());
+        System.out.println("Blocks to write");
+        for (int i = 0; i < blocksFromMaintenance.size(); i++)
+            System.out.println("  Index: " + addresses.get(i) + ", " + blocksFromMaintenance.get(i).toStringShort());
 
         boolean writeStatus = communicationStrategy.writeArray(addresses, encryptedBlocks);
         if (!writeStatus) {
@@ -331,11 +355,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
+        System.out.println("Move blocks from column to swap, column: " + columnIndex);
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
+            System.out.println("  Future swap partner: " + swap.toString());
             if (swap.getIndex().getColIndex() == columnIndex) {
                 int rowIndex = swap.getIndex().getRowIndex();
+                System.out.println("    Row index: " + rowIndex);
                 BlockLookahead swapPartner = column.get(rowIndex);
+                System.out.println("    Swap partner: " + swapPartner.toStringShort());
 //                if (Util.isDummyAddress(swapPartner.getAddress())) { // TODO: this could actually be applied if #blocks = size, test that
 //                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
 //                    return false;
@@ -343,6 +371,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 swapStash[Math.floorMod(swap.getSwapNumber(), matrixHeight)] = swapPartner;
                 futureSwapPartners.remove(i);
                 column.set(rowIndex, getLookaheadDummyBlock());
+                System.out.println("    Current swap stash:");
+                for (BlockLookahead b : swapStash)
+                    System.out.println("      " + (b != null ? b.toStringShort() : null));
+                System.out.println("    Current column");
+                for (BlockLookahead b : column)
+                    System.out.println("      " + (b != null ? b.toStringShort() : null));
             }
         }
 
@@ -351,6 +385,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Column
         res = column;
+
+        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+        for (BlockLookahead b : res)
+            System.out.println("    " + b.toStringShort());
 
 //        Access stash
         List<BlockLookahead> accessStashList = new ArrayList<>();
@@ -361,11 +399,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         for (int i = 0; i < matrixHeight; i++) {
-            if (accessStash.size() <= i)
+            System.out.println("Adding dummies to access stash, size: " + accessStashList.size());
+            if (accessStashList.size() <= i) {
                 accessStashList.add(getLookaheadDummyBlock());
+                System.out.println("    Adding one for index: " + i);
+            }
         }
         accessStashList = permutationStrategy.permuteLookaheadBlocks(accessStashList);
         res.addAll(accessStashList);
+
+        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+        for (BlockLookahead b : res)
+            System.out.println("    " + b.toStringShort());
 
 //        Swap stash
         List<BlockLookahead> swapStashList = new ArrayList<>();
@@ -376,6 +421,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 swapStashList.add(block);
         }
         res.addAll(swapStashList);
+
+        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+        for (BlockLookahead b : res)
+            System.out.println("    " + b.toStringShort());
 
         return res;
     }
@@ -492,7 +541,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
     }
 
-    private List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
+    public List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (BlockEncrypted b : encryptedBlocks) {
             BlockLookahead block = decryptToLookaheadBlock(b);
@@ -500,6 +549,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 logger.error("Unable to decrypt block");
                 return null;
             }
+            res.add(block);
         }
         return res;
     }
