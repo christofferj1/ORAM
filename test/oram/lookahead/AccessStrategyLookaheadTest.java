@@ -1,11 +1,13 @@
 package oram.lookahead;
 
-import oram.*;
+import oram.CommunicationStrategyStub;
+import oram.Constants;
+import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
+import oram.block.BlockStandard;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
-import oram.block.BlockStandard;
 import oram.util.FactoryStub;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
@@ -87,7 +89,23 @@ public class AccessStrategyLookaheadTest {
     @Test
     public void shouldBeAbleToCreateAccessStash() {
         setStandardServer();
-        Map<Integer, Map<Integer, BlockLookahead>> map = access.getAccessStash();
+
+        BlockLookahead block0 = new BlockLookahead(1, Util.leIntToByteArray(0), 0, 0);
+        BlockLookahead block1 = new BlockLookahead(2, Util.leIntToByteArray(1), 1, 0);
+        BlockLookahead block2 = new BlockLookahead(3, Util.leIntToByteArray(2), 2, 0);
+        BlockLookahead block3 = new BlockLookahead(4, Util.leIntToByteArray(3), 3, 0);
+        BlockLookahead block4 = new BlockLookahead(5, Util.leIntToByteArray(4), 0, 1);
+        BlockLookahead block7 = new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1);
+        BlockLookahead block8 = new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2);
+        BlockLookahead block9 = new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2);
+        BlockLookahead block10 = new BlockLookahead(11, Util.leIntToByteArray(10), 2, 2);
+        BlockLookahead block12 = new BlockLookahead(13, Util.leIntToByteArray(12), 0, 3);
+        BlockLookahead block14 = new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3);
+
+        List<BlockLookahead> blocks = Arrays.asList(block1, block2, block4, block7, block0, block3, block10, block12);
+
+//        First we try where the wanted cell was in the column we read
+        Map<Integer, Map<Integer, BlockLookahead>> map = access.getAccessStash(blocks, true);
 //        It should have three entries, where the first is a map with two entries
         assertThat(map, aMapWithSize(3));
         assertThat(map, hasKey(0));
@@ -106,12 +124,54 @@ public class AccessStrategyLookaheadTest {
         Map<Integer, BlockLookahead> map3 = map.get(3);
         assertThat(map3, aMapWithSize(1));
         assertThat(map3, hasEntry(0, new BlockLookahead(13, Util.leIntToByteArray(12), 0, 3)));
+
+//        Then we try where the wanted cell was not in the column we read
+        blocks = Arrays.asList(block8, block1, block2, block4, block7, block0, block3, block10, block12);
+
+
+        map = access.getAccessStash(blocks, false);
+//        It should have three entries, where the first is a map with two entries
+        assertThat(map, aMapWithSize(3));
+        assertThat(map, hasKey(0));
+        assertThat(map, hasKey(2));
+        assertThat(map, hasKey(3));
+
+        map0 = map.get(0);
+        assertThat(map0, aMapWithSize(2));
+        assertThat(map0, hasEntry(0, new BlockLookahead(1, Util.leIntToByteArray(0), 0, 0)));
+        assertThat(map0, hasEntry(3, new BlockLookahead(4, Util.leIntToByteArray(3), 3, 0)));
+
+        map2 = map.get(2);
+        assertThat(map2, aMapWithSize(1));
+        assertThat(map2, hasEntry(2, new BlockLookahead(11, Util.leIntToByteArray(10), 2, 2)));
+
+        map3 = map.get(3);
+        assertThat(map3, aMapWithSize(1));
+        assertThat(map3, hasEntry(0, new BlockLookahead(13, Util.leIntToByteArray(12), 0, 3)));
     }
 
     @Test
     public void shouldBeAbleToCreateSwatStash() {
         setStandardServer();
-        BlockLookahead[] list = access.getSwapStash();
+
+        BlockLookahead block0 = new BlockLookahead(1, Util.leIntToByteArray(0), 0, 0);
+        BlockLookahead block1 = new BlockLookahead(2, Util.leIntToByteArray(1), 1, 0);
+        BlockLookahead block2 = new BlockLookahead(3, Util.leIntToByteArray(2), 2, 0);
+        BlockLookahead block4 = new BlockLookahead(5, Util.leIntToByteArray(4), 0, 1);
+        BlockLookahead block10 = new BlockLookahead(11, Util.leIntToByteArray(10), 2, 3);
+        BlockLookahead block11 = new BlockLookahead(12, Util.leIntToByteArray(11), 3, 4);
+        BlockLookahead block12 = new BlockLookahead(13, Util.leIntToByteArray(12), 4, 5);
+        BlockLookahead block13 = new BlockLookahead(14, Util.leIntToByteArray(13), 5, 6);
+        BlockLookahead block3 = new BlockLookahead(4, Util.leIntToByteArray(3), 3, 0);
+        BlockLookahead block7 = new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1);
+        BlockLookahead block8 = new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2);
+        BlockLookahead block9 = new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2);
+        BlockLookahead block14 = new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3);
+
+        List<BlockLookahead> blocks = Arrays.asList(block0, block1, block2, block3, block4, block10, block11, block12,
+                block7, block9, block8, block14);
+
+        BlockLookahead[] list = access.getSwapStash(blocks, true);
 
         assertThat(list, arrayWithSize(4));
         assertThat(list, hasItemInArray(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)));
@@ -119,14 +179,16 @@ public class AccessStrategyLookaheadTest {
         assertThat(list, hasItemInArray(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)));
         assertThat(list, hasItemInArray(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3)));
 
+        blocks = Arrays.asList(block0, block1, block2, block3, block4, block10, block11, block12,
+                block13, block7, block9, block8, block14);
 
-//        assertThat(list, allOf(
-//                hasSize(4),
-//                hasItem(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)),
-//                hasItem(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)),
-//                hasItem(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)),
-//                hasItem(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3))
-//        ));
+        list = access.getSwapStash(blocks, false);
+
+        assertThat(list, arrayWithSize(4));
+        assertThat(list, hasItemInArray(new BlockLookahead(8, Util.leIntToByteArray(7), 3, 1)));
+        assertThat(list, hasItemInArray(new BlockLookahead(9, Util.leIntToByteArray(8), 0, 2)));
+        assertThat(list, hasItemInArray(new BlockLookahead(10, Util.leIntToByteArray(9), 1, 2)));
+        assertThat(list, hasItemInArray(new BlockLookahead(15, Util.leIntToByteArray(14), 2, 3)));
     }
 
     @Test

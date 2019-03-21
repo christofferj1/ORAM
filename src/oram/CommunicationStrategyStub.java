@@ -54,12 +54,19 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
 
     @Override
     public List<BlockEncrypted> readArray(List<Integer> addresses) {
-        return new ArrayList<>();
+        List<BlockEncrypted> res = new ArrayList<>();
+        for (Integer i : addresses) {
+            res.add(blocks[i]);
+        }
+        return res;
     }
 
     @Override
     public boolean writeArray(List<Integer> addresses, List<BlockEncrypted> blocks) {
-        return false;
+        for (int i = 0; i < addresses.size(); i++) {
+            this.blocks[addresses.get(i)] = blocks.get(i);
+        }
+        return true;
     }
 
     public String getTreeString() {

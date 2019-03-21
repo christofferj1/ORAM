@@ -20,8 +20,6 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static oram.Constants.INTEGER_BYTE_ARRAY_SIZE;
 import static oram.Util.byteArrayToLeInt;
@@ -34,7 +32,7 @@ import static oram.Util.byteArrayToLeInt;
  * Without keeping the stash locally
  */
 
-public class AccessStrategyLookahead implements AccessStrategy {
+public class AccessStrategyLookaheadOld implements AccessStrategy {
     private final SecretKey secretKey;
     private final Logger logger = LogManager.getLogger("log");
     private final int size;
@@ -47,7 +45,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private List<SwapPartnerData> futureSwapPartners;
 
 
-    public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
+    public AccessStrategyLookaheadOld(int size, int matrixHeight, byte[] key, Factory factory) {
         this.size = size;
         this.matrixHeight = matrixHeight;
         this.communicationStrategy = factory.getCommunicationStrategy();
@@ -121,14 +119,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return false;
         }
 
-        List<Integer> addresses = new ArrayList<>();
-        for (int i = 0; i < encryptedList.size(); i++)
-            addresses.add(i);
-
-        boolean writeSuccess = communicationStrategy.writeArray(addresses, encryptedList);
-        if (!writeSuccess) {
-            logger.error("Writing blocks were unsuccessful when initializing the ORAM");
-            return false;
+        for (int i = 0; i < (size + matrixHeight * 2); i++) {
+            if (!communicationStrategy.write(i, encryptedList.get(i))) {
+                logger.error("Writing blocks were unsuccessful when initializing the ORAM");
+                return false;
+            }
         }
 
         return true;
@@ -136,20 +131,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
+//        Fetch stashes
+        Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash();
+        BlockLookahead[] swapStash = getSwapStash();
+
         Index indexOfCurrentAddress = positionMap.get(address);
-        int maintenanceColumn = Math.floorMod(accessCounter, matrixHeight);
-        boolean blockInColumn = indexOfCurrentAddress.getColIndex() == maintenanceColumn;
-
-        List<BlockLookahead> blocks = readBlocks(indexOfCurrentAddress, maintenanceColumn, blockInColumn);
-        if (blocks == null)
-            return null;
-
-//        Fetch column and stashes from fetched blocks
-        List<BlockLookahead> column = getColumn(blocks, blockInColumn);
-        Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash(blocks, blockInColumn);
-        BlockLookahead[] swapStash = getSwapStash(blocks, blockInColumn);
-
-//        Index indexOfCurrentAddress = positionMap.get(address);
 
 //        Fetch block from either matrix, access stash or swap stash
         BlockLookahead block = fetchBlockFromMatrix(indexOfCurrentAddress);
@@ -176,8 +162,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
             logger.info("Block found in matrix: " + block.toStringShort());
 
 //        Get swap partner
-        BlockLookahead swapPartner = swapStash[maintenanceColumn];
-        swapStash[maintenanceColumn] = null;
+        int accessCounterMod = Math.floorMod(accessCounter, matrixHeight);
+        BlockLookahead swapPartner = swapStash[accessCounterMod];
+        swapStash[accessCounterMod] = null;
 
 //        Set index to index of swap partner and add to access stash
         block.setIndex(swapPartner.getIndex());
@@ -227,7 +214,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         pickNewFutureSwapPartner(swapStash);
-        if (!maintenanceJob(column, accessStash, swapStash)) {
+        if (!maintenanceJob(accessStash, swapStash)) {
             logger.error("Failed doing maintenance");
             return null;
         }
@@ -237,47 +224,20 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
-    public List<BlockLookahead> readBlocks(Index indexOfCurrentAddress, int maintenanceColumn, boolean blockInColumn) {
-        List<Integer> indices = new ArrayList<>();
-
-        if (!blockInColumn)
-            indices.add(getFlatArrayIndex(indexOfCurrentAddress));
-
-        for (int i = 0; i < matrixHeight; i++)
-            indices.add(getFlatArrayIndex(new Index(i, maintenanceColumn)));
-
-        indices.addAll(getIndicesForAccessStash());
-        indices.addAll(getIndicesForSwapStash());
-
-        List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(indices);
-        if (encryptedBlocks == null) {
-            logger.error("Unable to read blocks");
-            return null;
-        }
-
-        List<BlockLookahead> blocks = decryptLookaheadBlocks(encryptedBlocks);
-        if (blocks == null) {
-            logger.error("Unable to decrypt blocks");
-            return null;
-        }
-        return blocks;
-    }
-
-    boolean maintenanceJob(List<BlockLookahead> column, Map<Integer, Map<Integer, BlockLookahead>> accessStash,
-                           BlockLookahead[] swapStash) {
+    boolean maintenanceJob(Map<Integer, Map<Integer, BlockLookahead>> accessStash, BlockLookahead[] swapStash) {
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
-//        List<BlockLookahead> column = new ArrayList<>();
+        List<BlockLookahead> column = new ArrayList<>();
 
-////        Retrieve column from matrix
-//        for (int i = 0; i < matrixHeight; i++) {
-//            BlockEncrypted encryptedBlock = communicationStrategy.read(getFlatArrayIndex(new Index(i, columnIndex)));
-//            if (encryptedBlock == null) {
-//                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from communicationStrategy");
-//                return false;
-//            }
-//            BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
-//            column.add(block);
-//        }
+//        Retrieve column from matrix
+        for (int i = 0; i < matrixHeight; i++) {
+            BlockEncrypted encryptedBlock = communicationStrategy.read(getFlatArrayIndex(new Index(i, columnIndex)));
+            if (encryptedBlock == null) {
+                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from communicationStrategy");
+                return false;
+            }
+            BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
+            column.add(block);
+        }
 
 //        Move blocks from access stash to column
         Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
@@ -379,14 +339,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return true;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
-        int beginIndex = matrixHeight;
-        if (!blockInColumn) beginIndex++;
+    Map<Integer, Map<Integer, BlockLookahead>> getAccessStash() {
+        int beginIndex = size;
         int endIndex = beginIndex + matrixHeight;
 
         Map<Integer, Map<Integer, BlockLookahead>> res = new HashMap<>();
         for (int i = beginIndex; i < endIndex; i++) {
-            res = addToAccessStashMap(res, blocks.get(i));
+            BlockEncrypted blockRead = communicationStrategy.read(i);
+            BlockLookahead blockLookahead = decryptToLookaheadBlock(blockRead);
+            res = addToAccessStashMap(res, blockLookahead);
         }
 
         return res;
@@ -408,20 +369,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return map;
     }
 
-    List<Integer> getIndicesForAccessStash() {
-        int beginIndex = size;
-        int endIndex = beginIndex + matrixHeight;
-
-        return IntStream.range(beginIndex, endIndex).boxed().collect(Collectors.toList());
-    }
-
-    List<Integer> getIndicesForSwapStash() {
-        Integer beginIndex = size + matrixHeight;
-        Integer endIndex = beginIndex + matrixHeight;
-
-        return IntStream.range(beginIndex, endIndex).boxed().collect(Collectors.toList());
-    }
-
     Map<Integer, Map<Integer, BlockLookahead>> removeFromAccessStash
             (Map<Integer, Map<Integer, BlockLookahead>> stash,
              Index index) {
@@ -434,21 +381,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return stash;
     }
 
-    List<BlockLookahead> getColumn(List<BlockLookahead> blocks, boolean blockInColumn) {
-        int beginIndex = 0;
-        if (!blockInColumn) beginIndex++;
-        int endIndex = beginIndex + matrixHeight;
-
-        return blocks.subList(beginIndex, endIndex);
-    }
-
-    BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {
-        int beginIndex = matrixHeight * 2;
-        if (!blockInColumn) beginIndex++;
+    BlockLookahead[] getSwapStash() {
+        int flattenedArrayOffSet = size + matrixHeight;
 
         BlockLookahead[] res = new BlockLookahead[matrixHeight];
         for (int i = 0; i < matrixHeight; i++) {
-            res[i] = blocks.get(beginIndex + i);
+            res[i] = decryptToLookaheadBlock(communicationStrategy.read(i + flattenedArrayOffSet));
         }
         return res;
     }
@@ -495,17 +433,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
             swapStashContains = swapStashList.stream().anyMatch(s -> (s != null && s.getIndex().equals(finalIndex)));
         }
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
-    }
-
-    public List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
-        List<BlockLookahead> res = new ArrayList<>();
-        for (BlockEncrypted b : encryptedBlocks) {
-            BlockLookahead block = decryptToLookaheadBlock(b);
-            if (block == null)
-                logger.error("Unable to decrypt block");
-            return null;
-        }
-        return res;
     }
 
     //    TODO: check for null the correct places
