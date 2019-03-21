@@ -42,6 +42,7 @@ public class BlockLookahead implements Block {
         colIndex = index.getColIndex();
     }
 
+    @Override
     public int getAddress() {
         return address;
     }
@@ -50,6 +51,7 @@ public class BlockLookahead implements Block {
         this.address = address;
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }

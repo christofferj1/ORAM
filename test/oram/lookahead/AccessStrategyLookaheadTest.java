@@ -228,19 +228,6 @@ public class AccessStrategyLookaheadTest {
     }
 
     @Test
-    public void shouldBeAbleToReadCorrectIndexInMatrix() {
-        setStandardServer();
-        BlockLookahead block = access.fetchBlockFromMatrix(new Index(3, 2));
-        assertThat(block, equalTo(new BlockLookahead(12, Util.leIntToByteArray(11), 3, 2)));
-
-        block = access.fetchBlockFromMatrix(new Index(1, 0));
-        assertThat(block, equalTo(new BlockLookahead(2, Util.leIntToByteArray(1), 1, 0)));
-
-        block = access.fetchBlockFromMatrix(new Index(0, 1));
-        assertThat(block, equalTo(new BlockLookahead(5, Util.leIntToByteArray(4), 0, 1)));
-    }
-
-    @Test
     public void shouldBeAbleToLookUpInAccessStash() {
         BlockLookahead block0 = new BlockLookahead(5, null);
         BlockLookahead block1 = new BlockLookahead(1, null);

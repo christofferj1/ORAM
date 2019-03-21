@@ -13,9 +13,9 @@ import java.util.List;
 public interface CommunicationStrategy {
     boolean start();
 
-    BlockEncrypted read(int address);
+    BlockEncrypted read(int address); // TODO should not be used by the strategies
 
-    boolean write(int address, BlockEncrypted block);
+    boolean write(int address, BlockEncrypted block); // TODO should not be used by the strategies
 
     List<BlockEncrypted> readArray(List<Integer> addresses);
 

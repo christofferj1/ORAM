@@ -1,6 +1,7 @@
 package oram.permutation;
 
 import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
 import oram.block.BlockStandard;
 
 import java.util.ArrayList;
@@ -20,6 +21,11 @@ public class PermutationStrategyIdentity implements PermutationStrategy {
 
     @Override
     public List<BlockStandard> permuteStandardBlocks(List<BlockStandard> blocks) {
+        return new ArrayList<>(blocks);
+    }
+
+    @Override
+    public List<BlockLookahead> permuteLookaheadBlocks(List<BlockLookahead> blocks) {
         return new ArrayList<>(blocks);
     }
 }
