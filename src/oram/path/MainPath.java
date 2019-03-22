@@ -34,32 +34,28 @@ public class MainPath {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        int numberOfBlocks = 5;
+        int numberOfBlocks = 15;
         int bucketSize = 2;
         int size = 7;
-        int numberOfRounds = 1000;
+        int numberOfRounds = 10;
 
         List<BlockStandard> blocks = new ArrayList<>();
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
-        for (int i = 0; i < numberOfBlocks; i++) {
-            int blockNumber = i + 1;
-            BlockStandard block = new BlockStandard(blockNumber, ("Block " + blockNumber).getBytes());
+        for (int i = 1; i <= numberOfBlocks; i++) {
+            BlockStandard block = new BlockStandard(i, ("Block " + i).getBytes());
             blocks.add(block);
-            blockArray[i + 1] = block;
+            blockArray[i] = block;
         }
 
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, bucketSize);
+        Factory factory = new FactoryCustom(Enc.IDEN, Com.IMPL, Per.IMPL, size, bucketSize);
 
         CommunicationStrategy com = factory.getCommunicationStrategy();
         com.start();
         AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory);
         access.initializeServer(blocks);
 
-        printTreeFromServer(size, bucketSize, com, access);
-//        printTreeFromServer(bucketSize, com);
-//        System.out.println(com.getTreeString());
-
         logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
+        System.out.println("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
         for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;
 
@@ -78,28 +74,17 @@ public class MainPath {
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
-//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+
             logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
-            printTreeFromServer(size, bucketSize, com, access);
-
-            if (Arrays.equals(res, blockArray[address].getData())) {
-//                System.out.println("Read block data: " + s);
-            } else {
+            if (!Arrays.equals(res, blockArray[address].getData())) {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                 break;
             }
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-//            System.out.println(com.getTreeString());
-//            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
-//            if (!s.contains(Integer.toString(address))) {
-//                System.out.println("SHIT WENT WRONG!!!");
-//                break;
-//            }
-            if (i % 100 == 99)
-                System.out.println("Done " + (i + 1) + "/" + numberOfRounds + " of the rounds");
+            Util.printPercentageDone(startTime, numberOfRounds, i);
         }
         System.out.println("Max stash size: " + access.maxStashSize);
         logger.info("Max stash size: " + access.maxStashSize);
@@ -116,5 +101,13 @@ public class MainPath {
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j);
         System.out.println(Util.printTree(array, bucketSize, access));
+    }
+
+    private static String stringOf(String s, int number) {
+        if (number < 1) return "";
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < number; i++)
+            builder.append(s);
+        return builder.toString();
     }
 }

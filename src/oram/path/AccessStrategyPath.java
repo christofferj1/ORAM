@@ -60,13 +60,10 @@ public class AccessStrategyPath implements AccessStrategy {
     public void initializeServer() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
-//            System.out.println("Round: " + i + "\n" + communicationStrategy.getTreeString());
             positionMap.put(0, i);
             access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE]);
         }
-//        System.out.println("Initialized\n" + communicationStrategy.getTreeString());
         positionMap = new HashMap<>();
-//        print = true;
     }
 
     public boolean initializeServer(List<BlockStandard> blocks) {
@@ -153,10 +150,6 @@ public class AccessStrategyPath implements AccessStrategy {
         logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
                 + leafNodeIndex + " -> " + positionMap.get(address));
 
-//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
-//                + leafNodeIndex + " -> " + positionMap.get(address));
-
-
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
         if (!readPath) {
@@ -179,7 +172,6 @@ public class AccessStrategyPath implements AccessStrategy {
         if (stash.size() > maxStashSizeBetweenAccesses) {
             maxStashSizeBetweenAccesses = stash.size();
             logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
-            System.out.println("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
         return res;
     }
@@ -219,7 +211,6 @@ public class AccessStrategyPath implements AccessStrategy {
                 if (stash.size() > maxStashSize) {
                     maxStashSize = stash.size();
                     logger.info("Max stash size: " + maxStashSize);
-                    System.out.println("Max stash size: " + maxStashSize);
                 }
             }
         }
@@ -250,7 +241,6 @@ public class AccessStrategyPath implements AccessStrategy {
         if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
             logger.info("Max stash size: " + maxStashSize);
-            System.out.println("Max stash size: " + maxStashSize);
         }
 
         return endData;
@@ -330,7 +320,6 @@ public class AccessStrategyPath implements AccessStrategy {
 
     private List<BlockStandard> fillBucketWithDummyBlocks(List<BlockStandard> blocksToWrite) {
         if (blocksToWrite.size() > bucketSize) {
-//            System.out.println("Bucket size: " + bucketSize + ", blocks to right size: " + blocksToWrite.size());
             for (int i = blocksToWrite.size(); i > bucketSize; i--)
                 blocksToWrite.remove(i - 1);
         } else if (blocksToWrite.size() < bucketSize) {

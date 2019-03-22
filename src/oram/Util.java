@@ -236,7 +236,8 @@ public class Util {
         int seconds = (int) (milliseconds % 60000) / 1000;
         int millisecondsMod = (int) (milliseconds % 1000);
 
-        return String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millisecondsMod);
+        String string = String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millisecondsMod);
+        return StringUtils.rightPad(string, 12, '0'); // Adds zeros to the milliseconds
     }
 
     public static String getMatrixString(BlockLookahead[] blocks, int matrixHeight) {
@@ -305,5 +306,17 @@ public class Util {
             res[i] = charactersArray[secureRandom.nextInt(charactersArray.length)];
         }
         return new String(res);
+    }
+
+    public static void printPercentageDone(long startTime, double numberOfRounds, int roundNumber) {
+        double percentDone = ((roundNumber + 1) / numberOfRounds) * 100;
+        if ((percentDone % 1) == 0) {
+            int percentDoneInt = (int) percentDone;
+            long timeElapsed = (System.nanoTime() - startTime) / 1000000;
+            long timeElapsedPerPercent = timeElapsed / percentDoneInt;
+            long timeLeft = timeElapsedPerPercent * (100 - percentDoneInt);
+            System.out.println("Done with " + percentDoneInt + "%, time spend: " + getTimeString(timeElapsed) +
+                    ", estimated time left: " + getTimeString(timeLeft));
+        }
     }
 }
