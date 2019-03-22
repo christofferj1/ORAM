@@ -78,12 +78,13 @@ public class MainPath {
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
             printTreeFromServer(size, bucketSize, com, access);
 
             if (Arrays.equals(res, blockArray[address].getData())) {
-                System.out.println("Read block data: " + s);
+//                System.out.println("Read block data: " + s);
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                 break;
@@ -98,7 +99,7 @@ public class MainPath {
 //                break;
 //            }
             if (i % 100 == 99)
-                System.out.println("Done " + i + "/" + numberOfRounds + " of the rounds");
+                System.out.println("Done " + (i + 1) + "/" + numberOfRounds + " of the rounds");
         }
         System.out.println("Max stash size: " + access.maxStashSize);
         logger.info("Max stash size: " + access.maxStashSize);

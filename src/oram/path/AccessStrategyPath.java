@@ -153,8 +153,8 @@ public class AccessStrategyPath implements AccessStrategy {
         logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
                 + leafNodeIndex + " -> " + positionMap.get(address));
 
-        System.out.println("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
-                + leafNodeIndex + " -> " + positionMap.get(address));
+//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
+//                + leafNodeIndex + " -> " + positionMap.get(address));
 
 
 //        Line 3 to 5 in pseudo code.

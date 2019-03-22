@@ -6,28 +6,32 @@
 
     <Appenders>
         <RollingFile name="fileLogger" fileName="${basePath}/log.log"
-                     filePattern="${basePath}/app-info-%d{yyyy-MM-dd}.log">
+                     filePattern="${basePath}/log.roll_over.log">
+            <!--filePattern="${basePath}/log.${date:yyyy-MM-dd_HH-mm-ss}.log">-->
             <PatternLayout>
                 <pattern>[%-5level] %d{MM-dd HH:mm:ss} %F %L, %r ms - %msg%n</pattern>
             </PatternLayout>
             <Policies>
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
         </RollingFile>
 
         <RollingFile name="fileLoggerDebug" fileName="${basePath}/log_DEBUG.log"
-                     filePattern="${basePath}/app-info-%d{yyyy-MM-dd}.log">
+                     filePattern="${basePath}/log_DEBUG.roll_over.log">
+            <!--filePattern="${basePath}/log_DEBUG.${date:yyyy-MM-dd_HH-mm-ss}.log">-->
             <PatternLayout>
                 <pattern>[%-5level] %d{MM-dd HH:mm:ss} %F %L, %r ms - %msg%n</pattern>
             </PatternLayout>
             <Policies>
-                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <OnStartupTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
             <Filters>
-            <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>
-            <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
-            <ThresholdFilter level="fatal" onMatch="DENY" onMismatch="NEUTRAL"/>
-            <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="fatal" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>
             </Filters>
         </RollingFile>
 
