@@ -225,7 +225,7 @@ public class AccessStrategyPathTest {
         factory.setEncryptionStrategy(encryptionStrategy);
         AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory);
 
-        List<BlockStandard> res = access.decryptBlockPaths(encryptedList);
+        List<BlockStandard> res = access.decryptBlockPaths(encryptedList, true);
         assertThat(res, hasSize(3));
         assertThat(res, hasItem(block0));
         assertThat(res, hasItem(block1));

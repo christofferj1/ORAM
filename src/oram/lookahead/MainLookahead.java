@@ -33,11 +33,16 @@ public class MainLookahead {
 
     public static void main(String[] args) {
         long startTime = System.nanoTime();
-        byte[] key = new byte[Constants.BLOCK_SIZE];
+        byte[] key = new byte[Constants.AES_KEY_SIZE];
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
         int numberOfBlocks = 27;
+        int columns = 8;
+        int rows = 6;
+        int size = 36;
+        int numberOfRounds = 1000;
+
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
         for (int i = 0; i < numberOfBlocks; i++) {
@@ -47,9 +52,6 @@ public class MainLookahead {
             blockArray[i + 1] = block;
         }
 
-        int columns = 8;
-        int rows = 6;
-        int size = 36;
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, columns, rows);
 
         CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
@@ -61,7 +63,6 @@ public class MainLookahead {
 
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
-        int numberOfRounds = 100;
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;
@@ -77,7 +78,7 @@ public class MainLookahead {
             }
 
             byte[] res = access.access(op, address, data);
-            if (res == null) { System.exit(-1);}
+            if (res == null) System.exit(-1);
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
@@ -98,6 +99,8 @@ public class MainLookahead {
 //                System.out.println("SHIT WENT WRONG!!!");
 //                break;
 //            }
+            if (i % 100 == 99)
+                System.out.println("Done " + i + "/" + numberOfRounds + " of the rounds");
         }
 
         long timeElapsed = (System.nanoTime() - startTime) / 1000000;

@@ -70,7 +70,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     public String getTreeString() {
-        return Util.printTree(blocks, bucketSize);
+        return Util.printTreeEncrypted(blocks, bucketSize);
     }
 
     public String getMatrixAndStashString(AccessStrategyLookahead accessStrategy) {

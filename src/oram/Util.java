@@ -3,7 +3,9 @@ package oram;
 import oram.block.Block;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
+import oram.block.BlockStandard;
 import oram.encryption.EncryptionStrategy;
+import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,7 +13,9 @@ import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p> ORAM <br>
@@ -20,7 +24,7 @@ import java.util.Arrays;
  */
 
 public class Util {
-   private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] getRandomByteArray(int length) {
         if (length <= 0) return new byte[0];
@@ -117,16 +121,71 @@ public class Util {
         return Arrays.copyOf(array, i + 1);
     }
 
-    public static String printTree(BlockEncrypted[] array, int bucketSize) {
+    public static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
         }
 
-        return printBucket(array, bucketSize, 0, 1, layers);
+        List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
+
+        List<BlockStandard> blockStandards = access.decryptBlockPaths(encrypted, false);
+        BlockStandard[] array1 = blockStandards.toArray(new BlockStandard[array.length]);
+        return printBucket(array1, bucketSize, 0, 1, layers);
     }
 
-    public static String printBucket(BlockEncrypted[] array, int bucketSize, int index, int layer, int maxLayers) {
+    public static String printBucket(BlockStandard[] array, int bucketSize, int index, int layer, int maxLayers) {
+        StringBuilder prefix = new StringBuilder();
+        for (int i = 1; i < layer; i++) {
+            prefix.append("        ");
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bucketSize; i++) {
+            int firstIndexInBucket = index * bucketSize;
+            int currentIndex = firstIndexInBucket + i;
+            if (i == 0)
+                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
+            else
+                builder.append(prefix).append("    ");
+
+            if (array.length > currentIndex)
+                builder.append(array[currentIndex].toStringShort());
+
+            builder.append("\n");
+        }
+
+        if (index >= Math.pow(2, maxLayers - 1) - 1)
+            return builder.toString();
+
+
+        String rightChild;
+        String leftChild;
+        if (index == 0) {
+            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers);
+            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers);
+        } else {
+            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
+            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
+        }
+
+        builder.insert(0, rightChild);
+        builder.append(leftChild);
+
+        return builder.toString();
+    }
+
+    public static String printTreeEncrypted(BlockEncrypted[] array, int bucketSize) {
+        int layers = 0;
+        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
+            layers++;
+        }
+
+        return printBucketEncrypted(array, bucketSize, 0, 1, layers);
+    }
+
+    public static String printBucketEncrypted(BlockEncrypted[] array, int bucketSize, int index, int layer,
+                                              int maxLayers) {
         StringBuilder prefix = new StringBuilder();
         for (int i = 1; i < layer; i++) {
             prefix.append("        ");
@@ -152,11 +211,11 @@ public class Util {
         String rightChild;
         String leftChild;
         if (index == 0) {
-            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers);
-            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers);
+            rightChild = printBucketEncrypted(array, bucketSize, 2, layer + 1, maxLayers);
+            leftChild = printBucketEncrypted(array, bucketSize, 1, layer + 1, maxLayers);
         } else {
-            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
-            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
+            rightChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
+            leftChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
         }
 
         builder.insert(0, rightChild);
@@ -184,21 +243,22 @@ public class Util {
         StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
         for (int row = 0; row < matrixHeight; row++) {
             for (int col = 0; col < matrixHeight; col++) {
-                int index = col * 4 + row;
+                int index = col * matrixHeight + row;
                 BlockLookahead block = blocks[index];
                 if (block != null) {
                     String string = new String(block.getData()).trim();
                     builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                    builder.append(";");
+                    builder.append(",");
                     builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
                 } else
                     builder.append("       null");
-                builder.append(" : ");
+                if (col < matrixHeight - 1)
+                    builder.append(" | ");
             }
             builder.append("\n");
         }
 
-        builder.append("Swap                         : Access\n");
+        builder.append("Swap                         | Access\n");
         for (int i = 0; i < matrixHeight; i++) {
             int index = i + matrixHeight * matrixHeight + matrixHeight;
             BlockLookahead block = blocks[index];
@@ -213,7 +273,7 @@ public class Util {
                 builder.append(")");
             } else
                 builder.append("                     null");
-            builder.append(" : ");
+            builder.append(" | ");
             index -= matrixHeight;
             block = blocks[index];
             if (block != null) {
@@ -234,7 +294,7 @@ public class Util {
         return builder.toString();
     }
 
-   public static String getRandomString(int length) {
+    public static String getRandomString(int length) {
         if (length <= 0) return "";
 
         char[] charactersArray = CHARACTERS.toCharArray();

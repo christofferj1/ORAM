@@ -114,7 +114,7 @@ public class UtilTest {
         String string =
                 " 0: Block{add=[], data=[   0,   0,   0]}\n" +
                         "    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat("A single block, bucket size 2", Util.printTree(blocks, 2), is(string));
+        assertThat("A single block, bucket size 2", Util.printTreeEncrypted(blocks, 2), is(string));
 
         blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
                 block, block, block};
@@ -133,7 +133,7 @@ public class UtilTest {
                         "            Block{add=[], data=[   0,   0,   0]}\n" +
                         "                 3: Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat("3 filled layers", Util.printTree(blocks, 2), is(string));
+        assertThat("3 filled layers", Util.printTreeEncrypted(blocks, 2), is(string));
 
         blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
                 block};
@@ -152,7 +152,7 @@ public class UtilTest {
                         "            Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat("The number of nodes is not an exponent of two", Util.printTree(blocks, 2), is(string));
+        assertThat("The number of nodes is not an exponent of two", Util.printTreeEncrypted(blocks, 2), is(string));
 
         blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block};
         string =
@@ -170,7 +170,7 @@ public class UtilTest {
                         "            Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat("The number of nodes is not an exponent of two", Util.printTree(blocks, 2), is(string));
+        assertThat("The number of nodes is not an exponent of two", Util.printTreeEncrypted(blocks, 2), is(string));
 
         blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
                 block, block, block, block, block, block, block, block, block, block};
@@ -196,7 +196,7 @@ public class UtilTest {
                         "                    Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat("Trying bucket size 3", Util.printTree(blocks, 3), is(string));
+        assertThat("Trying bucket size 3", Util.printTreeEncrypted(blocks, 3), is(string));
     }
 
     @Test
@@ -210,7 +210,7 @@ public class UtilTest {
                         "    Block{add=[], data=[   0,   0,   0]}\n" +
                         "         1: Block{add=[], data=[   0,   0,   0]}\n" +
                         "            Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat(Util.printBucket(blocks, 2, 0, 1, 2), is(string));
+        assertThat(Util.printBucketEncrypted(blocks, 2, 0, 1, 2), is(string));
 
         blocks = new BlockEncrypted[]{block, block, block, block, block, block, block, block, block, block, block,
                 block, block, block};
@@ -229,6 +229,6 @@ public class UtilTest {
                         "            Block{add=[], data=[   0,   0,   0]}\n" +
                         "                 3: Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
-        assertThat(Util.printBucket(blocks, 2, 0, 1, 3), is(string));
+        assertThat(Util.printBucketEncrypted(blocks, 2, 0, 1, 3), is(string));
     }
 }

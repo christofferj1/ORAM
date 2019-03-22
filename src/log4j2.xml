@@ -8,7 +8,7 @@
         <RollingFile name="fileLogger" fileName="${basePath}/log.log"
                      filePattern="${basePath}/app-info-%d{yyyy-MM-dd}.log">
             <PatternLayout>
-                <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %F %L %r [%t] %c{1} - %msg%n</pattern>
+                <pattern>[%-5level] %d{MM-dd HH:mm:ss} %F %L, %r ms - %msg%n</pattern>
             </PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
@@ -18,7 +18,7 @@
         <RollingFile name="fileLoggerDebug" fileName="${basePath}/log_DEBUG.log"
                      filePattern="${basePath}/app-info-%d{yyyy-MM-dd}.log">
             <PatternLayout>
-                <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %F %L %r [%t] %c{1} - %msg%n</pattern>
+                <pattern>[%-5level] %d{MM-dd HH:mm:ss} %F %L, %r ms - %msg%n</pattern>
             </PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>

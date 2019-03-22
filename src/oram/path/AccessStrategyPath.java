@@ -150,6 +150,13 @@ public class AccessStrategyPath implements AccessStrategy {
             System.out.println("Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(address));
         }
 
+        logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
+                + leafNodeIndex + " -> " + positionMap.get(address));
+
+        System.out.println("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
+                + leafNodeIndex + " -> " + positionMap.get(address));
+
+
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
         if (!readPath) {
@@ -197,7 +204,7 @@ public class AccessStrategyPath implements AccessStrategy {
             logger.error("Did not fetch the right amount of blocks");
             res = false;
         } else {
-            List<BlockStandard> blocksDecrypted = decryptBlockPaths(encryptedBlocks);
+            List<BlockStandard> blocksDecrypted = decryptBlockPaths(encryptedBlocks, true);
             if (blocksDecrypted == null) {
                 logger.error("Unable to decrypt path of blocks");
                 res = false;
@@ -388,7 +395,7 @@ public class AccessStrategyPath implements AccessStrategy {
         return res;
     }
 
-    List<BlockStandard> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
+    public List<BlockStandard> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks, boolean filterOutDummies) {
         List<BlockStandard> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
             if (block == null) continue;
@@ -398,7 +405,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (addressBytes == null) continue;
             int addressInt = Util.byteArrayToLeInt(addressBytes);
 
-            if (message == null || Util.isDummyAddress(addressInt)) continue;
+            if (message == null || (filterOutDummies && Util.isDummyAddress(addressInt))) continue;
 
             res.add(new BlockStandard(addressInt, message));
         }
