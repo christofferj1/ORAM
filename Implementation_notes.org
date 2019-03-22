@@ -1,6 +1,7 @@
 * General
 The check boxes is to mark when something is added to the report
  - [ ] At the client side, the server strategy is used to separate the algorithm logic from the server logic. The server layer handles the server socket and in/output streams. It also converts between byte[] and int addresses, so the ORAM logic can work with 'sane' types. Both the separation and the 'sane' data types makes it easier to test.
+   - [ ] Using no constants, except for stuff like key sizes, then everything works relatively to the parameters it is initialized with, and can therefore be scaled
  - [ ] The block interface is a way to handle a block, which sometimes consists of some data and an address of some sort, which is nicely separated (by the server)
    - [ ] There are different addresses for e.g. Path and lookahead (the later needs no address perhaps?)
  - [ ] Dummy blocks get address 0, as they do in some article (Log^3 N)

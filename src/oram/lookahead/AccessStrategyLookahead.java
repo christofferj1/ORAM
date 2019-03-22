@@ -282,10 +282,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return null;
         }
 
-        System.out.println("Addresses size: " + addresses.size() + ", blocks size: " + blocksFromMaintenance.size());
-        System.out.println("Blocks to write");
-        for (int i = 0; i < blocksFromMaintenance.size(); i++)
-            System.out.println("  Index: " + addresses.get(i) + ", " + blocksFromMaintenance.get(i).toStringShort());
+//        System.out.println("Addresses size: " + addresses.size() + ", blocks size: " + blocksFromMaintenance.size());
+//        System.out.println("Blocks to write");
+//        for (int i = 0; i < blocksFromMaintenance.size(); i++)
+//            System.out.println("  Index: " + addresses.get(i) + ", " + blocksFromMaintenance.get(i).toStringShort());
 
         boolean writeStatus = communicationStrategy.writeArray(addresses, encryptedBlocks);
         if (!writeStatus) {
@@ -355,15 +355,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
-        System.out.println("Move blocks from column to swap, column: " + columnIndex);
+//        System.out.println("Move blocks from column to swap, column: " + columnIndex);
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
-            System.out.println("  Future swap partner: " + swap.toString());
+//            System.out.println("  Future swap partner: " + swap.toString());
             if (swap.getIndex().getColIndex() == columnIndex) {
                 int rowIndex = swap.getIndex().getRowIndex();
-                System.out.println("    Row index: " + rowIndex);
+//                System.out.println("    Row index: " + rowIndex);
                 BlockLookahead swapPartner = column.get(rowIndex);
-                System.out.println("    Swap partner: " + swapPartner.toStringShort());
+//                System.out.println("    Swap partner: " + swapPartner.toStringShort());
 //                if (Util.isDummyAddress(swapPartner.getAddress())) { // TODO: this could actually be applied if #blocks = size, test that
 //                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
 //                    return false;
@@ -371,12 +371,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 swapStash[Math.floorMod(swap.getSwapNumber(), matrixHeight)] = swapPartner;
                 futureSwapPartners.remove(i);
                 column.set(rowIndex, getLookaheadDummyBlock());
-                System.out.println("    Current swap stash:");
-                for (BlockLookahead b : swapStash)
-                    System.out.println("      " + (b != null ? b.toStringShort() : null));
-                System.out.println("    Current column");
-                for (BlockLookahead b : column)
-                    System.out.println("      " + (b != null ? b.toStringShort() : null));
+//                System.out.println("    Current swap stash:");
+//                for (BlockLookahead b : swapStash)
+//                    System.out.println("      " + (b != null ? b.toStringShort() : null));
+//                System.out.println("    Current column");
+//                for (BlockLookahead b : column)
+//                    System.out.println("      " + (b != null ? b.toStringShort() : null));
             }
         }
 
@@ -386,9 +386,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Column
         res = column;
 
-        System.out.println("Blocks returned from maintenance job, size: " + res.size());
-        for (BlockLookahead b : res)
-            System.out.println("    " + b.toStringShort());
+//        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+//        for (BlockLookahead b : res)
+//            System.out.println("    " + b.toStringShort());
 
 //        Access stash
         List<BlockLookahead> accessStashList = new ArrayList<>();
@@ -399,18 +399,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
         for (int i = 0; i < matrixHeight; i++) {
-            System.out.println("Adding dummies to access stash, size: " + accessStashList.size());
+//            System.out.println("Adding dummies to access stash, size: " + accessStashList.size());
             if (accessStashList.size() <= i) {
                 accessStashList.add(getLookaheadDummyBlock());
-                System.out.println("    Adding one for index: " + i);
+//                System.out.println("    Adding one for index: " + i);
             }
         }
         accessStashList = permutationStrategy.permuteLookaheadBlocks(accessStashList);
         res.addAll(accessStashList);
 
-        System.out.println("Blocks returned from maintenance job, size: " + res.size());
-        for (BlockLookahead b : res)
-            System.out.println("    " + b.toStringShort());
+//        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+//        for (BlockLookahead b : res)
+//            System.out.println("    " + b.toStringShort());
 
 //        Swap stash
         List<BlockLookahead> swapStashList = new ArrayList<>();
@@ -422,9 +422,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
         res.addAll(swapStashList);
 
-        System.out.println("Blocks returned from maintenance job, size: " + res.size());
-        for (BlockLookahead b : res)
-            System.out.println("    " + b.toStringShort());
+//        System.out.println("Blocks returned from maintenance job, size: " + res.size());
+//        for (BlockLookahead b : res)
+//            System.out.println("    " + b.toStringShort());
 
         return res;
     }
