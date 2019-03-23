@@ -34,10 +34,10 @@ public class MainPath {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        int numberOfBlocks = 15;
-        int bucketSize = 2;
-        int size = 7;
-        int numberOfRounds = 10;
+        int numberOfBlocks = 27;
+        int bucketSize = 4;
+        int size = 31;
+        int numberOfRounds = 10000;
 
         List<BlockStandard> blocks = new ArrayList<>();
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];

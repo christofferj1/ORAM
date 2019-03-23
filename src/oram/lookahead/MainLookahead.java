@@ -37,22 +37,21 @@ public class MainLookahead {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        int numberOfBlocks = 27;
+        int numberOfBlocks = 30;
         int columns = 8;
         int rows = 6;
         int size = 36;
-        int numberOfRounds = 1000;
+        int numberOfRounds = 10000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
-        for (int i = 0; i < numberOfBlocks; i++) {
-            int blockNumber = i + 1;
-            BlockStandard block = new BlockStandard(blockNumber, ("Block " + blockNumber).getBytes());
+        for (int i = 1; i <= numberOfBlocks; i++) {
+            BlockStandard block = new BlockStandard(i, ("Block " + i).getBytes());
             blocks.add(block);
-            blockArray[i + 1] = block;
+            blockArray[i] = block;
         }
 
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, columns, rows);
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, columns, rows);
 
         CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
@@ -99,8 +98,7 @@ public class MainLookahead {
 //                System.out.println("SHIT WENT WRONG!!!");
 //                break;
 //            }
-            if (i % 100 == 99)
-                System.out.println("Done " + i + "/" + numberOfRounds + " of the rounds");
+            Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
         long timeElapsed = (System.nanoTime() - startTime) / 1000000;

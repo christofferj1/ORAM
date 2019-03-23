@@ -8,6 +8,8 @@ import oram.encryption.EncryptionStrategy;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
@@ -24,6 +26,7 @@ import java.util.List;
  */
 
 public class Util {
+    private static final Logger logger = LogManager.getLogger("log");
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] getRandomByteArray(int length) {
@@ -316,6 +319,8 @@ public class Util {
             long timeElapsedPerPercent = timeElapsed / percentDoneInt;
             long timeLeft = timeElapsedPerPercent * (100 - percentDoneInt);
             System.out.println("Done with " + percentDoneInt + "%, time spend: " + getTimeString(timeElapsed) +
+                    ", estimated time left: " + getTimeString(timeLeft));
+            logger.info("Done with " + percentDoneInt + "%, time spend: " + getTimeString(timeElapsed) +
                     ", estimated time left: " + getTimeString(timeLeft));
         }
     }

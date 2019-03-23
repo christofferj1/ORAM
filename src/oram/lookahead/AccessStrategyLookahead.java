@@ -364,10 +364,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //                System.out.println("    Row index: " + rowIndex);
                 BlockLookahead swapPartner = column.get(rowIndex);
 //                System.out.println("    Swap partner: " + swapPartner.toStringShort());
-//                if (Util.isDummyAddress(swapPartner.getAddress())) { // TODO: this could actually be applied if #blocks = size, test that
+
+//                This could actually be applied if #blocks = size, test that
+//                if (Util.isDummyAddress(swapPartner.getAddress())) {
 //                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
-//                    return false;
+//                    return null;
 //                }
+
                 swapStash[Math.floorMod(swap.getSwapNumber(), matrixHeight)] = swapPartner;
                 futureSwapPartners.remove(i);
                 column.set(rowIndex, getLookaheadDummyBlock());
