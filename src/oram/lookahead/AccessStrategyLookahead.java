@@ -629,6 +629,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
+    Index getIndexFromFlatArrayIndex(int flatArrayIndex) {
+        int column = flatArrayIndex / matrixHeight;
+        int row = flatArrayIndex % matrixHeight;
+        return new Index(row, column);
+    }
+
     List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = 0; i < matrixHeight; i++) { // Columns

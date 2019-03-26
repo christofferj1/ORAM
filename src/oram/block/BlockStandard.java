@@ -66,14 +66,7 @@ public class BlockStandard implements Block, Serializable {
     }
 
     public String toStringShort() {
-        String dataString;
-        if (data.length > 10) {
-            String arrayString = Util.printByteArray(Arrays.copyOf(data, 10), false);
-            arrayString = arrayString.substring(0, arrayString.length() - 1);
-            arrayString += ", ...";
-            dataString = arrayString;
-        } else
-            dataString = Util.printByteArray(data, false);
+        String dataString = Util.getShortDataString(data);
         return "Block{" +
                 "add=" + address +
                 ", data=" + dataString +

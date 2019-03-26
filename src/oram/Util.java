@@ -324,4 +324,16 @@ public class Util {
                     ", estimated time left: " + getTimeString(timeLeft));
         }
     }
+
+    public static String getShortDataString(byte[] data) {
+        String dataString;
+        if (data.length > 10) {
+            String arrayString = printByteArray(Arrays.copyOf(data, 10), false);
+            arrayString = arrayString.substring(0, arrayString.length() - 1);
+            arrayString += ", ...";
+            dataString = arrayString;
+        } else
+            dataString = printByteArray(data, false);
+        return dataString;
+    }
 }

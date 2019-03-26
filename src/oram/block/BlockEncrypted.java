@@ -41,20 +41,14 @@ public class BlockEncrypted implements Serializable {
 //        if (Util.isDummyAddress(Util.byteArrayToLeInt(address)))
 //            return "DUMMY COUNTER: " + Util.byteArrayToLeInt(data);
         return "BlockEncrypted{" +
-                "address=" + Util.printByteArray(address, true) + // TODO: should not trim
-                ", data=" + Util.printByteArray(data, true) + // TODO: should not trim
+                "address=" + Util.printByteArray(address, false) +
+                ", data=" + Util.printByteArray(data, false) +
                 '}';
     }
 
     public String toStringShort() {
         String dataString;
-        if (data.length > 10) {
-            String arrayString = Util.printByteArray(Arrays.copyOf(data, 10), false);
-            arrayString = arrayString.substring(0, arrayString.length() - 1);
-            arrayString += ", ...";
-            dataString = arrayString;
-        } else
-            dataString = Util.printByteArray(data, false);
+        dataString = Util.getShortDataString(data);
         return "Block{" +
                 "add=" + Util.printByteArray(address, true) +
                 ", data=" + dataString +

@@ -270,7 +270,8 @@ public class AccessStrategyPathOld implements AccessStrategy {
             }
 
 //            Make sure there are exactly Z blocks to write to the node
-            blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite); // TODO: permute
+            blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite);
+            blocksToWrite = permutationStrategy.permuteStandardBlocks(blocksToWrite);
             if (print) {
                 System.out.println("    Blocks actually written:");
                 System.out.print("        ");

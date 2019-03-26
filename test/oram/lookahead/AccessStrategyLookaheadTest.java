@@ -455,4 +455,24 @@ public class AccessStrategyLookaheadTest {
         BlockLookahead decryptedBlock = access.decryptToLookaheadBlock(encryptedBlock);
         assertThat(decryptedBlock, is(block));
     }
+
+    @Test
+    public void shouldBeAbleToCalculateFlatArrayIndexFromMatrixIndex() {
+        assertThat(access.getFlatArrayIndex(new Index(0, 0)), is(0));
+        assertThat(access.getFlatArrayIndex(new Index(3, 3)), is(15));
+        assertThat(access.getFlatArrayIndex(new Index(0, 1)), is(4));
+        assertThat(access.getFlatArrayIndex(new Index(0, 2)), is(8));
+        assertThat(access.getFlatArrayIndex(new Index(3, 1)), is(7));
+        assertThat(access.getFlatArrayIndex(new Index(2, 2)), is(10));
+    }
+
+    @Test
+    public void shouldBeAbleToCalculateMatrixIndexFromFlatArrayIndex() {
+        assertThat(access.getIndexFromFlatArrayIndex(0), is(new Index(0, 0)));
+        assertThat(access.getIndexFromFlatArrayIndex(15), is(new Index(3, 3)));
+        assertThat(access.getIndexFromFlatArrayIndex(4), is(new Index(0, 1)));
+        assertThat(access.getIndexFromFlatArrayIndex(8), is(new Index(0, 2)));
+        assertThat(access.getIndexFromFlatArrayIndex(7), is(new Index(3, 1)));
+        assertThat(access.getIndexFromFlatArrayIndex(10), is(new Index(2, 2)));
+    }
 }

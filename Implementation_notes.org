@@ -18,3 +18,4 @@ The check boxes is to mark when something is added to the report
 * Lookahead
  - [ ] Matrix is indexed such that the first 'matrixHeight' blocks are in the first column
  - [ ] Different from how the algorithm is described, I read the entire column for the maintenance job together with the stashes and the block to fetch, to help speed up. That means I don't fetch a single block, when it is a part of the column for the maintenance.
+ - [X] Access stash is implemented as a map of maps. Then I can retrieve and delete entire columns easily.
