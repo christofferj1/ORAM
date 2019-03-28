@@ -52,7 +52,7 @@ public class MainPath {
         CommunicationStrategy com = factory.getCommunicationStrategy();
         com.start();
         AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory);
-        access.initializeServer(blocks);
+        access.setup(blocks);
 
         logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
         System.out.println("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);

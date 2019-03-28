@@ -35,12 +35,17 @@ public class AccessStrategyTrivial implements AccessStrategy {
     private final PermutationStrategy permutationStrategy;
     private Map<Integer, Integer> positionMap;
 
-    public AccessStrategyTrivial(SecretKey secretKey, int size, Factory factory) {
-        this.secretKey = secretKey;
+    public AccessStrategyTrivial(int size, byte[] key, Factory factory) {
         this.size = size;
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.permutationStrategy = factory.getPermutationStrategy();
+        this.secretKey = encryptionStrategy.generateSecretKey(key);
+    }
+
+    @Override
+    public boolean setup(List<BlockStandard> blocks) {
+        return false;
     }
 
     @Override

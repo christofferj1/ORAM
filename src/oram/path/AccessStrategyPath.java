@@ -40,7 +40,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private boolean print = false;
     private int dummyCounter = 0;
 
-    AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
+    public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
         this.stash = new ArrayList<>();
         this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
@@ -57,7 +57,7 @@ public class AccessStrategyPath implements AccessStrategy {
         logger.debug("######### Initialized Path ORAM strategy #########");
     }
 
-    public void initializeServer() {
+    public void setup() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
             positionMap.put(0, i);
@@ -66,7 +66,8 @@ public class AccessStrategyPath implements AccessStrategy {
         positionMap = new HashMap<>();
     }
 
-    public boolean initializeServer(List<BlockStandard> blocks) {
+    @Override
+    public boolean setup(List<BlockStandard> blocks) {
         SecureRandom randomness = new SecureRandom();
 
         for (int i = 0; i < blocks.size(); i++) {

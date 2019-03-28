@@ -57,7 +57,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
         logger.debug("######### Initialized Path ORAM strategy #########");
     }
 
-    public void initializeServer() {
+    public void setup() {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
 //            System.out.println("Round: " + i + "\n" + communicationStrategy.getTreeString());
@@ -69,7 +69,8 @@ public class AccessStrategyPathOld implements AccessStrategy {
 //        print = true;
     }
 
-    public boolean initializeServer(List<BlockStandard> blocks) {
+    @Override
+    public boolean setup(List<BlockStandard> blocks) {
         SecureRandom randomness = new SecureRandom();
 
         for (int i = 0; i < blocks.size(); i++) {
