@@ -65,7 +65,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         logger.debug("######### Initialized Lookahead ORAM strategy #########");
     }
 
-    boolean setup(List<BlockStandard> blocks) {
+    @Override
+    public boolean setup(List<BlockStandard> blocks) {
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
             blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
