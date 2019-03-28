@@ -63,10 +63,10 @@ public class AccessStrategyTrivial implements AccessStrategy {
         SecureRandom randomness = new SecureRandom();
         int position = positionMap.getOrDefault(address, randomness.nextInt(size));
 
-        logger.info("Access op: " + op.toString() + ", address: " + address + ", position: " + position);
-        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position);
+        logger.info("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
+//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 
-        System.out.println("Read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
+
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
         List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
 

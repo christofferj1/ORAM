@@ -34,7 +34,7 @@ public class Main {
         randomness.nextBytes(key);
 
         ORAMFactory oramFactory = new ORAMFactoryTrivial();
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
         int numberOfBlocks = oramFactory.getNumberOfBlocks();
