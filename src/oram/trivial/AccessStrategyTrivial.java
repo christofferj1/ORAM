@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
+    private final List<Integer> allAddresses;
     private Map<Integer, Integer> positionMap;
 
     public AccessStrategyTrivial(int size, byte[] key, Factory factory) {
@@ -41,11 +43,19 @@ public class AccessStrategyTrivial implements AccessStrategy {
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.permutationStrategy = factory.getPermutationStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
+        this.allAddresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
+        positionMap = new HashMap<>();
     }
 
     @Override
     public boolean setup(List<BlockStandard> blocks) {
-        return false;
+        blocks = permutationStrategy.permuteStandardBlocks(blocks);
+        for (int i = 0; i < blocks.size(); i++)
+            positionMap.put(blocks.get(i).getAddress(), i);
+
+        List<BlockEncrypted> encryptedList = encryptBlocks(blocks);
+
+        return communicationStrategy.writeArray(allAddresses, encryptedList);
     }
 
     @Override
@@ -56,7 +66,6 @@ public class AccessStrategyTrivial implements AccessStrategy {
         logger.info("Access op: " + op.toString() + ", address: " + address + ", position: " + position);
         System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position);
 
-        List<Integer> allAddresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
         System.out.println("Read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
         List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
@@ -73,7 +82,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
         return res;
     }
 
-    List<BlockStandard> decryptBlocks(List<BlockEncrypted> blocks) {
+    private List<BlockStandard> decryptBlocks(List<BlockEncrypted> blocks) {
         List<BlockStandard> res = new ArrayList<>();
         for (BlockEncrypted b : blocks) {
             byte[] addressBytes = encryptionStrategy.decrypt(b.getAddress(), secretKey);
@@ -91,7 +100,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
         return res;
     }
 
-    List<BlockEncrypted> encryptBlocks(List<BlockStandard> blocks) {
+    private List<BlockEncrypted> encryptBlocks(List<BlockStandard> blocks) {
         List<BlockEncrypted> res = new ArrayList<>();
         for (BlockStandard b : blocks) {
             byte[] addressBytes = Util.leIntToByteArray(b.getAddress());

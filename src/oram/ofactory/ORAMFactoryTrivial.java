@@ -12,8 +12,8 @@ import oram.trivial.AccessStrategyTrivial;
 
 public class ORAMFactoryTrivial implements ORAMFactory {
     private final int size = 36;
-    private final int numberOfBlocks = 30;
-    private final int numberOfRounds = 100;
+    private final int numberOfBlocks = size;
+    private final int numberOfRounds = 10000;
 
     @Override
     public int getSize() {
