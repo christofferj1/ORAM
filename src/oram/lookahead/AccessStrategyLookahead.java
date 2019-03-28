@@ -1,7 +1,6 @@
 package oram.lookahead;
 
 
-import javafx.util.Pair;
 import oram.AccessStrategy;
 import oram.Constants;
 import oram.OperationType;
@@ -14,6 +13,8 @@ import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -522,7 +523,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         for (int i = 0; i < stash.length; i++) {
             BlockLookahead block = stash[i];
             if (block != null && block.getAddress() == address)
-                return new Pair<>(block, i);
+                return new ImmutablePair<>(block, i);
         }
         return null;
     }

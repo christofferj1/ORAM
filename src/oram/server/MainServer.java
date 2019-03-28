@@ -24,6 +24,7 @@ public class MainServer {
 //        TODO: check that the files directory exists
 
         ServerApplication serverApplication = new ServerApplicationImpl();
+        System.out.println("Running the server with IP:");
 
         System.out.println(getIPAddress());
 
