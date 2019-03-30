@@ -62,19 +62,24 @@ public class MainLookahead {
 
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
+        List<Integer> addressesWrittenTo = new ArrayList<>();
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         for (int i = 0; i < numberOfRounds; i++) {
-            int address = randomness.nextInt(numberOfBlocks) + 1;
-
             OperationType op;
+            int address;
             byte[] data;
-            if (randomness.nextBoolean()) {
-                op = OperationType.READ;
-                data = null;
-            } else {
+            if (addressesWrittenTo.isEmpty() || randomness.nextBoolean()) {
                 op = OperationType.WRITE;
                 data = Util.getRandomString(8).getBytes();
+                address = randomness.nextInt(numberOfBlocks) + 1;
+
+                addressesWrittenTo.add(address);
+            } else {
+                op = OperationType.READ;
+                data = null;
+                address = addressesWrittenTo.get(randomness.nextInt(addressesWrittenTo.size()));
             }
+
 
             byte[] res = access.access(op, address, data);
             if (res == null) System.exit(-1);
@@ -84,9 +89,9 @@ public class MainLookahead {
             System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
-            printMatrix(columns, rows, clientCommunicationLayer, access);
 
-            if (Arrays.equals(res, blockArray[address].getData())) {
+            if (Arrays.equals(res, blockArray[address].getData())
+                    || (op.equals(OperationType.WRITE) && Arrays.equals(res, Constants.DUMMY_RESPONSE.getBytes()))) {
                 System.out.println("Read block data: " + s);
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
@@ -98,7 +103,8 @@ public class MainLookahead {
 //                System.out.println("SHIT WENT WRONG!!!");
 //                break;
 //            }
-            Util.printPercentageDone(startTime, numberOfRounds, i);
+            printMatrix(columns, rows, clientCommunicationLayer, access);
+//            Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
         long timeElapsed = (System.nanoTime() - startTime) / 1000000;
