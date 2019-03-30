@@ -42,7 +42,7 @@ public class MainLookahead {
         int columns = 8;
         int rows = 6;
         int size = 36;
-        int numberOfRounds = 100;
+        int numberOfRounds = 30000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
