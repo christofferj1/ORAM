@@ -15,4 +15,6 @@ public class Constants {
     public static final int AES_BLOCK_SIZE = 16;
     public static final int AES_KEY_SIZE = 16;
     public static final int INTEGER_BYTE_ARRAY_SIZE = 4;
+
+    public static final String DUMMY_RESPONSE = "$$$ WROTE DUMMY BLOCK $$$";
 }

@@ -1,5 +1,6 @@
 package oram.lookahead;
 
+import oram.CommunicationStrategyStub;
 import oram.Constants;
 import oram.OperationType;
 import oram.Util;
@@ -41,7 +42,7 @@ public class MainLookahead {
         int columns = 8;
         int rows = 6;
         int size = 36;
-        int numberOfRounds = 10000;
+        int numberOfRounds = 100;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
@@ -53,7 +54,7 @@ public class MainLookahead {
 
         Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, columns, rows);
 
-        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
+        CommunicationStrategyStub clientCommunicationLayer = (CommunicationStrategyStub) factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
         AccessStrategyLookahead access = new AccessStrategyLookahead(size, rows, key, factory);
         access.setup(blocks);
@@ -62,18 +63,22 @@ public class MainLookahead {
 
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
+        List<Integer> addressesWrittenTo = new ArrayList<>();
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         for (int i = 0; i < numberOfRounds; i++) {
-            int address = randomness.nextInt(numberOfBlocks) + 1;
-
             OperationType op;
+            int address;
             byte[] data;
-            if (randomness.nextBoolean()) {
-                op = OperationType.READ;
-                data = null;
-            } else {
+            if (addressesWrittenTo.isEmpty() || randomness.nextBoolean()) {
                 op = OperationType.WRITE;
                 data = Util.getRandomString(8).getBytes();
+                address = randomness.nextInt(numberOfBlocks) + 1;
+
+                addressesWrittenTo.add(address);
+            } else {
+                op = OperationType.READ;
+                data = null;
+                address = addressesWrittenTo.get(randomness.nextInt(addressesWrittenTo.size()));
             }
 
             byte[] res = access.access(op, address, data);
@@ -84,14 +89,16 @@ public class MainLookahead {
             System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
-            printMatrix(columns, rows, clientCommunicationLayer, access);
 
-            if (Arrays.equals(res, blockArray[address].getData())) {
-                System.out.println("Read block data: " + s);
+            if (Arrays.equals(res, blockArray[address].getData())
+                    || (op.equals(OperationType.WRITE) && Arrays.equals(res, Constants.DUMMY_RESPONSE.getBytes()))) {
+                System.out.println("Read  block  data: " + s);
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                 break;
             }
+
+            printMatrix(columns, rows, clientCommunicationLayer, access);
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 //            if (!s.contains(Integer.toString(address))) {

@@ -42,9 +42,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
-    private Map<Integer, Index> positionMap;
+    private Map<Integer, Integer> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
+    private List<Integer> knownDummyAddresses;
 
 
     public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
@@ -59,13 +60,46 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessCounter = 0;
         futureSwapPartners = new ArrayList<>();
         positionMap = new HashMap<>();
+        knownDummyAddresses = new ArrayList<>();
 
         logger.info("######### Initialized Lookahead ORAM strategy #########");
         logger.debug("######### Initialized Lookahead ORAM strategy #########");
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setup(List<BlockStandard> block) {
+        List<Integer> addresses  = new ArrayList<>();
+        List<BlockLookahead> lookaheadBlocks = new ArrayList<>();
+        for (int i = 0; i < size + matrixHeight; i++) {
+            addresses.add(i);
+            lookaheadBlocks.add(getLookaheadDummyBlock());
+        }
+
+        //        Pick swap partners
+        SecureRandom randomness = new SecureRandom();
+        for (int i = 0; i < matrixHeight; i++) {
+            Index index = null;
+            boolean indexIsNotUnique = true;
+            while (indexIsNotUnique) {
+                index = new Index(randomness.nextInt(matrixHeight), randomness.nextInt(matrixHeight));
+                Index finalIndex = index;
+                indexIsNotUnique = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(finalIndex));
+            }
+            futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
+            accessCounter++;
+
+            BlockLookahead lookaheadDummyBlock = getLookaheadDummyBlock();
+            lookaheadDummyBlock.setIndex(index);
+            addresses.add(size + matrixHeight + i);
+            lookaheadBlocks.add(lookaheadDummyBlock);
+        }
+
+        knownDummyAddresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
+
+        return communicationStrategy.writeArray(addresses, encryptBlocks(lookaheadBlocks));
+    }
+
+    public boolean setupOld(List<BlockStandard> blocks) {
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
             blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
@@ -74,6 +108,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Shuffle and convert
         blocks = permutationStrategy.permuteStandardBlocks(blocks);
         List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
+        for (int i = 0; i < size; i++) {
+            if (Util.isDummyAddress(blockLookaheads.get(i).getAddress()))
+                knownDummyAddresses.add(i);
+        }
 
 //        Pick swap partners
         SecureRandom randomness = new SecureRandom();
@@ -137,7 +175,21 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
-        Index indexOfCurrentAddress = positionMap.get(address);
+        SecureRandom randomness = new SecureRandom();
+
+//        Find position
+        Integer position = positionMap.getOrDefault(address, null);
+        if (position == null) {
+            if (op.equals(OperationType.WRITE)) {
+                position = knownDummyAddresses.remove(randomness.nextInt(knownDummyAddresses.size()));
+            } else {
+                logger.error("Tried to read an address never written to");
+                return null;
+            }
+        }
+
+//        Find index from position and maintenance column
+        Index indexOfCurrentAddress = getIndexFromFlatArrayIndex(position);
         int maintenanceColumnIndex = Math.floorMod(accessCounter, matrixHeight);
 
         logger.info("Access op: " + op.toString() + ", address: " + address + ", index: ("
@@ -178,19 +230,23 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         boolean blockFoundInMatrix = true;
         boolean blockFoundInAccessStash = true;
+        boolean blockFoundInSwapStash = true;
         int swapCount = 0;
         if (Util.isDummyAddress(block.getAddress())) {
             blockFoundInMatrix = false;
             block = findBlockInAccessStash(accessStash, indexOfCurrentAddress);
             if (block == null) {
                 blockFoundInAccessStash = false;
-                Pair<BlockLookahead, Integer> pair = findBlockInSwapStash(swapStash, address);
+                Pair<BlockLookahead, Integer> pair = findBlockInSwapStash(swapStash, indexOfCurrentAddress);
                 if (pair == null) {
-                    logger.error("Unable to locate block, address: " + address);
-                    return null;
+                    block = new BlockLookahead(address, Constants.DUMMY_RESPONSE.getBytes()); // Index is set below
+                    blockFoundInSwapStash = false;
+                    logger.error("Did not find blog");
                 } else {
                     block = pair.getKey();
                     swapCount = pair.getValue();
+                    if (Util.isDummyAddress(block.getAddress()))
+                        block = new BlockLookahead(address, Constants.DUMMY_RESPONSE.getBytes());
                     logger.info("Block found in swap stash: " + block.toStringShort());
                 }
             } else
@@ -219,8 +275,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (op.equals(OperationType.WRITE)) {block.setData(data);}
 
 //        Update position map
-        positionMap.put(swapPartner.getAddress(), swapPartner.getIndex());
-        positionMap.put(block.getAddress(), block.getIndex());
+        positionMap.put(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
+        positionMap.put(block.getAddress(), getFlatArrayIndex(block.getIndex()));
 
 //        Handle the switch around of the blocks
         BlockLookahead blockToWriteBackToMatrix;
@@ -230,27 +286,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
             blockToWriteBackToMatrix = swapPartner;
 //            Remove old version of block
             accessStash = removeFromAccessStash(accessStash, indexOfCurrentAddress);
-        } else {
+        } else if (blockFoundInSwapStash){
             blockToWriteBackToMatrix = getLookaheadDummyBlock();
-//            if (blockToWriteBackToMatrix == null) {
-//                logger.error("Unable to encrypt dummy block");
-//                return null;
-//            }
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-            positionMap.put(swapReplacement.getAddress(), swapReplacement.getIndex());
-        }
+            positionMap.put(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex()));
+        } else
+            blockToWriteBackToMatrix = swapPartner;
 
 //        TODO: if block in column, update that before parsing the column along to the maintenance job
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
-
-//        Write block back to the matrix
-//        if (!communicationStrategy.write(flatArrayIndex, blockToWriteBackToMatrix)) {
-//            logger.error("Unable to write swap partner to communicationStrategy: \n" + swapPartner.toString());
-//            return null;
-//        }
 
         pickNewFutureSwapPartner(swapStash);
         List<BlockLookahead> blocksFromMaintenance = maintenanceJob(column, accessStash, swapStash);
@@ -507,6 +554,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
+    /**
+     * Finds the block in the stash, if it has been put there. This is filled with dummy blocks, so they are simply
+     * filtered out.
+     */
     BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, Index index) {
         int colIndex = index.getColIndex();
         int rowIndex = index.getRowIndex();
@@ -519,10 +570,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return null;
     }
 
-    private Pair<BlockLookahead, Integer> findBlockInSwapStash(BlockLookahead[] stash, int address) {
+    /**
+     * Find block from swap based on index, as we during a write access might to overwrite a dummy block in swap stash
+     */
+    private Pair<BlockLookahead, Integer> findBlockInSwapStash(BlockLookahead[] stash, Index index) {
         for (int i = 0; i < stash.length; i++) {
             BlockLookahead block = stash[i];
-            if (block != null && block.getAddress() == address)
+            if (block != null && block.getIndex().equals(index))
                 return new Pair<>(block, i);
         }
         return null;
@@ -530,7 +584,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     private void pickNewFutureSwapPartner(BlockLookahead[] swapStash) {
         List<BlockLookahead> swapStashList = Arrays.asList(swapStash);
-
 
         SecureRandom randomness = new SecureRandom();
         boolean futureSwapsContainsIndex = true;
@@ -644,7 +697,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
                 res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
                 if (blockStandard.getAddress() != 0)
-                    positionMap.put(blockStandard.getAddress(), index);
+                    positionMap.put(blockStandard.getAddress(), getFlatArrayIndex(index));
             }
         }
         return res;

@@ -13,7 +13,7 @@ import oram.lookahead.AccessStrategyLookahead;
 public class ORAMFactoryLookahead implements ORAMFactory {
     private final int size = 36;
     private final int numberOfBlocks = 30;
-    private final int numberOfRounds = 10000;
+    private final int numberOfRounds = 100;
     private final int rows = 6;
     private final int columns = rows + 2;
 

@@ -5,7 +5,7 @@ import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import oram.ofactory.ORAMFactory;
-import oram.ofactory.ORAMFactoryTrivial;
+import oram.ofactory.ORAMFactoryLookahead;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -33,8 +33,8 @@ public class Main {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        ORAMFactory oramFactory = new ORAMFactoryTrivial();
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
+        ORAMFactory oramFactory = new ORAMFactoryLookahead();
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
         int numberOfBlocks = oramFactory.getNumberOfBlocks();
@@ -53,24 +53,30 @@ public class Main {
 
         int size = oramFactory.getSize();
         int numberOfRounds = oramFactory.getNumberOfRounds();
-        String string = "Size: " + size + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks;
+        String string = "Size: " + size + ", #rounds: " + numberOfRounds + ", #blocks: " + numberOfBlocks;
         if (access.getClass().getSimpleName().equals(AccessStrategyPath.class.getSimpleName()))
             string += ", bucket size: " + oramFactory.getBucketSize();
         logger.info(string);
         System.out.println(string);
 
+        List<Integer> addressesWrittenTo = new ArrayList<>();
         for (int i = 0; i < numberOfRounds; i++) {
-            int address = randomness.nextInt(numberOfBlocks) + 1;
-
             OperationType op;
             byte[] data;
-            if (randomness.nextBoolean()) {
-                op = OperationType.READ;
-                data = null;
-            } else {
+            if (addressesWrittenTo.isEmpty() || randomness.nextBoolean()) {
                 op = OperationType.WRITE;
                 data = Util.getRandomString(8).getBytes();
+            } else {
+                op = OperationType.READ;
+                data = null;
             }
+
+            int address;
+            if (op.equals(OperationType.WRITE)) {
+                address = randomness.nextInt(numberOfBlocks) + 1;
+                addressesWrittenTo.add(address);
+            } else
+                address = addressesWrittenTo.get(randomness.nextInt(addressesWrittenTo.size()));
 
             byte[] res = access.access(op, address, data);
             if (res == null) System.exit(-1);
@@ -79,7 +85,8 @@ public class Main {
             String s = new String(res);
             System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
-            if (Arrays.equals(res, blockArray[address].getData())) {
+            if (Arrays.equals(res, blockArray[address].getData())
+                    || (op.equals(OperationType.WRITE) && Arrays.equals(res, Constants.DUMMY_RESPONSE.getBytes()))) {
                 System.out.println("Read block data: " + s);
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
