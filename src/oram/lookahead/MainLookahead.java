@@ -99,6 +99,7 @@ public class MainLookahead {
             }
 
             printMatrix(columns, rows, clientCommunicationLayer, access);
+            System.out.println(Arrays.toString(access.knownDummyAddresses.toArray()));
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 //            if (!s.contains(Integer.toString(address))) {
