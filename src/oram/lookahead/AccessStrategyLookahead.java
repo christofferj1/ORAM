@@ -14,6 +14,7 @@ import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,7 +103,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         List<Integer> addresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
         Collections.shuffle(addresses, new SecureRandom());
         for (int i = 0; i < size; i++) {
-            positionMap.put(i, addresses.get(i));
+            positionMap.put(i + 1, addresses.get(i));
         }
     }
 
@@ -179,8 +180,19 @@ public class AccessStrategyLookahead implements AccessStrategy {
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
         System.out.println("Position map: ");
-        for (Map.Entry e : positionMap.entrySet())
-            System.out.print(e.getKey() + " -> " + e.getValue() + ", ");
+//        for (Map.Entry e : positionMap.entrySet())
+//            System.out.print(e.getKey() + " -> " + e.getValue() + ", ");
+        for (int i = 0; i <= size; i++) {
+            if (i != 0)
+                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.get(i)), 2));
+            else System.out.print("       ");
+            for (int j = 1; j <= size; j++) {
+                int res = positionMap.get(j);
+                if (res == i)
+                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(res), 2) + " ; ");
+            }
+            System.out.println(" ");
+        }
         System.out.println(" ");
 
         Integer position = positionMap.get(address);
@@ -279,6 +291,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
         byte[] res = block.getData();
         if (op.equals(OperationType.WRITE)) {block.setData(data);}
 
+//        The problem is, that when updating the position map, we need to know what other position to change.
+//        We used to only have to change once where there were an address in the block, so we knew which one were relevant
+//        to update. Now someone with address 0 still has a relevant pointer to it.
+
 //        Update position map
         positionMap.put(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
         positionMap.put(block.getAddress(), getFlatArrayIndex(block.getIndex()));
@@ -297,10 +313,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //                logger.error("Unable to encrypt dummy block");
 //                return null;
 //            }
-            BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
+            int address1 = swapPartner.getAddress();
+            BlockLookahead swapReplacement = new BlockLookahead(address1, swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-            positionMap.put(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex()));
+            int flatArrayIndex = getFlatArrayIndex(swapReplacement.getIndex());
+            positionMap.put(swapReplacement.getAddress(), flatArrayIndex);
         } else
             blockToWriteBackToMatrix = swapPartner;
 

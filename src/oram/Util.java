@@ -257,12 +257,12 @@ public class Util {
                 } else
                     builder.append("       null");
                 if (col < matrixHeight - 1)
-                    builder.append(" | ");
+                    builder.append(" ||| ");
             }
             builder.append("\n");
         }
 
-        builder.append("Swap                         | Access\n");
+        builder.append("Swap                         ||| Access\n");
         for (int i = 0; i < matrixHeight; i++) {
             int index = i + matrixHeight * matrixHeight + matrixHeight;
             BlockLookahead block = blocks[index];
@@ -277,7 +277,7 @@ public class Util {
                 builder.append(")");
             } else
                 builder.append("                     null");
-            builder.append(" | ");
+            builder.append(" ||| ");
             index -= matrixHeight;
             block = blocks[index];
             if (block != null) {

@@ -14,6 +14,7 @@ The check boxes is to mark when something is added to the report
    - [ ] The Server part at the client side turns every array into an encrypted block, where the address array comes from the first 32 bytes of the data
    - [ ] Each ORAM strategy handle their individual data format
    - [ ] The server uses its own blocks (like Path blocks), which carries the address on the server, which is not send back to the client
+ - [ ] Using byte[] in position maps, as they give consistent map sizes (and I don't care about small blocks, as this is a test, and it helps me get closer to a real scenario, where the setup is bigger)
 
 * Lookahead
  - [ ] Matrix is indexed such that the first 'matrixHeight' blocks are in the first column

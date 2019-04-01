@@ -9,7 +9,6 @@ import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,6 +70,10 @@ public class MainLookahead {
             if (addressesWrittenTo.isEmpty() || randomness.nextBoolean()) {
                 op = OperationType.WRITE;
                 data = Util.getRandomString(8).getBytes();
+
+//                Scanner scanner = new Scanner(System.in);
+//                address = Integer.parseInt(scanner.nextLine());
+//                address = 29;
                 address = randomness.nextInt(numberOfBlocks) + 1;
 
                 addressesWrittenTo.add(address);
@@ -86,7 +89,7 @@ public class MainLookahead {
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
