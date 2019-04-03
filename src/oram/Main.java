@@ -28,9 +28,7 @@ public class Main {
 
     public static void main(String[] args) {
         long startTime = System.nanoTime();
-        byte[] key = new byte[Constants.AES_KEY_SIZE];
-        SecureRandom randomness = new SecureRandom();
-        randomness.nextBytes(key);
+        byte[] key = Constants.KEY_BYTES;
 
         ORAMFactory oramFactory = new ORAMFactoryLookahead();
         Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
@@ -58,6 +56,7 @@ public class Main {
         logger.info(string);
         System.out.println(string);
 
+        SecureRandom randomness = new SecureRandom();
         for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;
 

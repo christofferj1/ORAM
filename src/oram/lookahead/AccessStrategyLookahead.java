@@ -11,6 +11,7 @@ import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
+import oram.factory.FactoryImpl;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -19,6 +20,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,7 +50,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
 
-
     public AccessStrategyLookahead(int size, int matrixHeight, byte[] key, Factory factory) {
         this.size = size;
         this.matrixHeight = matrixHeight;
@@ -63,6 +65,19 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         logger.info("######### Initialized Lookahead ORAM strategy #########");
         logger.debug("######### Initialized Lookahead ORAM strategy #########");
+    }
+
+    public static void main(String[] args) {
+        AccessStrategyLookahead access = new AccessStrategyLookahead(1, 1, Constants.KEY_BYTES, new FactoryImpl());
+        BlockLookahead block = access.getLookaheadDummyBlock();
+        BlockEncrypted encrypted = access.encryptBlock(block);
+        for (int i = 0; i < 100; i++) {
+            try (FileOutputStream fis = new FileOutputStream("files/" + i)) {
+                fis.write(encrypted.getData());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -93,6 +108,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             swapPartners.add(blockLookaheads.get(flatArrayIndex));
         }
 
+        List<Integer> addresses = new ArrayList<>();
+
 //        Add blocks to the right place in the flattened array
 //        First the matrix
         List<BlockLookahead> res = new ArrayList<>();
@@ -100,20 +117,29 @@ public class AccessStrategyLookahead implements AccessStrategy {
             BlockLookahead block = blockLookaheads.get(i);
             Index index = block.getIndex();
             boolean isSwapPartner = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(index));
-            if (isSwapPartner)
-                res.add(getLookaheadDummyBlock());
-            else
-                res.add(blockLookaheads.get(i));
+            if (isSwapPartner) {
+//                res.add(getLookaheadDummyBlock());
+            } else {
+                if (!Util.isDummyAddress(block.getAddress())) {
+                    res.add(block);
+                    addresses.add(i);
+                }
+            }
         }
         futureSwapPartners = new ArrayList<>();
 
 //        Then the access swap
-        for (int i = size; i < size + matrixHeight; i++)
-            res.add(getLookaheadDummyBlock());
+//        for (int i = size; i < size + matrixHeight; i++)
+//            res.add(getLookaheadDummyBlock());
 
 //        At last the swap stash
-        for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++)
-            res.add(swapPartners.get(i - (size + matrixHeight)));
+        for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++) {
+            BlockLookahead swapPartner = swapPartners.get(i - (size + matrixHeight));
+            if (!Util.isDummyAddress(swapPartner.getAddress())) {
+                res.add(swapPartner);
+                addresses.add(i);
+            }
+        }
 
 
 //        Encrypt and write blocks to server
@@ -123,9 +149,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return false;
         }
 
-        List<Integer> addresses = new ArrayList<>();
-        for (int i = 0; i < encryptedList.size(); i++)
-            addresses.add(i);
+//        for (int i = 0; i < encryptedList.size(); i++)
+//            addresses.add(i);
 
         boolean writeSuccess = communicationStrategy.writeArray(addresses, encryptedList);
         if (!writeSuccess) {
