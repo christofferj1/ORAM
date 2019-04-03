@@ -14,14 +14,13 @@ import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,16 +67,22 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     public static void main(String[] args) {
-        AccessStrategyLookahead access = new AccessStrategyLookahead(1, 1, Constants.KEY_BYTES, new FactoryImpl());
-        BlockLookahead block = access.getLookaheadDummyBlock();
-        BlockEncrypted encrypted = access.encryptBlock(block);
-        for (int i = 0; i < 100; i++) {
-            try (FileOutputStream fis = new FileOutputStream("files/" + i)) {
-                fis.write(encrypted.getData());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        FactoryImpl factory = new FactoryImpl();
+        AccessStrategyLookahead access = new AccessStrategyLookahead(1, 1, Constants.KEY_BYTES, factory);
+//        BlockLookahead block = access.getLookaheadDummyBlock();
+//        BlockEncrypted encrypted = access.encryptBlock(block);
+//        for (int i = 0; i < 100; i++) {
+//            try (FileOutputStream fis = new FileOutputStream("files/" + i)) {
+//                fis.write(encrypted.getData());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+        EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
+        BlockLookahead dummy = access.getLookaheadDummyBlock();
+        BlockEncrypted enc = access.encryptBlock(dummy);
+
+
     }
 
     @Override
@@ -158,11 +163,38 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return false;
         }
 
+        for (int i = 0; i <= size; i++) {
+            if (i != 0)
+                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
+            else System.out.print("       ");
+            for (int j = 1; j <= size; j++) {
+                int pos = positionMap.getOrDefault(j, -1);
+                if (pos == i)
+                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(pos), 2) + " ; ");
+            }
+            System.out.println(" ");
+        }
+        System.out.println(" ");
+
         return true;
     }
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
+        for (int i = 0; i <= size; i++) {
+            if (i != 0)
+                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.get(i)), 2));
+            else System.out.print("       ");
+            for (int j = 1; j <= size; j++) {
+                int res = positionMap.get(j);
+                if (res == i)
+                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(res), 2) + " ; ");
+            }
+            System.out.println(" ");
+        }
+        System.out.println(" ");
+
+
         Integer position = positionMap.getOrDefault(address, null);
         if (position == null) {
             logger.error("Unable to look up position for address: " + address);
@@ -590,19 +622,31 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     //    TODO: check for null the correct places
     public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
+        System.out.println("Decrypt block");
         byte[] encryptedDataFull = blockEncrypted.getData();
+        System.out.println("    " + Arrays.toString(encryptedDataFull));
         int encryptedDataFullLength = encryptedDataFull.length;
         int endOfDataIndex = encryptedDataFullLength - Constants.BLOCK_SIZE * 2;
+        System.out.println("    data length: " + encryptedDataFullLength + ", end of data length: " + endOfDataIndex);
         byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
         byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
         byte[] indices = encryptionStrategy.decrypt(encryptedIndex, secretKey);
+
         if (data == null) {
             logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
         }
+        System.out.println("    Data: " + Arrays.toString(data));
+        System.out.println("    Indices: " + Arrays.toString(indices));
+        if (Arrays.equals(indices, new byte[]{5, 0, 0, 0, 5, 0, 0, 0}))
+            System.out.println("jdlsajd");
+
+        System.out.println("    Encrypted address: " + Arrays.toString(blockEncrypted.getAddress()));
 
         byte[] addressBytes = encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey);
+
+        System.out.println("    Address bytes: " + Arrays.toString(addressBytes));
 
         int address = byteArrayToLeInt(addressBytes);
 
@@ -639,8 +683,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
             byte[] addressBytes = Util.leIntToByteArray(block.getAddress());
             byte[] encryptedAddress = encryptionStrategy.encrypt(addressBytes, secretKey);
             byte[] encryptedData = encryptionStrategy.encrypt(block.getData(), secretKey);
-            byte[] encryptedIndex = encryptionStrategy.encrypt(ArrayUtils.addAll(rowIndexBytes, colIndexBytes),
+            byte[] indexBytes = ArrayUtils.addAll(rowIndexBytes, colIndexBytes);
+            byte[] encryptedIndex = encryptionStrategy.encrypt(indexBytes,
                     secretKey);
+
+            System.out.println("Encrypt block");
+            System.out.println("    Row bytes: " + rowIndexBytes.length + ", " + Arrays.toString(rowIndexBytes));
+            System.out.println("    Col bytes: " + colIndexBytes.length + ", " + Arrays.toString(colIndexBytes));
+            System.out.println("    Add bytes: " + addressBytes.length + ", " + Arrays.toString(addressBytes));
+            System.out.println("    Dat bytes: " + block.getData().length + ", " + Arrays.toString(block.getData()));
 
             if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
                 logger.error("Unable to encrypt block: " + block.toStringShort());
@@ -648,6 +699,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
 
             byte[] encryptedDataPlus = ArrayUtils.addAll(encryptedData, encryptedIndex);
+
+            System.out.println("    Ind bytes: " + indexBytes.length + ", " + Arrays.toString(indexBytes));
+            System.out.println("    Enc ind bytes: " + encryptedIndex.length + ", " + Arrays.toString(encryptedIndex));
+            System.out.println("    Enc dat bytes: " + encryptedData.length + ", " + Arrays.toString(encryptedData));
+            System.out.println("    Enc da+ bytes: " + encryptedDataPlus.length + ", " + Arrays.toString(encryptedDataPlus));
 
             res.add(new BlockEncrypted(encryptedAddress, encryptedDataPlus));
         }

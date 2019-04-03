@@ -33,9 +33,8 @@ public class MainLookahead {
 
     public static void main(String[] args) {
         long startTime = System.nanoTime();
-        byte[] key = new byte[Constants.AES_KEY_SIZE];
-        SecureRandom randomness = new SecureRandom();
-        randomness.nextBytes(key);
+        byte[] key = Constants.KEY_BYTES;
+//        randomness.nextBytes(key);
 
         int numberOfBlocks = 30;
         int columns = 8;
@@ -51,7 +50,7 @@ public class MainLookahead {
             blockArray[i] = block;
         }
 
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, columns, rows);
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, columns, rows);
 
         CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
@@ -62,6 +61,7 @@ public class MainLookahead {
 
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
+        SecureRandom randomness = new SecureRandom();
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         for (int i = 0; i < numberOfRounds; i++) {
             int address = randomness.nextInt(numberOfBlocks) + 1;
