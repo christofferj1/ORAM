@@ -111,9 +111,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
             int flatArrayIndex = getFlatArrayIndex(index);
             swapPartners.add(blockLookaheads.get(flatArrayIndex));
         }
-        System.out.println("Initial swap partners: ");
-        for (SwapPartnerData s : futureSwapPartners)
-            System.out.println("    " + s.toString());
+//        System.out.println("Initial swap partners: ");
+//        for (SwapPartnerData s : futureSwapPartners)
+//            System.out.println("    " + s.toString());
 
         List<Integer> addresses = new ArrayList<>();
 
@@ -143,8 +143,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++) {
             BlockLookahead swapPartner = swapPartners.get(i - (size + matrixHeight));
 //            if (!Util.isDummyAddress(swapPartner.getAddress())) {
-                res.add(swapPartner);
-                addresses.add(i);
+            res.add(swapPartner);
+            addresses.add(i);
 //            }
         }
 
@@ -230,7 +230,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
 //        Fetch column and stashes from fetched blocks
-        List<BlockLookahead> column = getColumn(blocks, blockInColumn);
+        List<BlockLookahead> column = getColumn(blocks, blockInColumn, maintenanceColumnIndex);
         Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash(blocks, blockInColumn);
         BlockLookahead[] swapStash = getSwapStash(blocks, blockInColumn);
 
@@ -581,12 +581,18 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return stash;
     }
 
-    private List<BlockLookahead> getColumn(List<BlockLookahead> blocks, boolean blockInColumn) {
+    private List<BlockLookahead> getColumn(List<BlockLookahead> blocks, boolean blockInColumn, int maintenanceColumn) {
         int beginIndex = 0;
         if (!blockInColumn) beginIndex++;
         int endIndex = beginIndex + matrixHeight;
 
-        return blocks.subList(beginIndex, endIndex);
+        List<BlockLookahead> column = blocks.subList(beginIndex, endIndex);
+
+//        The index might not be part of the dummy data, so it is added for each block
+        for (int i = 0; i < matrixHeight; i++)
+            column.get(i).setIndex(new Index(i, maintenanceColumn));
+
+        return column;
     }
 
     BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {

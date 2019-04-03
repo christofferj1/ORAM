@@ -56,7 +56,7 @@ public class MainLookahead {
         AccessStrategyLookahead access = new AccessStrategyLookahead(size, rows, key, factory);
         access.setup(blocks);
 
-        printMatrix(columns, rows, clientCommunicationLayer, access);
+//        printMatrix(columns, rows, clientCommunicationLayer, access);
 
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
@@ -100,7 +100,7 @@ public class MainLookahead {
 //                System.out.println("SHIT WENT WRONG!!!");
 //                break;
 //            }
-            Util.printPercentageDone(startTime, numberOfRounds, i);
+//            Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
         long timeElapsed = (System.nanoTime() - startTime) / 1000000;
