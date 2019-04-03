@@ -43,7 +43,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
-    private Map<Integer, Index> positionMap;
+    private Map<Integer, Integer> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
 
@@ -138,16 +138,21 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
-        Index indexOfCurrentAddress = positionMap.get(address);
+        Integer position = positionMap.getOrDefault(address, null);
+        if (position == null) {
+            logger.error("Unable to look up position for address: " + address);
+            return null;
+        }
+        Index indexOfCurrentAddress = getIndexFromFlatArrayIndex(position);
         int maintenanceColumnIndex = Math.floorMod(accessCounter, matrixHeight);
 
         logger.info("Access op: " + op.toString() + ", address: " + address + ", index: ("
                 + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
                 "), maintenance column: " + maintenanceColumnIndex);
 
-        System.out.println("Access op: " + op.toString() + ", address: " + address + ", index: ("
-                + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
-                "), maintenance column: " + maintenanceColumnIndex);
+//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", index: ("
+//                + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
+//                "), maintenance column: " + maintenanceColumnIndex);
 
 //        This tells if the block we fetch is in the column used for maintenance
         boolean blockInColumn = indexOfCurrentAddress.getColIndex() == maintenanceColumnIndex;
@@ -219,10 +224,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         byte[] res = block.getData();
         if (op.equals(OperationType.WRITE)) {block.setData(data);}
 
-//        Update position map
-        positionMap.put(swapPartner.getAddress(), swapPartner.getIndex());
-        positionMap.put(block.getAddress(), block.getIndex());
-
 //        Handle the switch around of the blocks
         BlockLookahead blockToWriteBackToMatrix;
         if (blockFoundInMatrix)
@@ -240,10 +241,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-            positionMap.put(swapReplacement.getAddress(), swapReplacement.getIndex());
+            positionMap.put(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex()));
         }
 
-//        TODO: if block in column, update that before parsing the column along to the maintenance job
+//        Update position map
+        positionMap.put(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
+        positionMap.put(block.getAddress(), getFlatArrayIndex(block.getIndex()));
+
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
 
@@ -645,7 +649,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
                 res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
                 if (blockStandard.getAddress() != 0)
-                    positionMap.put(blockStandard.getAddress(), index);
+                    positionMap.put(blockStandard.getAddress(), getFlatArrayIndex(index));
             }
         }
         return res;

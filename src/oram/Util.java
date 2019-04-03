@@ -318,9 +318,12 @@ public class Util {
             long timeElapsed = (System.nanoTime() - startTime) / 1000000;
             long timeElapsedPerPercent = timeElapsed / percentDoneInt;
             long timeLeft = timeElapsedPerPercent * (100 - percentDoneInt);
-            System.out.println("Done with " + percentDoneInt + "%, time spend: " + getTimeString(timeElapsed) +
+
+            String percent = percentDoneInt < 10 ? " " + percentDoneInt : String.valueOf(percentDoneInt);
+            percent = percentDoneInt < 100 ? " " + percent : percent;
+            System.out.println("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
                     ", estimated time left: " + getTimeString(timeLeft));
-            logger.info("Done with " + percentDoneInt + "%, time spend: " + getTimeString(timeElapsed) +
+            logger.info("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
                     ", estimated time left: " + getTimeString(timeLeft));
         }
     }

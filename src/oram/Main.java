@@ -5,9 +5,8 @@ import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import oram.ofactory.ORAMFactory;
-import oram.ofactory.ORAMFactoryTrivial;
+import oram.ofactory.ORAMFactoryLookahead;
 import oram.path.AccessStrategyPath;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,8 +32,8 @@ public class Main {
         SecureRandom randomness = new SecureRandom();
         randomness.nextBytes(key);
 
-        ORAMFactory oramFactory = new ORAMFactoryTrivial();
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
+        ORAMFactory oramFactory = new ORAMFactoryLookahead();
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
         int numberOfBlocks = oramFactory.getNumberOfBlocks();
@@ -77,10 +76,10 @@ public class Main {
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
             if (Arrays.equals(res, blockArray[address].getData())) {
-                System.out.println("Read block data: " + s);
+//                System.out.println("Read block data: " + s);
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                 break;
