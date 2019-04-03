@@ -14,7 +14,6 @@ import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -112,6 +111,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
             int flatArrayIndex = getFlatArrayIndex(index);
             swapPartners.add(blockLookaheads.get(flatArrayIndex));
         }
+        System.out.println("Initial swap partners: ");
+        for (SwapPartnerData s : futureSwapPartners)
+            System.out.println("    " + s.toString());
 
         List<Integer> addresses = new ArrayList<>();
 
@@ -140,10 +142,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        At last the swap stash
         for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++) {
             BlockLookahead swapPartner = swapPartners.get(i - (size + matrixHeight));
-            if (!Util.isDummyAddress(swapPartner.getAddress())) {
+//            if (!Util.isDummyAddress(swapPartner.getAddress())) {
                 res.add(swapPartner);
                 addresses.add(i);
-            }
+//            }
         }
 
 
@@ -163,36 +165,36 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return false;
         }
 
-        for (int i = 0; i <= size; i++) {
-            if (i != 0)
-                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
-            else System.out.print("       ");
-            for (int j = 1; j <= size; j++) {
-                int pos = positionMap.getOrDefault(j, -1);
-                if (pos == i)
-                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(pos), 2) + " ; ");
-            }
-            System.out.println(" ");
-        }
-        System.out.println(" ");
+//        for (int i = 0; i <= size; i++) {
+//            if (i != 0)
+//                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
+//            else System.out.print("       ");
+//            for (int j = 1; j <= size; j++) {
+//                int pos = positionMap.getOrDefault(j, -1);
+//                if (pos == i)
+//                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(pos), 2) + " ; ");
+//            }
+//            System.out.println(" ");
+//        }
+//        System.out.println(" ");
 
         return true;
     }
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
-        for (int i = 0; i <= size; i++) {
-            if (i != 0)
-                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.get(i)), 2));
-            else System.out.print("       ");
-            for (int j = 1; j <= size; j++) {
-                int res = positionMap.get(j);
-                if (res == i)
-                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(res), 2) + " ; ");
-            }
-            System.out.println(" ");
-        }
-        System.out.println(" ");
+//        for (int i = 0; i <= size; i++) {
+//            if (i != 0)
+//                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
+//            else System.out.print("       ");
+//            for (int j = 1; j <= size; j++) {
+//                int res = positionMap.getOrDefault(j, -1);
+//                if (res == i)
+//                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(res), 2) + " ; ");
+//            }
+//            System.out.println(" ");
+//        }
+//        System.out.println(" ");
 
 
         Integer position = positionMap.getOrDefault(address, null);
@@ -390,7 +392,9 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private List<BlockLookahead> maintenanceJob(List<BlockLookahead> column,
                                                 Map<Integer, Map<Integer, BlockLookahead>> accessStash,
                                                 BlockLookahead[] swapStash) {
+//        System.out.println("Maintenance job");
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
+//        System.out.println("    Column index: " + columnIndex);
 //        List<BlockLookahead> column = new ArrayList<>();
 
 ////        Retrieve column from matrix
@@ -405,9 +409,19 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        }
 
 //        Move blocks from access stash to column
+//        System.out.println("    Move blocks from access stash to column");
+//        System.out.println("        Current column");
+//        for (BlockLookahead b : column)
+//            System.out.println("          " + (b != null ? b.toStringShort() : null));
         Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
+//        System.out.println("        Moved map (size: " + map.size() + "):");
         for (Map.Entry<Integer, BlockLookahead> entry : map.entrySet()) {
-            if (!Util.isDummyAddress(column.get(entry.getKey()).getAddress())) {
+//            System.out.println("          " + entry.getKey() + " -> " + entry.getValue());
+            BlockLookahead blockLookahead = column.get(entry.getKey());
+//            System.out.println("          Block: " + blockLookahead.toStringShort());
+            int address = blockLookahead.getAddress();
+            if (!Util.isDummyAddress(address)) {
+                System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAARRRRH");
                 logger.error("Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
                         columnIndex + "), but place were not filled with dummy block");
                 return null;
@@ -418,6 +432,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
+//        System.out.println("    Move blocks from column to swap, column: " + columnIndex);
+//        System.out.println("        Current swap stash:");
+//        for (BlockLookahead b : swapStash)
+//            System.out.println("          " + (b != null ? b.toStringShort() : null));
+//        System.out.println("        Current column");
+//        for (BlockLookahead b : column)
+//            System.out.println("          " + (b != null ? b.toStringShort() : null));
+//        System.out.println("        Future swap partners");
+//        for (SwapPartnerData s : futureSwapPartners)
+//            System.out.println("          " + s.toString());
+//        System.out.println("      --------------------------");
 //        System.out.println("Move blocks from column to swap, column: " + columnIndex);
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
@@ -426,7 +451,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 int rowIndex = swap.getIndex().getRowIndex();
 //                System.out.println("    Row index: " + rowIndex);
                 BlockLookahead swapPartner = column.get(rowIndex);
-//                System.out.println("    Swap partner: " + swapPartner.toStringShort());
+//                System.out.println("            Swap partner: " + swapPartner.toStringShort());
 
 //                This could actually be applied if #blocks = size, test that
 //                if (Util.isDummyAddress(swapPartner.getAddress())) {
@@ -445,6 +470,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //                    System.out.println("      " + (b != null ? b.toStringShort() : null));
             }
         }
+//        System.out.println("      --------------------------");
+//        System.out.println("        Current swap stash:");
+//        for (BlockLookahead b : swapStash)
+//            System.out.println("          " + (b != null ? b.toStringShort() : null));
+//        System.out.println("        Current column");
+//        for (BlockLookahead b : column)
+//            System.out.println("          " + (b != null ? b.toStringShort() : null));
 
 //        Putting the blocks back into a result list
         List<BlockLookahead> res;
@@ -468,7 +500,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //            System.out.println("Adding dummies to access stash, size: " + accessStashList.size());
             if (accessStashList.size() <= i) {
                 accessStashList.add(getLookaheadDummyBlock());
-//                System.out.println("    Adding one for index: " + i);
             }
         }
         accessStashList = permutationStrategy.permuteLookaheadBlocks(accessStashList);
@@ -622,12 +653,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
     //    TODO: check for null the correct places
     public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
-        System.out.println("Decrypt block");
+//        System.out.println("Decrypt block");
         byte[] encryptedDataFull = blockEncrypted.getData();
-        System.out.println("    " + Arrays.toString(encryptedDataFull));
+//        System.out.println("    " + Arrays.toString(encryptedDataFull));
         int encryptedDataFullLength = encryptedDataFull.length;
         int endOfDataIndex = encryptedDataFullLength - Constants.BLOCK_SIZE * 2;
-        System.out.println("    data length: " + encryptedDataFullLength + ", end of data length: " + endOfDataIndex);
+//        System.out.println("    data length: " + encryptedDataFullLength + ", end of data length: " + endOfDataIndex);
         byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
         byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
@@ -637,16 +668,16 @@ public class AccessStrategyLookahead implements AccessStrategy {
             logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
         }
-        System.out.println("    Data: " + Arrays.toString(data));
-        System.out.println("    Indices: " + Arrays.toString(indices));
-        if (Arrays.equals(indices, new byte[]{5, 0, 0, 0, 5, 0, 0, 0}))
-            System.out.println("jdlsajd");
-
-        System.out.println("    Encrypted address: " + Arrays.toString(blockEncrypted.getAddress()));
+//        System.out.println("    Data: " + Arrays.toString(data));
+//        System.out.println("    Indices: " + Arrays.toString(indices));
+//        if (Arrays.equals(indices, new byte[]{5, 0, 0, 0, 5, 0, 0, 0}))
+//            System.out.println("jdlsajd");
+//
+//        System.out.println("    Encrypted address: " + Arrays.toString(blockEncrypted.getAddress()));
 
         byte[] addressBytes = encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey);
 
-        System.out.println("    Address bytes: " + Arrays.toString(addressBytes));
+//        System.out.println("    Address bytes: " + Arrays.toString(addressBytes));
 
         int address = byteArrayToLeInt(addressBytes);
 
@@ -687,11 +718,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
             byte[] encryptedIndex = encryptionStrategy.encrypt(indexBytes,
                     secretKey);
 
-            System.out.println("Encrypt block");
-            System.out.println("    Row bytes: " + rowIndexBytes.length + ", " + Arrays.toString(rowIndexBytes));
-            System.out.println("    Col bytes: " + colIndexBytes.length + ", " + Arrays.toString(colIndexBytes));
-            System.out.println("    Add bytes: " + addressBytes.length + ", " + Arrays.toString(addressBytes));
-            System.out.println("    Dat bytes: " + block.getData().length + ", " + Arrays.toString(block.getData()));
+//            System.out.println("Encrypt block");
+//            System.out.println("    Row bytes: " + rowIndexBytes.length + ", " + Arrays.toString(rowIndexBytes));
+//            System.out.println("    Col bytes: " + colIndexBytes.length + ", " + Arrays.toString(colIndexBytes));
+//            System.out.println("    Add bytes: " + addressBytes.length + ", " + Arrays.toString(addressBytes));
+//            System.out.println("    Dat bytes: " + block.getData().length + ", " + Arrays.toString(block.getData()));
 
             if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
                 logger.error("Unable to encrypt block: " + block.toStringShort());
@@ -700,10 +731,10 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
             byte[] encryptedDataPlus = ArrayUtils.addAll(encryptedData, encryptedIndex);
 
-            System.out.println("    Ind bytes: " + indexBytes.length + ", " + Arrays.toString(indexBytes));
-            System.out.println("    Enc ind bytes: " + encryptedIndex.length + ", " + Arrays.toString(encryptedIndex));
-            System.out.println("    Enc dat bytes: " + encryptedData.length + ", " + Arrays.toString(encryptedData));
-            System.out.println("    Enc da+ bytes: " + encryptedDataPlus.length + ", " + Arrays.toString(encryptedDataPlus));
+//            System.out.println("    Ind bytes: " + indexBytes.length + ", " + Arrays.toString(indexBytes));
+//            System.out.println("    Enc ind bytes: " + encryptedIndex.length + ", " + Arrays.toString(encryptedIndex));
+//            System.out.println("    Enc dat bytes: " + encryptedData.length + ", " + Arrays.toString(encryptedData));
+//            System.out.println("    Enc da+ bytes: " + encryptedDataPlus.length + ", " + Arrays.toString(encryptedDataPlus));
 
             res.add(new BlockEncrypted(encryptedAddress, encryptedDataPlus));
         }

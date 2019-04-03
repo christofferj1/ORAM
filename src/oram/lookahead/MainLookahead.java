@@ -9,7 +9,6 @@ import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,7 +39,7 @@ public class MainLookahead {
         int columns = 8;
         int rows = 6;
         int size = 36;
-        int numberOfRounds = 1000;
+        int numberOfRounds = 10000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
@@ -64,6 +63,7 @@ public class MainLookahead {
         SecureRandom randomness = new SecureRandom();
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         for (int i = 0; i < numberOfRounds; i++) {
+//            printMatrix(columns, rows, clientCommunicationLayer, access);
             int address = randomness.nextInt(numberOfBlocks) + 1;
 
             OperationType op;
@@ -81,15 +81,17 @@ public class MainLookahead {
 
             res = Util.removeTrailingZeroes(res);
             String s = new String(res);
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
 //            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
-            printMatrix(columns, rows, clientCommunicationLayer, access);
 
             if (Arrays.equals(res, blockArray[address].getData())) {
-                System.out.println("Read block data: " + s);
+//                System.out.println("Read block data: " + s);
+//                printMatrix(columns, rows, clientCommunicationLayer, access);
+//                System.out.println("_________________________________________________________________________________");
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                printMatrix(columns, rows, clientCommunicationLayer, access);
                 break;
             }
 
