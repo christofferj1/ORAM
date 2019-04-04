@@ -235,13 +235,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     }
 
     @Override
-    public boolean sendOverWrittenAddresses(List<Integer> addresses) {
-        if (addresses == null || addresses.isEmpty()) {
-            logger.error("Cannot read empty array of addresses");
-            return false;
-        }
-
-        int addressSize = addresses.size();
+    public boolean sendEndSignal() {
         try {
 //            Send operation type
             byte[] operationTypeBytes = Util.leIntToByteArray(2);
@@ -249,20 +243,12 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(operationTypeBytes);
 
-//            Send number of blocks
-            byte[] numberOfBlocks = Util.leIntToByteArray(addressSize);
+//            Send number of blocks, just to follow the protocol
+            byte[] numberOfBlocks = Util.leIntToByteArray(0);
             length = numberOfBlocks.length;
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(numberOfBlocks);
 
-//            Send addresses
-            byte[] addressBytes;
-            for (int i : addresses) {
-                addressBytes = Util.leIntToByteArray(i);
-                length = addressBytes.length;
-                dataOutputStream.write(Util.beIntToByteArray(length));
-                dataOutputStream.write(addressBytes);
-            }
             dataOutputStream.flush();
 
             byte[] statusBitArray = new byte[0];

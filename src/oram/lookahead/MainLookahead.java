@@ -32,13 +32,12 @@ public class MainLookahead {
 
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
-//        randomness.nextBytes(key);
 
         int numberOfBlocks = 70;
         int columns = 11;
         int rows = 9;
         int size = 81;
-        int numberOfRounds = 110;
+        int numberOfRounds = 10000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
@@ -56,8 +55,6 @@ public class MainLookahead {
         access.setup(blocks);
 
 //        printMatrix(columns, rows, clientCommunicationLayer, access);
-
-//        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
@@ -84,49 +81,28 @@ public class MainLookahead {
             if (res == null) System.exit(-1);
 
             res = Util.removeTrailingZeroes(res);
-            String s = new String(res);
 //            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
-//            System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
-
-            if (Arrays.equals(res, blockArray[address].getData())) {
-//                System.out.println("Read block data: " + s);
-//                printMatrix(columns, rows, clientCommunicationLayer, access);
-//                System.out.println("_________________________________________________________________________________");
-            } else {
+            if (!Arrays.equals(res, blockArray[address].getData())) {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
 //                printMatrix(columns, rows, clientCommunicationLayer, access);
                 break;
+            } else {
+//                System.out.println("Read block data: " + s);
+//                printMatrix(columns, rows, clientCommunicationLayer, access);
+//                System.out.println("_________________________________________________________________________________");
             }
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
-//            if (!s.contains(Integer.toString(address))) {
-//                System.out.println("SHIT WENT WRONG!!!");
-//                break;
-//            }
+
             Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
-        for (int i = 0; i < columns * 2; i++)
-            addresses.add(i + size);
-
         System.out.println("Overwriting with dummy blocks");
-        if (clientCommunicationLayer.sendOverWrittenAddresses(addresses))
+        if (clientCommunicationLayer.sendEndSignal())
             System.out.println("Successfully rewrote all the blocks");
         else
             System.out.println("Unable to overwrite the blocks on the server");
-
-//        byte[] res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
-//        if (res == null)
-//            System.exit(-1);
-//        System.out.println("Written block 11: " + new String(res));
-//        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
-//
-//        res = access.access(OperationType.READ, 11, null);
-//        if (res == null)
-//            System.exit(-1);
-//        System.out.println("Read block 11: " + new String(res));
-//        System.out.println(clientCommunicationLayer.getMatrixAndStashString());
     }
 
     public static void printMatrix(int columns, int rows, CommunicationStrategy clientCommunicationLayer,

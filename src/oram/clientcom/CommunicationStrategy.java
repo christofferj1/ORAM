@@ -21,5 +21,5 @@ public interface CommunicationStrategy {
 
     boolean writeArray(List<Integer> addresses, List<BlockEncrypted> blocks);
 
-    boolean sendOverWrittenAddresses(List<Integer> addresses);
+    boolean sendEndSignal();
 }

@@ -70,7 +70,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     @Override
-    public boolean sendOverWrittenAddresses(List<Integer> addresses) {
+    public boolean sendEndSignal() {
         return true;
     }
 
