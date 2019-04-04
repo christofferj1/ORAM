@@ -240,7 +240,8 @@ public class Util {
         int millisecondsMod = (int) (milliseconds % 1000);
 
         String string = String.format("%02d:%02d:%02d.%d", hours, minutes, seconds, millisecondsMod);
-        return StringUtils.rightPad(string, 12, '0'); // Adds zeros to the milliseconds
+        string = StringUtils.rightPad(string, 12, '0');
+        return string; // Adds zeros to the milliseconds
     }
 
     public static String getMatrixString(BlockLookahead[] blocks, int matrixHeight) {
@@ -322,9 +323,11 @@ public class Util {
             String percent = percentDoneInt < 10 ? " " + percentDoneInt : String.valueOf(percentDoneInt);
             percent = percentDoneInt < 100 ? " " + percent : percent;
             System.out.println("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft));
+                    ", estimated time left: " + getTimeString(timeLeft) + " (estimated total: " +
+                    getTimeString(timeElapsed + timeLeft) + ")");
             logger.info("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft));
+                    ", estimated time left: " + getTimeString(timeLeft) + " (estimated total: " +
+                    getTimeString(timeElapsed + timeLeft) + ")");
         }
     }
 

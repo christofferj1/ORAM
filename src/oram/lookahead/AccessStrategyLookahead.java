@@ -663,7 +663,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         byte[] encryptedDataFull = blockEncrypted.getData();
 //        System.out.println("    " + Arrays.toString(encryptedDataFull));
         int encryptedDataFullLength = encryptedDataFull.length;
-        int endOfDataIndex = encryptedDataFullLength - Constants.BLOCK_SIZE * 2;
+        int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
 //        System.out.println("    data length: " + encryptedDataFullLength + ", end of data length: " + endOfDataIndex);
         byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);

@@ -62,7 +62,7 @@ public class AccessStrategyLookaheadTest {
         BlockStandard block13 = new BlockStandard(7, "Block 13".getBytes());
         BlockStandard block14 = new BlockStandard(14, "Block 14".getBytes());
         BlockStandard block15 = new BlockStandard(5, "Block 15".getBytes());
-        BlockStandard block16 = new BlockStandard(0, new byte[]{Constants.BLOCK_SIZE});
+        BlockStandard block16 = new BlockStandard(0, new byte[Constants.BLOCK_SIZE]);
         List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14, block15, block16));
 

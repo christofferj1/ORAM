@@ -234,11 +234,61 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
         return res;
     }
 
+    @Override
+    public boolean sendOverWrittenAddresses(List<Integer> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
+            logger.error("Cannot read empty array of addresses");
+            return false;
+        }
+
+        int addressSize = addresses.size();
+        try {
+//            Send operation type
+            byte[] operationTypeBytes = Util.leIntToByteArray(2);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+//            Send number of blocks
+            byte[] numberOfBlocks = Util.leIntToByteArray(addressSize);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
+//            Send addresses
+            byte[] addressBytes;
+            for (int i : addresses) {
+                addressBytes = Util.leIntToByteArray(i);
+                length = addressBytes.length;
+                dataOutputStream.write(Util.beIntToByteArray(length));
+                dataOutputStream.write(addressBytes);
+            }
+            dataOutputStream.flush();
+
+            byte[] statusBitArray = new byte[0];
+            length = dataInputStream.readInt();
+            if (length > 0) {
+                statusBitArray = new byte[length];
+                dataInputStream.readFully(statusBitArray, 0, length);
+            }
+
+            if (Util.byteArrayToLeInt(statusBitArray) == 0) {
+                logger.error("Status bit received (when overwriting blocks) was 0");
+                return false;
+            }
+        } catch (IOException e) {
+            logger.error("Error happened while reading block: " + e);
+            logger.debug("Stacktrace", e);
+            return false;
+        }
+        return true;
+    }
+
     private boolean setupConnection() {
 //        System.out.println("Enter IP");
 //        Scanner scanner = new Scanner(System.in);
 //        String hostname = scanner.nextLine();
-        String ipAddress = "127.0.0.1";
+        String ipAddress = "10.192.109.85";
         try {
 //            TODO: sleep and try over
             socket = new Socket(ipAddress, Constants.PORT);

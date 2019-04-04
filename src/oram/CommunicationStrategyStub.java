@@ -69,6 +69,11 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         return true;
     }
 
+    @Override
+    public boolean sendOverWrittenAddresses(List<Integer> addresses) {
+        return true;
+    }
+
     public String getTreeString() {
         return Util.printTreeEncrypted(blocks, bucketSize);
     }

@@ -31,15 +31,14 @@ public class MainLookahead {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
-        long startTime = System.nanoTime();
         byte[] key = Constants.KEY_BYTES;
 //        randomness.nextBytes(key);
 
-        int numberOfBlocks = 30;
-        int columns = 8;
-        int rows = 6;
-        int size = 36;
-        int numberOfRounds = 10000;
+        int numberOfBlocks = 70;
+        int columns = 11;
+        int rows = 9;
+        int size = 81;
+        int numberOfRounds = 110;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
@@ -61,10 +60,15 @@ public class MainLookahead {
 //        System.out.println(clientCommunicationLayer.getMatrixAndStashString(access));
 
         SecureRandom randomness = new SecureRandom();
+        List<Integer> addresses = new ArrayList<>();
+        for (int i = 0; i < numberOfRounds; i++)
+            addresses.add(randomness.nextInt(numberOfBlocks) + 1);
+
         logger.info("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
+        long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
 //            printMatrix(columns, rows, clientCommunicationLayer, access);
-            int address = randomness.nextInt(numberOfBlocks) + 1;
+            int address = addresses.get(i);
 
             OperationType op;
             byte[] data;
@@ -73,7 +77,7 @@ public class MainLookahead {
                 data = null;
             } else {
                 op = OperationType.WRITE;
-                data = Util.getRandomString(8).getBytes();
+                data = Util.getRandomString(Constants.BLOCK_SIZE).getBytes();
             }
 
             byte[] res = access.access(op, address, data);
@@ -91,7 +95,7 @@ public class MainLookahead {
 //                System.out.println("_________________________________________________________________________________");
             } else {
                 System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
-                printMatrix(columns, rows, clientCommunicationLayer, access);
+//                printMatrix(columns, rows, clientCommunicationLayer, access);
                 break;
             }
 
@@ -100,12 +104,17 @@ public class MainLookahead {
 //                System.out.println("SHIT WENT WRONG!!!");
 //                break;
 //            }
-//            Util.printPercentageDone(startTime, numberOfRounds, i);
+            Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
-        long timeElapsed = (System.nanoTime() - startTime) / 1000000;
+        for (int i = 0; i < columns * 2; i++)
+            addresses.add(i + size);
 
-        System.out.println("Time: " + Util.getTimeString(timeElapsed));
+        System.out.println("Overwriting with dummy blocks");
+        if (clientCommunicationLayer.sendOverWrittenAddresses(addresses))
+            System.out.println("Successfully rewrote all the blocks");
+        else
+            System.out.println("Unable to overwrite the blocks on the server");
 
 //        byte[] res = access.access(OperationType.WRITE, 11, "Hello world".getBytes());
 //        if (res == null)

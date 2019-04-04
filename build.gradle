@@ -17,12 +17,11 @@ targetCompatibility = 1.8
 
 dependencies {
     compile "org.apache.commons.lang3:commons-lang3:3.8.1",
-            "org.apache.logging.log4j:log4j-api:2.11.2"
+            "org.apache.logging.log4j:log4j-api:2.11.2",
             "org.apache.logging.log4j:log4j-core:2.11.2"
     testCompile "junit:junit:4.11",
                 "org.hamcrest:hamcrest:2.1"
 }
-
 
 repositories {
     flatDir {

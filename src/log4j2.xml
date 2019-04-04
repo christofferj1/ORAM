@@ -40,7 +40,7 @@
         <Logger name="log" level="debug" additivity="true">
             <appender-ref ref="fileLogger" level="info"/>
         </Logger>
-        <Root name="debug_log" level="debug" additivity="false">
+        <Root level="debug" additivity="false">
             <appender-ref ref="fileLoggerDebug"/>
         </Root>
     </Loggers>

@@ -441,7 +441,7 @@ public class AccessStrategyLookaheadOld implements AccessStrategy {
     public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
         byte[] encryptedDataFull = blockEncrypted.getData();
         int encryptedDataFullLength = encryptedDataFull.length;
-        int endOfDataIndex = encryptedDataFullLength - Constants.BLOCK_SIZE * 2;
+        int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
         byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
         byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);

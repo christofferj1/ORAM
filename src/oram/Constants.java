@@ -11,8 +11,7 @@ public class Constants {
 
     public static final byte[] KEY_BYTES = "$ Hello World! $".getBytes();
 
-    public static final int BLOCK_SIZE = 16;
-    public static final int LOG_OF_BLOCK_SIZE = (int) Math.ceil(Math.log(BLOCK_SIZE) / Math.log(2));
+    public static final int BLOCK_SIZE = 512;
     public static final int DUMMY_BLOCK_ADDRESS = 0;
     public static final int AES_BLOCK_SIZE = 16;
     public static final int AES_KEY_SIZE = 16;
