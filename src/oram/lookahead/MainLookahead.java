@@ -80,7 +80,7 @@ public class MainLookahead {
             byte[] res = access.access(op, address, data);
             if (res == null) System.exit(-1);
 
-            res = Util.removeTrailingZeroes(res);
+            //res = Util.removeTrailingZeroes(res); TODO: Why did I do that?
 //            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
             if (!Arrays.equals(res, blockArray[address].getData())) {

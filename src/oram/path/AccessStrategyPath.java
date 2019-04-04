@@ -128,7 +128,7 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Return a random position if the block does not have one already
         int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
         if (print) {
-            System.out.println("Access op: " + op.toString() + ", address: " + address + ", data: " + Arrays.toString(data));
+            System.out.println("Access op: " + op.toString() + ", address: " + address + ", data: " + Util.getShortDataString(data));
             System.out.println("MAP BEFORE");
             for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
                 System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
@@ -174,7 +174,7 @@ public class AccessStrategyPath implements AccessStrategy {
             maxStashSizeBetweenAccesses = stash.size();
             logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
-        System.out.println("Returning data: " + Arrays.toString(res));
+        System.out.println("Returning data: " + Util.getShortDataString(res));
         return res;
     }
 
@@ -231,7 +231,7 @@ public class AccessStrategyPath implements AccessStrategy {
         for (int i = 0; i < stash.size(); i++) {
             if (stash.get(i).getAddress() == address) {
                 endData = stash.get(i).getData();
-                if (print) System.out.println("    Retrieving end data: " + Arrays.toString(endData));
+                if (print) System.out.println("    Retrieving end data: " + Util.getShortDataString(endData));
                 if (op.equals(OperationType.WRITE)) {
                     if (print) System.out.println("    Overwrites with new data");
                     stash.set(i, new BlockStandard(address, data));

@@ -31,10 +31,10 @@ public class MainPath {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 15;
-        int bucketSize = 2;
-        int size = 15;
-        int numberOfRounds = 1010;
+        int numberOfBlocks = 30;
+        int bucketSize = 4;
+        int size = 31;
+        int numberOfRounds = 10000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
 
@@ -78,9 +78,17 @@ public class MainPath {
                 if (res.length == 0) {
                     break;
                 } else {
-                    res = Util.removeTrailingZeroes(res);
+//                    res = Util.removeTrailingZeroes(res);
                     if (!Arrays.equals(res, blockArray[address].getData())) {
                         System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                        System.out.println("The arrays, that weren't the same:");
+                        System.out.println("    res: " + Arrays.toString(res));
+                        System.out.println("    old: " + Arrays.toString(blockArray[address].getData()));
+                        System.out.println("Block array");
+                        for (int j = 0; j < blockArray.length; j++) {
+                            String string = blockArray[j] != null ? blockArray[j].toStringShort() : "null";
+                            System.out.println("    " + j + ": " + string);
+                        }
                         break;
                     }
                 }

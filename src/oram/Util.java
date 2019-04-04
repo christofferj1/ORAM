@@ -332,6 +332,7 @@ public class Util {
     }
 
     public static String getShortDataString(byte[] data) {
+        if (data == null) return null;
         String dataString;
         if (data.length > 10) {
             String arrayString = printByteArray(Arrays.copyOf(data, 10), false);
