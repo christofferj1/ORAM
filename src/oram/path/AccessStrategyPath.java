@@ -36,19 +36,19 @@ public class AccessStrategyPath implements AccessStrategy {
     public int maxStashSizeBetweenAccesses;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print = false;
+    private boolean print = true;
     private int dummyCounter = 0;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
-        this.stash = new ArrayList<>();
-        this.positionMap = new HashMap<>();
         this.bucketSize = bucketSize;
-        this.L = (int) Math.ceil(Math.log(size) / Math.log(2));
+        stash = new ArrayList<>();
+        positionMap = new HashMap<>();
+        L = (int) Math.ceil(Math.log(size) / Math.log(2));
         leafCount = (int) (Math.pow(2, L - 1));
-        this.communicationStrategy = factory.getCommunicationStrategy();
-        this.encryptionStrategy = factory.getEncryptionStrategy();
-        this.secretKey = encryptionStrategy.generateSecretKey(key);
-        this.permutationStrategy = factory.getPermutationStrategy();
+        communicationStrategy = factory.getCommunicationStrategy();
+        encryptionStrategy = factory.getEncryptionStrategy();
+        secretKey = encryptionStrategy.generateSecretKey(key);
+        permutationStrategy = factory.getPermutationStrategy();
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
@@ -76,17 +76,16 @@ public class AccessStrategyPath implements AccessStrategy {
 
         List<BlockEncrypted> blocksToWrite = new ArrayList<>();
         List<Integer> nodesHandled = new ArrayList<>();
-        for (int l = L - 1; l >= 0; l--) {
-            for (int leafNodeIndex = leafCount - 1; leafNodeIndex >= 0; leafNodeIndex--) {
-                int nodeIndex = getNode(leafNodeIndex, l);
-                if (nodesHandled.contains(nodeIndex))
+        for (int l = L - 1; l >= 0; l--) { // Goes though all layers, starting at the bottom
+            for (int leafNodeIndex = leafCount - 1; leafNodeIndex >= 0; leafNodeIndex--) { // Goes though all leaves
+                int nodeIndex = getNode(leafNodeIndex, l); // Get the node for that leaf in the current layer
+                if (nodesHandled.contains(nodeIndex)) // On higher layers, nodes cover multiple leaves
                     continue;
 
+//                Fill bucket with blocks and encrypt them
                 List<BlockStandard> bucketOfBlocks = getBlocksForNode(nodeIndex);
                 bucketOfBlocks = fillBucketWithDummyBlocks(bucketOfBlocks);
-
                 removeBlocksFromStash(bucketOfBlocks);
-
                 List<BlockEncrypted> bucketOfEncryptedBlocks = encryptBucketOfBlocks(bucketOfBlocks);
 
                 if (bucketOfEncryptedBlocks == null) {
@@ -159,8 +158,10 @@ public class AccessStrategyPath implements AccessStrategy {
 
 //        Line 6 to 9 in pseudo code
         byte[] res = retrieveDataOverwriteBlock(address, op, data);
-        if (res == null)
+        if (res == null) {
             logger.error("Unable to retrieve data from address: " + address);
+            res = new byte[0];
+        }
 
 //        Line 10 to 15 in pseudo code.
         boolean writeBack = writeBackPath(leafNodeIndex);
@@ -173,6 +174,7 @@ public class AccessStrategyPath implements AccessStrategy {
             maxStashSizeBetweenAccesses = stash.size();
             logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
+        System.out.println("Returning data: " + Arrays.toString(res));
         return res;
     }
 
@@ -203,7 +205,7 @@ public class AccessStrategyPath implements AccessStrategy {
             } else {
 
                 if (print) {
-                    System.out.print("    Found blocks: ");
+                    System.out.println("    Found blocks: ");
                     for (BlockStandard b : blocksDecrypted) System.out.println("        " + b.toStringShort());
                 }
 
@@ -223,12 +225,15 @@ public class AccessStrategyPath implements AccessStrategy {
      * @return the data the access must return at last
      */
     private byte[] retrieveDataOverwriteBlock(int address, OperationType op, byte[] data) {
+        if (print) System.out.println("Retrieve data and overwrite block");
         boolean hasOverwrittenBlock = false;
         byte[] endData = null;
         for (int i = 0; i < stash.size(); i++) {
             if (stash.get(i).getAddress() == address) {
                 endData = stash.get(i).getData();
+                if (print) System.out.println("    Retrieving end data: " + Arrays.toString(endData));
                 if (op.equals(OperationType.WRITE)) {
+                    if (print) System.out.println("    Overwrites with new data");
                     stash.set(i, new BlockStandard(address, data));
                     hasOverwrittenBlock = true;
                 }
@@ -236,8 +241,10 @@ public class AccessStrategyPath implements AccessStrategy {
             }
         }
 
-        if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock)
+        if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock) {
             stash.add(new BlockStandard(address, data));
+            if (print) System.out.println("    Adding new block to stash");
+        }
         if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
             logger.info("Max stash size: " + maxStashSize);
@@ -320,13 +327,20 @@ public class AccessStrategyPath implements AccessStrategy {
     }
 
     private List<BlockStandard> fillBucketWithDummyBlocks(List<BlockStandard> blocksToWrite) {
+        List<BlockStandard> res = new ArrayList<>(blocksToWrite);
         if (blocksToWrite.size() > bucketSize) {
-            for (int i = blocksToWrite.size(); i > bucketSize; i--)
-                blocksToWrite.remove(i - 1);
+            res = removeOverflowingBlocks(res);
         } else if (blocksToWrite.size() < bucketSize) {
-            blocksToWrite = fillWithDummy(blocksToWrite);
+            res = fillWithDummy(res);
         }
-        return blocksToWrite;
+        return res;
+    }
+
+    private List<BlockStandard> removeOverflowingBlocks(List<BlockStandard> blocksToWrite) {
+        List<BlockStandard> res = new ArrayList<>(blocksToWrite);
+        for (int i = blocksToWrite.size(); i > bucketSize; i--)
+            res.remove(i - 1);
+        return res;
     }
 
     private void removeBlocksFromStash(List<BlockStandard> blocksToWrite) {

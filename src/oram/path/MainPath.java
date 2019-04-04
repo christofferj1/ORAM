@@ -29,71 +29,84 @@ public class MainPath {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
-        long startTime = System.nanoTime();
-        byte[] key = new byte[Constants.AES_KEY_SIZE];
-        SecureRandom randomness = new SecureRandom();
-        randomness.nextBytes(key);
+        byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 27;
-        int bucketSize = 4;
-        int size = 31;
-        int numberOfRounds = 10000;
+        int numberOfBlocks = 15;
+        int bucketSize = 2;
+        int size = 15;
+        int numberOfRounds = 1010;
 
-        List<BlockStandard> blocks = new ArrayList<>();
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
-        for (int i = 1; i <= numberOfBlocks; i++) {
-            BlockStandard block = new BlockStandard(i, ("Block " + i).getBytes());
-            blocks.add(block);
-            blockArray[i] = block;
-        }
 
-        Factory factory = new FactoryCustom(Enc.IDEN, Com.IMPL, Per.IMPL, size, bucketSize);
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, bucketSize);
 
-        CommunicationStrategy com = factory.getCommunicationStrategy();
-        com.start();
+        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
+        clientCommunicationLayer.start();
         AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory);
-        access.setup(blocks);
+
+        SecureRandom randomness = new SecureRandom();
+        List<Integer> addresses = new ArrayList<>();
+        for (int i = 0; i < numberOfRounds / 2; i++)
+            addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
         logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
         System.out.println("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
-        for (int i = 0; i < numberOfRounds; i++) {
-            int address = randomness.nextInt(numberOfBlocks) + 1;
 
+        List<Integer> addressesWrittenTo = new ArrayList<>();
+        long startTime = System.nanoTime();
+        for (int i = 0; i < numberOfRounds; i++) {
+            printTreeFromServer(size, bucketSize, clientCommunicationLayer, access);
+            int address = addresses.get(i % addresses.size());
+
+            boolean writing = i < numberOfRounds / 2;
             OperationType op;
             byte[] data;
-            if (randomness.nextBoolean()) {
+            if (writing) {
+                op = OperationType.WRITE;
+                data = Util.getRandomByteArray(Constants.BLOCK_SIZE);
+            } else {
                 op = OperationType.READ;
                 data = null;
-            } else {
-                op = OperationType.WRITE;
-                data = Util.getRandomString(8).getBytes();
             }
 
             byte[] res = access.access(op, address, data);
-            if (res == null) System.exit(-1);
 
-            res = Util.removeTrailingZeroes(res);
-            String s = new String(res);
-
-            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
-
-            if (!Arrays.equals(res, blockArray[address].getData())) {
-                System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+            if (res == null)
                 break;
-            }
+
+            if (addressesWrittenTo.contains(address)) {
+                if (res.length == 0) {
+                    break;
+                } else {
+                    res = Util.removeTrailingZeroes(res);
+                    if (!Arrays.equals(res, blockArray[address].getData())) {
+                        System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                        break;
+                    }
+                }
+            } else
+                addressesWrittenTo.add(address);
+
+            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
             Util.printPercentageDone(startTime, numberOfRounds, i);
         }
+
+        printTreeFromServer(size, bucketSize, clientCommunicationLayer, access);
+
         System.out.println("Max stash size: " + access.maxStashSize);
         logger.info("Max stash size: " + access.maxStashSize);
         System.out.println("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
         logger.info("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
 
-        long timeElapsed = (System.nanoTime() - startTime) / 1000000;
-
-        System.out.println("Time: " + Util.getTimeString(timeElapsed));
+        System.out.println("Overwriting with dummy blocks");
+        if (clientCommunicationLayer.sendEndSignal())
+            System.out.println("Successfully rewrote all the blocks");
+        else
+            System.out.println("Unable to overwrite the blocks on the server");
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {
