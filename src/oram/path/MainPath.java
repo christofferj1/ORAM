@@ -34,10 +34,10 @@ public class MainPath {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 8000;
+        int numberOfBlocks = 16000;
         int bucketSize = 4;
-        int size = 8191;
-        int numberOfRounds = 250;
+        int size = 16383;
+        int numberOfRounds = 50;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
 
