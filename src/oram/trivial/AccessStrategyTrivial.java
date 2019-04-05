@@ -14,10 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -47,8 +44,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
         positionMap = new HashMap<>();
     }
 
-    @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setupOld(List<BlockStandard> blocks) {
         blocks = permutationStrategy.permuteStandardBlocks(blocks);
         for (int i = 0; i < blocks.size(); i++)
             positionMap.put(blocks.get(i).getAddress(), i);
@@ -56,6 +52,17 @@ public class AccessStrategyTrivial implements AccessStrategy {
         List<BlockEncrypted> encryptedList = encryptBlocks(blocks);
 
         return communicationStrategy.writeArray(allAddresses, encryptedList);
+    }
+
+    @Override
+    public boolean setup(List<BlockStandard> blocks) {
+        SecureRandom randomness = new SecureRandom();
+        int numberOfBlocks = blocks.size();
+        List<Integer> positions = IntStream.range(0, numberOfBlocks).boxed().collect(Collectors.toList());
+        for (int i = 1; i <= numberOfBlocks; i++)
+            positionMap.put(i, positions.remove(randomness.nextInt(positions.size())));
+
+        return true;
     }
 
     @Override

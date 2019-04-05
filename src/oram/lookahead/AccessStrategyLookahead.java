@@ -11,7 +11,6 @@ import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
-import oram.factory.FactoryImpl;
 import oram.permutation.PermutationStrategy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -65,31 +64,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         logger.debug("######### Initialized Lookahead ORAM strategy #########");
     }
 
-    public static void main(String[] args) {
-        FactoryImpl factory = new FactoryImpl();
-        AccessStrategyLookahead access = new AccessStrategyLookahead(1, 1, Constants.KEY_BYTES, factory);
-//        BlockLookahead block = access.getLookaheadDummyBlock();
-//        BlockEncrypted encrypted = access.encryptBlock(block);
-//        for (int i = 0; i < 100; i++) {
-//            try (FileOutputStream fis = new FileOutputStream("files/" + i)) {
-//                fis.write(encrypted.getData());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
-        BlockLookahead dummy = access.getLookaheadDummyBlock();
-        BlockEncrypted enc = access.encryptBlock(dummy);
-
-
-    }
-
     @Override
     public boolean setup(List<BlockStandard> blocks) {
+        Util.logAndPrint(logger, "Starting setup");
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
             blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
         }
+
+        Util.logAndPrint(logger, "    Created dummy blocks");
 
 //        Shuffle and convert
         blocks = permutationStrategy.permuteStandardBlocks(blocks);
@@ -114,6 +97,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        System.out.println("Initial swap partners: ");
 //        for (SwapPartnerData s : futureSwapPartners)
 //            System.out.println("    " + s.toString());
+
+        Util.logAndPrint(logger, "    Swap partners picked");
 
         List<Integer> addresses = new ArrayList<>();
 
@@ -148,6 +133,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //            }
         }
 
+        Util.logAndPrint(logger, "    Blocks added to final list");
 
 //        Encrypt and write blocks to server
         List<BlockEncrypted> encryptedList = encryptBlocks(res);
@@ -156,15 +142,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return false;
         }
 
+        Util.logAndPrint(logger, "    Blocks encrypted");
+
 //        for (int i = 0; i < encryptedList.size(); i++)
 //            addresses.add(i);
 
-        boolean writeSuccess = communicationStrategy.writeArray(addresses, encryptedList);
-        if (!writeSuccess) {
+        if (!communicationStrategy.writeArray(addresses, encryptedList)) {
             logger.error("Writing blocks were unsuccessful when initializing the ORAM");
             return false;
         }
 
+        Util.logAndPrint(logger, "    Blocks written to server");
 //        for (int i = 0; i <= size; i++) {
 //            if (i != 0)
 //                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));

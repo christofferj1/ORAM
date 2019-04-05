@@ -1,10 +1,8 @@
-package oram.lookahead;
+package oram.trivial;
 
 import oram.Constants;
 import oram.OperationType;
 import oram.Util;
-import oram.block.BlockEncrypted;
-import oram.block.BlockLookahead;
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
@@ -20,52 +18,43 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static oram.factory.FactoryCustom.*;
 
 /**
  * <p> ORAM <br>
- * Created by Christoffer S. Jensen on 12-03-2019. <br>
+ * Created by Christoffer S. Jensen on 05-04-2019. <br>
  * Master Thesis 2019 </p>
  */
 
-public class MainLookahead {
+public class MainTrivial {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 100;
-        int columns = 12;
-        int rows = 10;
-        int size = 100;
+        int numberOfBlocks = 180;
+        int size = 190;
         int numberOfRounds = 1000;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
-        List<BlockStandard> blocks = new ArrayList<>();
-        for (int i = 1; i <= numberOfBlocks; i++) {
-            BlockStandard block = new BlockStandard(i, Util.getRandomByteArray(Constants.BLOCK_SIZE));
-            blocks.add(block);
-            blockArray[i] = block;
-        }
 
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, columns, rows);
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, 1);
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategyLookahead access = new AccessStrategyLookahead(size, rows, key, factory);
-        access.setup(blocks);
+        AccessStrategyTrivial access = new AccessStrategyTrivial(size, key, factory);
+        access.setup(new ArrayList<>(Arrays.asList(new BlockStandard[size])));
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
-        StringBuilder resume = new StringBuilder("Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
+        StringBuilder resume = new StringBuilder("Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds);
         Util.logAndPrint(logger, resume.toString());
 
+        List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
             int address = addresses.get(i % addresses.size());
@@ -88,14 +77,17 @@ public class MainLookahead {
             //res = Util.removeTrailingZeroes(res); TODO: Why did I do that?
             logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 7) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + " in round: " + StringUtils.leftPad(String.valueOf(i), 6) + ", returning data: " + Util.getShortDataString(res));
 
-            if (!Arrays.equals(res, blockArray[address].getData())) {
-                Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
-                Util.logAndPrint(logger, "    The arrays, that weren't the same:");
-                Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
-                Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
-                Util.logAndPrint(logger, "    Block array");
-                break;
-            }
+            if (addressesWrittenTo.contains(address)) {
+                if (!Arrays.equals(res, blockArray[address].getData())) {
+                    Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                    Util.logAndPrint(logger, "    The arrays, that weren't the same:");
+                    Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
+                    Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
+                    Util.logAndPrint(logger, "    Block array");
+                    break;
+                }
+            } else
+                addressesWrittenTo.add(address);
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
@@ -124,16 +116,5 @@ public class MainLookahead {
                     Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
 
         Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
-    }
-
-    public static void printMatrix(int columns, int rows, CommunicationStrategy clientCommunicationLayer,
-                                   AccessStrategyLookahead access) {
-        List<Integer> addresses = IntStream.range(0, columns * rows).boxed().collect(Collectors.toList());
-        List<BlockEncrypted> encryptedBlocks = clientCommunicationLayer.readArray(addresses);
-        List<BlockLookahead> blockLookaheads = access.decryptLookaheadBlocks(encryptedBlocks);
-        BlockLookahead[] blockLookaheadArray = new BlockLookahead[columns * rows];
-        for (int j = 0; j < rows * columns; j++)
-            blockLookaheadArray[j] = blockLookaheads.get(j);
-        System.out.println(Util.getMatrixString(blockLookaheadArray, rows));
     }
 }

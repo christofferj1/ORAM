@@ -6,6 +6,8 @@ import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookahead;
+import oram.ofactory.ORAMFactoryPath;
+import oram.ofactory.ORAMFactoryTrivial;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +16,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import static oram.factory.FactoryCustom.*;
 
@@ -30,7 +33,7 @@ public class Main {
         long startTime = System.nanoTime();
         byte[] key = Constants.KEY_BYTES;
 
-        ORAMFactory oramFactory = new ORAMFactoryLookahead();
+        ORAMFactory oramFactory = getOramFactory();
         Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
@@ -46,7 +49,8 @@ public class Main {
         CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
         clientCommunicationLayer.start();
         AccessStrategy access = oramFactory.getAccessStrategy(key, factory);
-        access.setup(blocks);
+        if (!(oramFactory instanceof ORAMFactoryPath))
+            access.setup(blocks);
 
         int size = oramFactory.getSize();
         int numberOfRounds = oramFactory.getNumberOfRounds();
@@ -89,6 +93,28 @@ public class Main {
             String percentageDoneString = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (percentageDoneString != null)
                 Util.logAndPrint(logger, percentageDoneString);
+        }
+    }
+
+    private static ORAMFactory getOramFactory() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Choose ORAM [l/p/t]");
+        String answer = scanner.nextLine();
+        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
+            System.out.println("Choose ORAM [l/p/t]");
+            answer = scanner.nextLine();
+        }
+        switch (answer) {
+            case "l":
+                return new ORAMFactoryLookahead();
+            case "p":
+                return new ORAMFactoryPath();
+            case "t":
+                return new ORAMFactoryTrivial();
+            default:
+                logger.error("Unable to find ORAM factory for: " + answer);
+                System.exit(-1);
+                return null;
         }
     }
 }

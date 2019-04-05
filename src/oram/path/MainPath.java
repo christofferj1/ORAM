@@ -34,10 +34,10 @@ public class MainPath {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 16000;
+        int numberOfBlocks = 31;
         int bucketSize = 4;
-        int size = 16383;
-        int numberOfRounds = 50;
+        int size = 31;
+        int numberOfRounds = 350;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
 
@@ -58,9 +58,6 @@ public class MainPath {
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
-
-//            printTreeFromServer(size, bucketSize, communicationStrategy, access);
-
             int address = addresses.get(i % addresses.size());
 
             boolean writing = i < numberOfRounds / 2;
@@ -79,13 +76,13 @@ public class MainPath {
             if (res == null)
                 break;
 
-            Util.logAndPrint(logger, "Accessed block " + StringUtils.leftPad(String.valueOf(address), 7) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 5) + ", returning data: " + Util.getShortDataString(res));
+            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 7) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 6) + ", returning data: " + Util.getShortDataString(res));
 
             if (addressesWrittenTo.contains(address)) {
                 if (res.length == 0) {
                     break;
                 } else {
-//                    res = Util.removeTrailingZeroes(res);
+//                    res = Util.removeTrailingZeroes(res); TODO: Why did I do this?
                     if (!Arrays.equals(res, blockArray[address].getData())) {
                         Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                         Util.logAndPrint(logger, "    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
@@ -93,10 +90,6 @@ public class MainPath {
                         Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
                         Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
                         Util.logAndPrint(logger, "    Block array");
-                        for (int j = 0; j < blockArray.length; j++) {
-                            String string = blockArray[j] != null ? blockArray[j].toStringShort() : "null";
-                            Util.logAndPrint(logger, "        " + j + ": " + string);
-                        }
                         break;
                     }
                 }
@@ -105,18 +98,14 @@ public class MainPath {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {
                 if (string.contains("0%"))
                     resume.append("\n").append(string);
-//                Util.logAndPrint(logger, " ");
-                Util.logAndPrint(logger, "\n" + string + "\n");
-//                Util.logAndPrint(logger, " ");
+                logger.info("\n\n" + string + "\n");
+                System.out.println(string);
             }
         }
-
-//        printTreeFromServer(size, bucketSize, communicationStrategy, access);
 
         Util.logAndPrint(logger, "Max stash size: " + access.maxStashSize + ", max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
 
