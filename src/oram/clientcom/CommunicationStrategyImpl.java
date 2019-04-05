@@ -274,7 +274,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
 //        System.out.println("Enter IP");
 //        Scanner scanner = new Scanner(System.in);
 //        String hostname = scanner.nextLine();
-        String ipAddress = "10.192.109.85";
+        String ipAddress = "127.0.0.1";
         try {
 //            TODO: sleep and try over
             socket = new Socket(ipAddress, Constants.PORT);

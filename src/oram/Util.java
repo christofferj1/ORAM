@@ -17,6 +17,7 @@ import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -320,13 +321,19 @@ public class Util {
             long timeElapsedPerPercent = timeElapsed / percentDoneInt;
             long timeLeft = timeElapsedPerPercent * (100 - percentDoneInt);
 
+            Calendar now = Calendar.getInstance();
+            now.setTimeInMillis(System.currentTimeMillis() + timeLeft);
+            String done = now.get(Calendar.HOUR_OF_DAY) + ":";
+            done += now.get(Calendar.MINUTE) + ":";
+            done += now.get(Calendar.SECOND);
+
             String percent = percentDoneInt < 10 ? " " + percentDoneInt : String.valueOf(percentDoneInt);
             percent = percentDoneInt < 100 ? " " + percent : percent;
             System.out.println("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft) + " (estimated total: " +
+                    ", estimated time left: " + getTimeString(timeLeft) + ", done: " + done + " (estimated total: " +
                     getTimeString(timeElapsed + timeLeft) + ")");
             logger.info("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft) + " (estimated total: " +
+                    ", estimated time left: " + getTimeString(timeLeft) + ", done: " + done + " (estimated total: " +
                     getTimeString(timeElapsed + timeLeft) + ")");
         }
     }

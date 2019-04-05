@@ -3,9 +3,11 @@ package oram.factory;
 import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyImpl;
+import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyIdentity;
 import oram.encryption.EncryptionStrategyImpl;
+import oram.encryption.EncryptionStrategyTiming;
 import oram.permutation.PermutationStrategy;
 import oram.permutation.PermutationStrategyIdentity;
 import oram.permutation.PermutationStrategyImpl;
@@ -17,12 +19,14 @@ import oram.permutation.PermutationStrategyImpl;
  */
 
 public class FactoryCustom implements Factory {
-    private EncryptionStrategy encryptionStrategy;
-    private CommunicationStrategy communicationStrategy;
-    private PermutationStrategy permutationStrategy;
     private final Enc enc;
     private final Com com;
     private final Per per;
+    private EncryptionStrategy encryptionStrategy;
+    private EncryptionStrategyTiming encryptionStrategyTiming;
+    private CommunicationStrategy communicationStrategy;
+    private CommunicationStrategyTiming communicationStrategyTiming;
+    private PermutationStrategy permutationStrategy;
     private int size;
     private int bucketSize;
 
@@ -44,8 +48,9 @@ public class FactoryCustom implements Factory {
                 case IMPL:
                     encryptionStrategy = new EncryptionStrategyImpl();
             }
+            encryptionStrategyTiming = new EncryptionStrategyTiming(encryptionStrategy);
         }
-        return encryptionStrategy;
+        return encryptionStrategyTiming;
     }
 
     @Override
@@ -58,8 +63,9 @@ public class FactoryCustom implements Factory {
                 case STUB:
                     communicationStrategy = new CommunicationStrategyStub(size, bucketSize);
             }
+            communicationStrategyTiming = new CommunicationStrategyTiming(communicationStrategy);
         }
-        return communicationStrategy;
+        return communicationStrategyTiming;
     }
 
     @Override

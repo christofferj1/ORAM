@@ -92,7 +92,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
 
                 List<BlockEncrypted> bucketOfEncryptedBlocks = encryptBucketOfBlocks(bucketOfBlocks);
 
-                if (bucketOfEncryptedBlocks == null){
+                if (bucketOfEncryptedBlocks == null) {
                     logger.error("Returned null when trying to encrypt blocks when initializing the ORAM");
                     return false;
                 }
@@ -149,7 +149,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
-        if (!readPath){
+        if (!readPath) {
             logger.error("Unable to read path doing access");
             return null;
         }
@@ -161,7 +161,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
 
 //        Line 10 to 15 in pseudo code.
         boolean writeBack = writeBackPath(leafNodeIndex);
-        if (!writeBack){
+        if (!writeBack) {
             logger.error("Unable to write back path with doing access");
             return null;
         }
@@ -290,13 +290,13 @@ public class AccessStrategyPathOld implements AccessStrategy {
 
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWrite = encryptBucketOfBlocks(blocksToWrite);
-            if (encryptedBlocksToWrite == null){
+            if (encryptedBlocksToWrite == null) {
                 logger.error("Returned null when trying to encrypt blocks");
                 return false;
             }
             for (int i = 0; i < blocksToWrite.size(); i++) {
                 boolean writeSuccess = communicationStrategy.write(arrayPosition + i, encryptedBlocksToWrite.get(i));
-                if (!writeSuccess){
+                if (!writeSuccess) {
                     logger.error("Writing returned unsuccessful");
                     return false;
                 }

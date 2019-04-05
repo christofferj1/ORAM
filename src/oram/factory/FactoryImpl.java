@@ -1,9 +1,11 @@
 package oram.factory;
 
-import oram.clientcom.CommunicationStrategyImpl;
 import oram.clientcom.CommunicationStrategy;
+import oram.clientcom.CommunicationStrategyImpl;
+import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
+import oram.encryption.EncryptionStrategyTiming;
 import oram.permutation.PermutationStrategy;
 import oram.permutation.PermutationStrategyImpl;
 
@@ -15,21 +17,27 @@ import oram.permutation.PermutationStrategyImpl;
 
 public class FactoryImpl implements Factory {
     private EncryptionStrategyImpl encryptionStrategy;
+    private EncryptionStrategyTiming encryptionStrategyTiming;
     private CommunicationStrategyImpl communicationStrategyImpl;
+    private CommunicationStrategyTiming communicationStrategyTiming;
     private PermutationStrategyImpl permutationStrategy;
 
     @Override
     public EncryptionStrategy getEncryptionStrategy() {
-        if (encryptionStrategy == null)
+        if (encryptionStrategy == null) {
             encryptionStrategy = new EncryptionStrategyImpl();
-        return encryptionStrategy;
+            encryptionStrategyTiming = new EncryptionStrategyTiming(encryptionStrategy);
+        }
+        return encryptionStrategyTiming;
     }
 
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
-        if (communicationStrategyImpl == null)
+        if (communicationStrategyImpl == null) {
             communicationStrategyImpl = new CommunicationStrategyImpl();
-        return communicationStrategyImpl;
+            communicationStrategyTiming = new CommunicationStrategyTiming(communicationStrategyImpl);
+        }
+        return communicationStrategyTiming;
     }
 
     @Override

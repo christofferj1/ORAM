@@ -36,7 +36,7 @@ public class AccessStrategyPath implements AccessStrategy {
     public int maxStashSizeBetweenAccesses;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print = true;
+    private boolean print = false;
     private int dummyCounter = 0;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {

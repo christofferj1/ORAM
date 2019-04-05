@@ -6,6 +6,9 @@ import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
+import oram.clientcom.CommunicationStrategyTiming;
+import oram.encryption.EncryptionStrategy;
+import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import org.apache.commons.lang3.StringUtils;
@@ -34,14 +37,14 @@ public class MainPath {
         int numberOfBlocks = 30;
         int bucketSize = 4;
         int size = 31;
-        int numberOfRounds = 10000;
+        int numberOfRounds = 250;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
 
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, bucketSize);
 
-        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
-        clientCommunicationLayer.start();
+        CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
+        communicationStrategy.start();
         AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory);
 
         SecureRandom randomness = new SecureRandom();
@@ -55,7 +58,7 @@ public class MainPath {
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
-            printTreeFromServer(size, bucketSize, clientCommunicationLayer, access);
+//            printTreeFromServer(size, bucketSize, communicationStrategy, access);
             int address = addresses.get(i % addresses.size());
 
             boolean writing = i < numberOfRounds / 2;
@@ -103,7 +106,7 @@ public class MainPath {
             Util.printPercentageDone(startTime, numberOfRounds, i);
         }
 
-        printTreeFromServer(size, bucketSize, clientCommunicationLayer, access);
+//        printTreeFromServer(size, bucketSize, communicationStrategy, access);
 
         System.out.println("Max stash size: " + access.maxStashSize);
         logger.info("Max stash size: " + access.maxStashSize);
@@ -111,10 +114,19 @@ public class MainPath {
         logger.info("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
 
         System.out.println("Overwriting with dummy blocks");
-        if (clientCommunicationLayer.sendEndSignal())
+        if (communicationStrategy.sendEndSignal())
             System.out.println("Successfully rewrote all the blocks");
         else
             System.out.println("Unable to overwrite the blocks on the server");
+
+        EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
+        if (encryptionStrategy instanceof EncryptionStrategyTiming)
+            System.out.println("Encryption time: " +
+                    Util.getTimeString(((EncryptionStrategyTiming) encryptionStrategy).getTime() / 1000000));
+
+        if (communicationStrategy instanceof CommunicationStrategyTiming)
+            System.out.println("Communication time: " +
+                    Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {

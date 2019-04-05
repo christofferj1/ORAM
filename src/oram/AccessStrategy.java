@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface AccessStrategy {
     boolean setup(List<BlockStandard> blocks);
+
     //    TODO: add an access method which takes a position (bytes for it) map as parameter, and sets it before it calls
 //     the original access method
     byte[] access(OperationType op, int address, byte[] data);
