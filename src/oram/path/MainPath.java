@@ -135,8 +135,7 @@ public class MainPath {
             Util.logAndPrint(logger, "Communication time: " +
                     Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
 
-        System.out.println(" ### Resume ###");
-        System.out.println(resume.toString());
+        Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {

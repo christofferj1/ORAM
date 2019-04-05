@@ -8,7 +8,6 @@ import oram.encryption.EncryptionStrategy;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
@@ -27,7 +26,6 @@ import java.util.List;
  */
 
 public class Util {
-    private static final Logger logger = LogManager.getLogger("log");
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] getRandomByteArray(int length) {
@@ -337,8 +335,8 @@ public class Util {
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis() + timeLeft);
         String done = (now.get(Calendar.HOUR_OF_DAY) < 10 ? "0" + now.get(Calendar.HOUR_OF_DAY) : "" +
-                now.get(Calendar.HOUR_OF_DAY));
-        done += (now.get(Calendar.MINUTE) < 10 ? "0" + now.get(Calendar.MINUTE) : now.get(Calendar.MINUTE));
+                now.get(Calendar.HOUR_OF_DAY)) + ":";
+        done += (now.get(Calendar.MINUTE) < 10 ? "0" + now.get(Calendar.MINUTE) : now.get(Calendar.MINUTE)) + ":";
         done += (now.get(Calendar.SECOND) < 10 ? "0" + now.get(Calendar.SECOND) : now.get(Calendar.SECOND));
         return done;
     }
