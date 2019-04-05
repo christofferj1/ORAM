@@ -58,7 +58,9 @@ public class MainPath {
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
+
 //            printTreeFromServer(size, bucketSize, communicationStrategy, access);
+
             int address = addresses.get(i % addresses.size());
 
             boolean writing = i < numberOfRounds / 2;
@@ -77,6 +79,9 @@ public class MainPath {
             if (res == null)
                 break;
 
+            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4) + ", returning data: " + Util.getShortDataString(res));
+            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4) + ", returning data: " + Util.getShortDataString(res));
+
             if (addressesWrittenTo.contains(address)) {
                 if (res.length == 0) {
                     break;
@@ -84,22 +89,22 @@ public class MainPath {
 //                    res = Util.removeTrailingZeroes(res);
                     if (!Arrays.equals(res, blockArray[address].getData())) {
                         System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
-                        System.out.println("The arrays, that weren't the same:");
-                        System.out.println("    res: " + Arrays.toString(res));
-                        System.out.println("    old: " + Arrays.toString(blockArray[address].getData()));
-                        System.out.println("Block array");
+                        System.out.println("    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
+                        System.out.println("    The arrays, that weren't the same:");
+                        System.out.println("        res: " + Arrays.toString(res));
+                        System.out.println("        old: " + Arrays.toString(blockArray[address].getData()));
+                        System.out.println("    Block array");
                         for (int j = 0; j < blockArray.length; j++) {
                             String string = blockArray[j] != null ? blockArray[j].toStringShort() : "null";
-                            System.out.println("    " + j + ": " + string);
+                            System.out.println("        " + j + ": " + string);
                         }
                         break;
                     }
                 }
-            } else
+            } else {
                 addressesWrittenTo.add(address);
-
-            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//                System.out.println("Added address: " + address);
+            }
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 

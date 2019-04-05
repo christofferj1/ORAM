@@ -174,7 +174,9 @@ public class AccessStrategyPath implements AccessStrategy {
             maxStashSizeBetweenAccesses = stash.size();
             logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
-        System.out.println("Returning data: " + Util.getShortDataString(res));
+
+        if (print) System.out.println("Returning data: " + Util.getShortDataString(res));
+
         return res;
     }
 
