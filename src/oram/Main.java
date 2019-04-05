@@ -86,7 +86,9 @@ public class Main {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-            Util.printPercentageDone(startTime, numberOfRounds, i);
+            String percentageDoneString = Util.getPercentageDoneString(startTime, numberOfRounds, i);
+            if (percentageDoneString != null)
+                Util.logAndPrint(logger, percentageDoneString);
         }
     }
 }

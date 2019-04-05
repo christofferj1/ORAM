@@ -34,9 +34,9 @@ public class MainPath {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        int numberOfBlocks = 30;
+        int numberOfBlocks = 8000;
         int bucketSize = 4;
-        int size = 31;
+        int size = 8191;
         int numberOfRounds = 250;
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
@@ -52,8 +52,8 @@ public class MainPath {
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
-        logger.info("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
-        System.out.println("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
+        StringBuilder resume = new StringBuilder("Size: " + size + ", bucket size: " + bucketSize + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks);
+        Util.logAndPrint(logger, resume.toString());
 
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
@@ -79,8 +79,7 @@ public class MainPath {
             if (res == null)
                 break;
 
-            logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4) + ", returning data: " + Util.getShortDataString(res));
-            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 4) + ", returning data: " + Util.getShortDataString(res));
+            Util.logAndPrint(logger, "Accessed block " + StringUtils.leftPad(String.valueOf(address), 7) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + ", in round: " + StringUtils.leftPad(String.valueOf(i), 5) + ", returning data: " + Util.getShortDataString(res));
 
             if (addressesWrittenTo.contains(address)) {
                 if (res.length == 0) {
@@ -88,50 +87,56 @@ public class MainPath {
                 } else {
 //                    res = Util.removeTrailingZeroes(res);
                     if (!Arrays.equals(res, blockArray[address].getData())) {
-                        System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
-                        System.out.println("    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
-                        System.out.println("    The arrays, that weren't the same:");
-                        System.out.println("        res: " + Arrays.toString(res));
-                        System.out.println("        old: " + Arrays.toString(blockArray[address].getData()));
-                        System.out.println("    Block array");
+                        Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                        Util.logAndPrint(logger, "    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
+                        Util.logAndPrint(logger, "    The arrays, that weren't the same:");
+                        Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
+                        Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
+                        Util.logAndPrint(logger, "    Block array");
                         for (int j = 0; j < blockArray.length; j++) {
                             String string = blockArray[j] != null ? blockArray[j].toStringShort() : "null";
-                            System.out.println("        " + j + ": " + string);
+                            Util.logAndPrint(logger, "        " + j + ": " + string);
                         }
                         break;
                     }
                 }
-            } else {
+            } else
                 addressesWrittenTo.add(address);
-//                System.out.println("Added address: " + address);
-            }
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-            Util.printPercentageDone(startTime, numberOfRounds, i);
+
+            String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
+            if (string != null) {
+                if (string.contains("0%"))
+                    resume.append("\n").append(string);
+//                Util.logAndPrint(logger, " ");
+                Util.logAndPrint(logger, "\n" + string + "\n");
+//                Util.logAndPrint(logger, " ");
+            }
         }
 
 //        printTreeFromServer(size, bucketSize, communicationStrategy, access);
 
-        System.out.println("Max stash size: " + access.maxStashSize);
-        logger.info("Max stash size: " + access.maxStashSize);
-        System.out.println("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
-        logger.info("Max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
+        Util.logAndPrint(logger, "Max stash size: " + access.maxStashSize + ", max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
 
-        System.out.println("Overwriting with dummy blocks");
+        Util.logAndPrint(logger, "Overwriting with dummy blocks");
         if (communicationStrategy.sendEndSignal())
-            System.out.println("Successfully rewrote all the blocks");
+            Util.logAndPrint(logger, "Successfully rewrote all the blocks");
         else
-            System.out.println("Unable to overwrite the blocks on the server");
+            Util.logAndPrint(logger, "Unable to overwrite the blocks on the server");
 
         EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
         if (encryptionStrategy instanceof EncryptionStrategyTiming)
-            System.out.println("Encryption time: " +
+            Util.logAndPrint(logger, "Encryption time: " +
                     Util.getTimeString(((EncryptionStrategyTiming) encryptionStrategy).getTime() / 1000000));
 
         if (communicationStrategy instanceof CommunicationStrategyTiming)
-            System.out.println("Communication time: " +
+            Util.logAndPrint(logger, "Communication time: " +
                     Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
+
+        System.out.println(" ### Resume ###");
+        System.out.println(resume.toString());
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {

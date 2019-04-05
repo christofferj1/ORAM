@@ -313,29 +313,34 @@ public class Util {
         return new String(res);
     }
 
-    public static void printPercentageDone(long startTime, double numberOfRounds, int roundNumber) {
+    public static String getPercentageDoneString(long startTime, double numberOfRounds, int roundNumber) {
         double percentDone = ((roundNumber + 1) / numberOfRounds) * 100;
+        percentDone = percentDone * 1000000;
+        percentDone = Math.round(percentDone);
+        percentDone = percentDone / 1000000;
         if ((percentDone % 1) == 0) {
             int percentDoneInt = (int) percentDone;
             long timeElapsed = (System.nanoTime() - startTime) / 1000000;
             long timeElapsedPerPercent = timeElapsed / percentDoneInt;
             long timeLeft = timeElapsedPerPercent * (100 - percentDoneInt);
 
-            Calendar now = Calendar.getInstance();
-            now.setTimeInMillis(System.currentTimeMillis() + timeLeft);
-            String done = now.get(Calendar.HOUR_OF_DAY) + ":";
-            done += now.get(Calendar.MINUTE) + ":";
-            done += now.get(Calendar.SECOND);
-
             String percent = percentDoneInt < 10 ? " " + percentDoneInt : String.valueOf(percentDoneInt);
             percent = percentDoneInt < 100 ? " " + percent : percent;
-            System.out.println("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft) + ", done: " + done + " (estimated total: " +
-                    getTimeString(timeElapsed + timeLeft) + ")");
-            logger.info("Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
-                    ", estimated time left: " + getTimeString(timeLeft) + ", done: " + done + " (estimated total: " +
-                    getTimeString(timeElapsed + timeLeft) + ")");
+            return "Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
+                    ", estimated time left: " + getTimeString(timeLeft) + ", done: " + getClockString(timeLeft) +
+                    " (estimated total: " + getTimeString(timeElapsed + timeLeft) + ")";
         }
+        return null;
+    }
+
+    public static String getClockString(long timeLeft) {
+        Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(System.currentTimeMillis() + timeLeft);
+        String done = (now.get(Calendar.HOUR_OF_DAY) < 10 ? "0" + now.get(Calendar.HOUR_OF_DAY) : "" +
+                now.get(Calendar.HOUR_OF_DAY));
+        done += (now.get(Calendar.MINUTE) < 10 ? "0" + now.get(Calendar.MINUTE) : now.get(Calendar.MINUTE));
+        done += (now.get(Calendar.SECOND) < 10 ? "0" + now.get(Calendar.SECOND) : now.get(Calendar.SECOND));
+        return done;
     }
 
     public static String getShortDataString(byte[] data) {
@@ -349,5 +354,10 @@ public class Util {
         } else
             dataString = printByteArray(data, false);
         return dataString;
+    }
+
+    public static void logAndPrint(Logger logger, String string) {
+        System.out.println(string);
+        logger.info(string);
     }
 }

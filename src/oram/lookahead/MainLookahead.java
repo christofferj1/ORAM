@@ -95,7 +95,9 @@ public class MainLookahead {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-            Util.printPercentageDone(startTime, numberOfRounds, i);
+            String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
+            if (string != null)
+                Util.logAndPrint(logger, string);
         }
 
         System.out.println("Overwriting with dummy blocks");
