@@ -138,7 +138,7 @@ public class Main {
 
     private static ORAMFactory getOramFactory() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Choose ORAM [l/p/t]");
+        Util.logAndPrint(logger, "Choose ORAM [l/p/t]");
         String answer = scanner.nextLine();
         while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
             System.out.println("Choose ORAM [l/p/t]");
