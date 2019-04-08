@@ -89,7 +89,6 @@ public class MainPath {
                         Util.logAndPrint(logger, "    The arrays, that weren't the same:");
                         Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
                         Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
-                        Util.logAndPrint(logger, "    Block array");
                         break;
                     }
                 }
@@ -107,7 +106,7 @@ public class MainPath {
             }
         }
 
-        Util.logAndPrint(logger, "Max stash size: " + access.maxStashSize + ", max stash size between accesses: " + access.maxStashSizeBetweenAccesses);
+        Util.logAndPrint(logger, "Max stash size: " + access.getMaxStashSize() + ", max stash size between accesses: " + access.getMaxStashSizeBetweenAccesses());
 
         Util.logAndPrint(logger, "Overwriting with dummy blocks");
         if (communicationStrategy.sendEndSignal())

@@ -27,4 +27,12 @@ public interface ORAMFactory {
     int getNumberOfRounds();
 
     int getNumberOfBlocks();
+
+    void setParameters();
+
+    String getInitString();
+
+    int getMaxStashSize();
+
+    int getMaxStashSizeBetweenAccesses();
 }

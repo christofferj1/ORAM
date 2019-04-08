@@ -1,6 +1,7 @@
 package oram.ofactory;
 
 import oram.AccessStrategy;
+import oram.Util;
 import oram.factory.Factory;
 import oram.path.AccessStrategyPath;
 
@@ -11,10 +12,11 @@ import oram.path.AccessStrategyPath;
  */
 
 public class ORAMFactoryPath implements ORAMFactory {
-    private final int size = 31;
-    private final int bucketSize = 4;
-    private final int numberOfBlocks = 27;
-    private final int numberOfRounds = 10000;
+    private AccessStrategyPath accessStrategy;
+    private int size;
+    private int bucketSize;
+    private int numberOfBlocks;
+    private int numberOfRounds;
 
     @Override
     public int getSize() {
@@ -23,12 +25,38 @@ public class ORAMFactoryPath implements ORAMFactory {
 
     @Override
     public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory) {
-        return new AccessStrategyPath(size, bucketSize, secretKey, factory);
+        if (accessStrategy == null)
+            accessStrategy = new AccessStrategyPath(size, bucketSize, secretKey, factory);
+        return accessStrategy;
     }
 
     @Override
     public int getNumberOfBlocks() {
         return numberOfBlocks;
+    }
+
+    @Override
+    public void setParameters() {
+        size = Util.getInteger("size");
+        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfRounds = Util.getInteger("number of rounds");
+        bucketSize = Util.getInteger("bucket size");
+    }
+
+    @Override
+    public String getInitString() {
+        return "Size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
+                ", doing rounds: " + numberOfRounds;
+    }
+
+    @Override
+    public int getMaxStashSize() {
+        return accessStrategy.getMaxStashSize();
+    }
+
+    @Override
+    public int getMaxStashSizeBetweenAccesses() {
+        return accessStrategy.getMaxStashSizeBetweenAccesses();
     }
 
     @Override

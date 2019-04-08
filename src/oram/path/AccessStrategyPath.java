@@ -32,8 +32,8 @@ public class AccessStrategyPath implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
-    public int maxStashSize;
-    public int maxStashSizeBetweenAccesses;
+    private int maxStashSize;
+    private int maxStashSizeBetweenAccesses;
     private List<BlockStandard> stash;
     private Map<Integer, Integer> positionMap;
     private boolean print = false;
@@ -416,5 +416,13 @@ public class AccessStrategyPath implements AccessStrategy {
             res.add(new BlockStandard(addressInt, message));
         }
         return res;
+    }
+
+    public int getMaxStashSize() {
+        return maxStashSize;
+    }
+
+    public int getMaxStashSizeBetweenAccesses() {
+        return maxStashSizeBetweenAccesses;
     }
 }

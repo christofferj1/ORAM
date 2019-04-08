@@ -1,6 +1,7 @@
 package oram.ofactory;
 
 import oram.AccessStrategy;
+import oram.Util;
 import oram.factory.Factory;
 import oram.trivial.AccessStrategyTrivial;
 
@@ -11,9 +12,9 @@ import oram.trivial.AccessStrategyTrivial;
  */
 
 public class ORAMFactoryTrivial implements ORAMFactory {
-    private final int size = 36;
-    private final int numberOfBlocks = size;
-    private final int numberOfRounds = 10000;
+    private int size;
+    private int numberOfBlocks;
+    private int numberOfRounds;
 
     @Override
     public int getSize() {
@@ -28,6 +29,28 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     @Override
     public int getNumberOfBlocks() {
         return numberOfBlocks;
+    }
+
+    @Override
+    public void setParameters() {
+        size = Util.getInteger("size");
+        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfRounds = Util.getInteger("number of rounds");
+    }
+
+    @Override
+    public String getInitString() {
+        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds;
+    }
+
+    @Override
+    public int getMaxStashSize() {
+        return -42;
+    }
+
+    @Override
+    public int getMaxStashSizeBetweenAccesses() {
+        return -42;
     }
 
     @Override
@@ -59,5 +82,6 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     public int factorySizeParameter1() {
         return 1;
     }
+
 
 }

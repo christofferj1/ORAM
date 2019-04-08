@@ -1,6 +1,7 @@
 package oram.ofactory;
 
 import oram.AccessStrategy;
+import oram.Util;
 import oram.factory.Factory;
 import oram.lookahead.AccessStrategyLookahead;
 
@@ -11,11 +12,11 @@ import oram.lookahead.AccessStrategyLookahead;
  */
 
 public class ORAMFactoryLookahead implements ORAMFactory {
-    private final int size = 36;
-    private final int numberOfBlocks = 30;
-    private final int numberOfRounds = 10000;
-    private final int rows = 6;
-    private final int columns = rows + 2;
+    private int size;
+    private int numberOfBlocks;
+    private int numberOfRounds;
+    private int rows;
+    private int columns;
 
     @Override
     public int getSize() {
@@ -30,6 +31,31 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     @Override
     public int getNumberOfBlocks() {
         return numberOfBlocks;
+    }
+
+    @Override
+    public void setParameters() {
+        size = Util.getInteger("size");
+        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfRounds = Util.getInteger("number of rounds");
+        rows = Util.getInteger("number of rows");
+        columns = rows + 2;
+    }
+
+    @Override
+    public String getInitString() {
+        return "Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
+                ", rounds: " + numberOfRounds;
+    }
+
+    @Override
+    public int getMaxStashSize() {
+        return -42;
+    }
+
+    @Override
+    public int getMaxStashSizeBetweenAccesses() {
+        return -42;
     }
 
     @Override

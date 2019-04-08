@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 apply plugin: 'application'
 
-mainClassName = 'oram.path.MainPath'
+mainClassName = 'oram.Main'
 
 sourceSets {
     main {
@@ -15,6 +15,10 @@ sourceSets {
             srcDirs 'src'
         }
     }
+}
+
+run {
+    standardIn = System.in
 }
 
 sourceCompatibility = 1.8

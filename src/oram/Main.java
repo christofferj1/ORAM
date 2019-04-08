@@ -2,13 +2,15 @@ package oram;
 
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
+import oram.clientcom.CommunicationStrategyTiming;
+import oram.encryption.EncryptionStrategy;
+import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
 import oram.factory.FactoryCustom;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookahead;
 import oram.ofactory.ORAMFactoryPath;
 import oram.ofactory.ORAMFactoryTrivial;
-import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,70 +32,108 @@ public class Main {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
-        long startTime = System.nanoTime();
         byte[] key = Constants.KEY_BYTES;
 
         ORAMFactory oramFactory = getOramFactory();
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.STUB, Per.IMPL, oramFactory.factorySizeParameter0(),
+        oramFactory.setParameters();
+        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
         int numberOfBlocks = oramFactory.getNumberOfBlocks();
+
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
         for (int i = 1; i <= numberOfBlocks; i++) {
-            BlockStandard block = new BlockStandard(i, ("Block " + i).getBytes());
+            BlockStandard block = new BlockStandard(i, Util.getRandomByteArray(Constants.BLOCK_SIZE));
             blocks.add(block);
             blockArray[i] = block;
         }
 
-        CommunicationStrategy clientCommunicationLayer = factory.getCommunicationStrategy();
-        clientCommunicationLayer.start();
+        boolean pathORAMChosen = oramFactory instanceof ORAMFactoryPath;
+        CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
+        communicationStrategy.start();
         AccessStrategy access = oramFactory.getAccessStrategy(key, factory);
-        if (!(oramFactory instanceof ORAMFactoryPath))
+        if (!pathORAMChosen)
             access.setup(blocks);
 
-        int size = oramFactory.getSize();
-        int numberOfRounds = oramFactory.getNumberOfRounds();
-        String string = "Size: " + size + ", doing rounds: " + numberOfRounds + ", with number of blocks: " + numberOfBlocks;
-        if (access.getClass().getSimpleName().equals(AccessStrategyPath.class.getSimpleName()))
-            string += ", bucket size: " + oramFactory.getBucketSize();
-        logger.info(string);
-        System.out.println(string);
-
         SecureRandom randomness = new SecureRandom();
-        for (int i = 0; i < numberOfRounds; i++) {
-            int address = randomness.nextInt(numberOfBlocks) + 1;
+        List<Integer> addresses = new ArrayList<>();
+        int numberOfRounds = oramFactory.getNumberOfRounds();
+        for (int i = 0; i < numberOfRounds / 2; i++)
+            addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
+        StringBuilder resume = new StringBuilder(oramFactory.getInitString());
+        if (pathORAMChosen)
+            resume.append(", bucket size: ").append(oramFactory.getBucketSize());
+        Util.logAndPrint(logger, resume.toString());
+
+        List<Integer> addressesWrittenTo = new ArrayList<>();
+        long startTime = System.nanoTime();
+        for (int i = 0; i < numberOfRounds; i++) {
+            int address = addresses.get(i % addresses.size());
+
+            boolean writing = i < numberOfRounds / 2;
             OperationType op;
             byte[] data;
-            if (randomness.nextBoolean()) {
+            if (writing) {
+                op = OperationType.WRITE;
+                data = Util.getRandomByteArray(Constants.BLOCK_SIZE);
+            } else {
                 op = OperationType.READ;
                 data = null;
-            } else {
-                op = OperationType.WRITE;
-                data = Util.getRandomString(8).getBytes();
             }
 
             byte[] res = access.access(op, address, data);
             if (res == null) System.exit(-1);
 
-            res = Util.removeTrailingZeroes(res);
-            String s = new String(res);
-//            System.out.println("Accessed block " + StringUtils.leftPad(String.valueOf(address), 2) + ": " + StringUtils.leftPad(s, 8) + ", op type: " + op + ", data: " + (data != null ? new String(data) : null) + " in round: " + StringUtils.leftPad(String.valueOf(i), 4));
+//            res = Util.removeTrailingZeroes(res);
 
-            if (Arrays.equals(res, blockArray[address].getData())) {
-//                System.out.println("Read block data: " + s);
-            } else {
-                System.out.println("SHIT WENT WRONG!!! - WRONG BLOCK!!!");
-                break;
-            }
+            if (addressesWrittenTo.contains(address)) {
+                if (pathORAMChosen && res.length == 0)
+                    break;
+                else {
+                    if (!Arrays.equals(res, blockArray[address].getData())) {
+                        Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                        Util.logAndPrint(logger, "    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
+                        Util.logAndPrint(logger, "    The arrays, that weren't the same:");
+                        Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
+                        Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
+                        break;
+                    }
+                }
+            } else
+                addressesWrittenTo.add(address);
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-            String percentageDoneString = Util.getPercentageDoneString(startTime, numberOfRounds, i);
-            if (percentageDoneString != null)
-                Util.logAndPrint(logger, percentageDoneString);
+            String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
+            if (string != null) {
+                if (string.contains("0%"))
+                    resume.append("\n").append(string);
+                logger.info("\n\n" + string + "\n");
+                System.out.println(string);
+            }
         }
+
+        if (pathORAMChosen)
+            Util.logAndPrint(logger, "Max stash size: " + oramFactory.getMaxStashSize() + ", max stash size between accesses: " + oramFactory.getMaxStashSizeBetweenAccesses());
+
+        Util.logAndPrint(logger, "Overwriting with dummy blocks");
+        if (communicationStrategy.sendEndSignal())
+            Util.logAndPrint(logger, "Successfully rewrote all the blocks");
+        else
+            Util.logAndPrint(logger, "Unable to overwrite the blocks on the server");
+
+        EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
+        if (encryptionStrategy instanceof EncryptionStrategyTiming)
+            Util.logAndPrint(logger, "Encryption time: " +
+                    Util.getTimeString(((EncryptionStrategyTiming) encryptionStrategy).getTime() / 1000000));
+
+        if (communicationStrategy instanceof CommunicationStrategyTiming)
+            Util.logAndPrint(logger, "Communication time: " +
+                    Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
+
+        Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
     }
 
     private static ORAMFactory getOramFactory() {

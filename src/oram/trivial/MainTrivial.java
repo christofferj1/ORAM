@@ -74,7 +74,6 @@ public class MainTrivial {
             if (res == null)
                 break;
 
-            //res = Util.removeTrailingZeroes(res); TODO: Why did I do that?
             logger.info("Accessed block " + StringUtils.leftPad(String.valueOf(address), 7) + ", op type: " + op + ", data: " + Util.getShortDataString(data) + " in round: " + StringUtils.leftPad(String.valueOf(i), 6) + ", returning data: " + Util.getShortDataString(res));
 
             if (addressesWrittenTo.contains(address)) {

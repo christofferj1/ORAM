@@ -14,10 +14,7 @@ import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p> ORAM <br>
@@ -357,5 +354,16 @@ public class Util {
     public static void logAndPrint(Logger logger, String string) {
         System.out.println(string);
         logger.info(string);
+    }
+
+    public static int getInteger(String name) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter integer for '" + name + "'");
+        String answer = scanner.nextLine();
+        while (!answer.matches("\\d+")) {
+            System.out.println("Enter integer for '" + name + "'");
+            answer = scanner.nextLine();
+        }
+        return Integer.parseInt(answer);
     }
 }
