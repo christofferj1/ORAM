@@ -38,7 +38,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private int maxStashSizeBetweenAccesses;
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print = false;
+    private boolean print = true;
     private int dummyCounter = 0;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
@@ -368,6 +368,7 @@ public class AccessStrategyPath implements AccessStrategy {
     public List<BlockPath> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks, boolean filterOutDummies) {
         List<BlockPath> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
+//            System.out.println("Decrypt block");
             if (block == null) continue;
 //            Address
             byte[] addressBytes = encryptionStrategy.decrypt(block.getAddress(), secretKey);
@@ -394,7 +395,18 @@ public class AccessStrategyPath implements AccessStrategy {
                 return null;
             }
 
-            res.add(new BlockPath(addressInt, encryptedDataFull, Util.byteArrayToLeInt(indexBytes)));
+            int index = Util.byteArrayToLeInt(indexBytes);
+
+//            System.out.println("    Encrypted data full " + Arrays.toString(encryptedDataFull));
+//            System.out.println("    Encrypted data full size " + encryptedDataFullLength);
+//            System.out.println("    End of data index " + endOfDataIndex);
+//            System.out.println("    Encrypted data " + Arrays.toString(encryptedData));
+//            System.out.println("    Encrypted index " + Arrays.toString(encryptedIndex));
+//            System.out.println("    Date " + Arrays.toString(data));
+//            System.out.println("    Index bytes " + Arrays.toString(indexBytes));
+//            System.out.println("    Index " + index);
+
+            res.add(new BlockPath(addressInt, data, index));
         }
         return res;
     }

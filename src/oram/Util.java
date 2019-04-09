@@ -126,11 +126,11 @@ public class Util {
         List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
 
         List<BlockPath> blockStandards = access.decryptBlockPaths(encrypted, false);
-        BlockStandard[] array1 = blockStandards.toArray(new BlockStandard[array.length]);
+        BlockPath[] array1 = blockStandards.toArray(new BlockPath[array.length]);
         return printBucket(array1, bucketSize, 0, 1, layers);
     }
 
-    public static String printBucket(BlockStandard[] array, int bucketSize, int index, int layer, int maxLayers) {
+    public static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers) {
         StringBuilder prefix = new StringBuilder();
         for (int i = 1; i < layer; i++) {
             prefix.append("        ");

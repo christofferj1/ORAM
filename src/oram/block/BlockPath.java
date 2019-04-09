@@ -58,8 +58,8 @@ public class BlockPath implements Block {
 
     @Override
     public String toString() {
-        return "Lookahead{" +
-                "add=" + (address < 10 ? " " + address : address) +
+        return "BlockPath{" +
+                "address=" + (address < 10 ? " " + address : address) +
                 ", data=" + Util.printByteArray(data, false) +
                 ", index=" + index +
                 '}';
@@ -67,7 +67,7 @@ public class BlockPath implements Block {
 
     public String toStringShort() {
         String dataString = Util.getShortDataString(data);
-        return "Lookahead{" +
+        return "Path{" +
                 "add=" + (address < 10 ? " " + address : address) +
                 ", (" + index + ")" +
                 ", data=" + dataString +

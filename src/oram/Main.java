@@ -1,5 +1,6 @@
 package oram;
 
+import oram.block.BlockEncrypted;
 import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
@@ -11,6 +12,7 @@ import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookahead;
 import oram.ofactory.ORAMFactoryPath;
 import oram.ofactory.ORAMFactoryTrivial;
+import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,6 +67,8 @@ public class Main {
         StringBuilder resume = new StringBuilder(oramFactory.getInitString());
         Util.logAndPrint(logger, resume.toString());
 
+        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access);
+
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
@@ -104,10 +108,17 @@ public class Main {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
+            System.out.println("Block array");
+            for (int j = 0; j < blockArray.length; j++) {
+                BlockStandard b = blockArray[j];
+                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
+            }
+            System.out.println(" ");
+            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access);
+
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {
-                if (string.contains("0%"))
-                    resume.append("\n").append(string);
+                if (string.contains("0%")) {resume.append("\n").append(string);}
                 logger.info("\n\n" + string + "\n");
                 System.out.println(string);
             }
@@ -154,5 +165,12 @@ public class Main {
                 System.exit(-1);
                 return null;
         }
+    }
+
+    private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {
+        BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
+        for (int j = 0; j < array.length; j++)
+            array[j] = com.read(j);
+        System.out.println(Util.printTree(array, bucketSize, access));
     }
 }
