@@ -1,10 +1,10 @@
 package oram.path;
 
-import oram.block.BlockEncrypted;
 import oram.CommunicationStrategyStub;
 import oram.OperationType;
 import oram.Util;
-import oram.block.BlockStandard;
+import oram.block.BlockEncrypted;
+import oram.block.BlockPath;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.permutation.PermutationStrategy;
@@ -195,10 +195,10 @@ public class AccessStrategyPathTest {
         byte[] bytes1 = Util.getRandomByteArray(15);
         byte[] bytes2 = Util.getRandomByteArray(16);
         byte[] bytes4 = Util.getRandomByteArray(18);
-        BlockStandard block0 = new BlockStandard(1, bytes1);
-        BlockStandard block1 = new BlockStandard(2, bytes2);
-        BlockStandard block2 = new BlockStandard(0, new byte[17]);
-        BlockStandard block3 = new BlockStandard(4, bytes4);
+        BlockPath block0 = new BlockPath(1, bytes1, 0);
+        BlockPath block1 = new BlockPath(2, bytes2, 0);
+        BlockPath block2 = new BlockPath(0, new byte[17], 0);
+        BlockPath block3 = new BlockPath(4, bytes4, 0);
 
         byte[] key = "Some Key 6".getBytes();
 //        Define method specific encryption
@@ -225,7 +225,7 @@ public class AccessStrategyPathTest {
         factory.setEncryptionStrategy(encryptionStrategy);
         AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory);
 
-        List<BlockStandard> res = access.decryptBlockPaths(encryptedList, true);
+        List<BlockPath> res = access.decryptBlockPaths(encryptedList, true);
         assertThat(res, hasSize(3));
         assertThat(res, hasItem(block0));
         assertThat(res, hasItem(block1));

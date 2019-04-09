@@ -1,9 +1,6 @@
 package oram;
 
-import oram.block.Block;
-import oram.block.BlockEncrypted;
-import oram.block.BlockLookahead;
-import oram.block.BlockStandard;
+import oram.block.*;
 import oram.encryption.EncryptionStrategy;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
@@ -128,7 +125,7 @@ public class Util {
 
         List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
 
-        List<BlockStandard> blockStandards = access.decryptBlockPaths(encrypted, false);
+        List<BlockPath> blockStandards = access.decryptBlockPaths(encrypted, false);
         BlockStandard[] array1 = blockStandards.toArray(new BlockStandard[array.length]);
         return printBucket(array1, bucketSize, 0, 1, layers);
     }

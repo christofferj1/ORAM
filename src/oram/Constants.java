@@ -16,4 +16,10 @@ public class Constants {
     public static final int AES_BLOCK_SIZE = 16;
     public static final int AES_KEY_SIZE = 16;
     public static final int INTEGER_BYTE_ARRAY_SIZE = 4;
+
+    public static final int POSITION_BLOCK_SIZE = 17;
+    public static final int POSITION_MAP_1_SIZE = 64;
+    public static final int POSITION_MAP_2_SIZE = 1024;
+    public static final int POSITION_MAP_3_SIZE = 16384;
+    public static final int POSITION_MAP_4_SIZE = 262144;
 }

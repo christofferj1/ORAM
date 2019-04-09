@@ -2,6 +2,7 @@ package oram.permutation;
 
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
+import oram.block.BlockPath;
 import oram.block.BlockStandard;
 
 import java.util.List;
@@ -18,4 +19,6 @@ public interface PermutationStrategy {
     List<BlockStandard> permuteStandardBlocks(List<BlockStandard> blocks);
 
     List<BlockLookahead> permuteLookaheadBlocks(List<BlockLookahead> blocks);
+
+    List<BlockPath> permutePathBlocks(List<BlockPath> blocks);
 }
