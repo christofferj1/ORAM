@@ -53,7 +53,7 @@ public class Main {
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
         AccessStrategy access = oramFactory.getAccessStrategy(key, factory);
-        if (!pathORAMChosen)
+        if (oramFactory instanceof ORAMFactoryLookahead)
             access.setup(blocks);
 
         SecureRandom randomness = new SecureRandom();
@@ -63,8 +63,6 @@ public class Main {
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
         StringBuilder resume = new StringBuilder(oramFactory.getInitString());
-        if (pathORAMChosen)
-            resume.append(", bucket size: ").append(oramFactory.getBucketSize());
         Util.logAndPrint(logger, resume.toString());
 
         List<Integer> addressesWrittenTo = new ArrayList<>();

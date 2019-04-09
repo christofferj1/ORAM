@@ -8,13 +8,12 @@ import oram.block.BlockStandard;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
-import oram.permutation.PermutationStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
-import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,59 +26,33 @@ import java.util.stream.IntStream;
 public class AccessStrategyTrivial implements AccessStrategy {
     private final Logger logger = LogManager.getLogger("log");
     private final SecretKey secretKey;
-    private final int size;
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
-    private final PermutationStrategy permutationStrategy;
     private final List<Integer> allAddresses;
-    private Map<Integer, Integer> positionMap;
 
     public AccessStrategyTrivial(int size, byte[] key, Factory factory) {
-        this.size = size;
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
-        this.permutationStrategy = factory.getPermutationStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
         this.allAddresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
-        positionMap = new HashMap<>();
-    }
-
-    public boolean setupOld(List<BlockStandard> blocks) {
-        blocks = permutationStrategy.permuteStandardBlocks(blocks);
-        for (int i = 0; i < blocks.size(); i++)
-            positionMap.put(blocks.get(i).getAddress(), i);
-
-        List<BlockEncrypted> encryptedList = encryptBlocks(blocks);
-
-        return communicationStrategy.writeArray(allAddresses, encryptedList);
     }
 
     @Override
     public boolean setup(List<BlockStandard> blocks) {
-        SecureRandom randomness = new SecureRandom();
-        int numberOfBlocks = blocks.size();
-        List<Integer> positions = IntStream.range(0, numberOfBlocks).boxed().collect(Collectors.toList());
-        for (int i = 1; i <= numberOfBlocks; i++)
-            positionMap.put(i, positions.remove(randomness.nextInt(positions.size())));
-
         return true;
     }
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data) {
-        SecureRandom randomness = new SecureRandom();
-        int position = positionMap.getOrDefault(address, randomness.nextInt(size));
-
-        logger.info("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
+        logger.info("Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 //        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
-
 
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
         List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
 
-        byte[] res = blocks.get(position).getData();
+        byte[] res = blocks.get(address).getData();
         if (op.equals(OperationType.WRITE))
-            blocks.get(position).setData(data);
+            blocks.get(address).setData(data);
 
         List<BlockEncrypted> blocksToWrite = encryptBlocks(blocks);
 
