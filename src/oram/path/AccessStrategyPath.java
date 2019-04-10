@@ -103,8 +103,8 @@ public class AccessStrategyPath implements AccessStrategy {
             System.out.println("Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(address));
         }
 
-        logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: "
-                + leafNodeIndex + " -> " + positionMap.get(address));
+        logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: " + leafNodeIndex +
+                " -> " + positionMap.get(address));
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
@@ -195,7 +195,8 @@ public class AccessStrategyPath implements AccessStrategy {
                     if (print) System.out.println("    Overwrites with new data");
                     stash.set(i, new BlockPath(address, data, newLeadNodeIndex));
                     hasOverwrittenBlock = true;
-                }
+                } else
+                    stash.get(i).setIndex(newLeadNodeIndex); // Update leaf node index, even for op = READ
                 break;
             }
         }
