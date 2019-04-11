@@ -18,13 +18,21 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     private int rows;
     private int columns;
 
+    public ORAMFactoryLookahead() {
+        size = Util.getInteger("size");
+        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfRounds = Util.getInteger("number of rounds");
+        rows = Util.getInteger("number of rows");
+        columns = rows + 2;
+    }
+
     @Override
     public int getSize() {
         return size;
     }
 
     @Override
-    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory) {
+    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy) {
         return new AccessStrategyLookahead(size, rows, secretKey, factory);
     }
 
@@ -34,12 +42,8 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     }
 
     @Override
-    public void setParameters() {
-        size = Util.getInteger("size");
-        numberOfBlocks = Util.getInteger("number of blocks");
-        numberOfRounds = Util.getInteger("number of rounds");
-        rows = Util.getInteger("number of rows");
-        columns = rows + 2;
+    public int getOffSet() {
+        return 0;
     }
 
     @Override

@@ -20,6 +20,8 @@ import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.*;
 
+import static oram.Constants.DUMMY_LEAF_NODE_INDEX;
+
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 19-02-2019. <br>
@@ -27,9 +29,11 @@ import java.util.*;
 
 public class AccessStrategyPath implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
+    private final int size;
     private final int L;
     private final int bucketSize;
     private final int leafCount;
+    private final int offset;
     private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
@@ -40,11 +44,15 @@ public class AccessStrategyPath implements AccessStrategy {
     private Map<Integer, Integer> positionMap;
     private boolean print = true;
     private int dummyCounter = 0;
+    private AccessStrategy accessStrategy;
+    private String prefixString;
 
-    public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory) {
+    public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory, AccessStrategy accessStrategy,
+                              int offset) {
+        this.size = size;
         this.bucketSize = bucketSize;
+        this.offset = offset;
         stash = new ArrayList<>();
-        positionMap = new HashMap<>();
         L = (int) Math.ceil(Math.log(size) / Math.log(2));
         leafCount = (int) (Math.pow(2, L - 1));
         communicationStrategy = factory.getCommunicationStrategy();
@@ -54,6 +62,13 @@ public class AccessStrategyPath implements AccessStrategy {
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
+        prefixString = Util.getEmptyStringOfLength(offset);
+
+        if (accessStrategy != null)
+            this.accessStrategy = accessStrategy;
+        else
+            positionMap = new HashMap<>();
+
         logger.info("######### Initialized Path ORAM strategy #########");
         logger.debug("######### Initialized Path ORAM strategy #########");
     }
@@ -62,7 +77,7 @@ public class AccessStrategyPath implements AccessStrategy {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
             positionMap.put(0, i);
-            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE]);
+            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE], false);
         }
         positionMap = new HashMap<>();
     }
@@ -73,38 +88,63 @@ public class AccessStrategyPath implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
         if (data != null && data.length > Constants.BLOCK_SIZE) {
             logger.error("Accessed with data length: " + data.length);
         }
+
+        int addressToLookUp = address;
+        if (recursiveLookup)
+            addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
 
         SecureRandom randomness = new SecureRandom();
 
 //        Line 1 and 2 in pseudo code.
 //        Return a random position if the block does not have one already
-        int leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
-        if (print) {
-            System.out.println("Access op: " + op.toString() + ", address: " + address + ", data: " + Util.getShortDataString(data));
-            System.out.println("MAP BEFORE");
-            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
-                System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
-                        StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
-            System.out.println(" ");
-        }
-        int newLeafNodeIndex = randomness.nextInt((int) (Math.pow(2, L - 1)));
-        positionMap.put(address, newLeafNodeIndex);
+        Integer leafNodeIndex;
+        Integer newLeafNodeIndex = randomness.nextInt((int) (Math.pow(2, L - 1)));
+        if (positionMap == null) {
+            Map<Integer, Integer> positionMap = getPositionMap(addressToLookUp, newLeafNodeIndex);
+            if (positionMap == null)
+                return null;
 
-        if (print) {
-            System.out.println("MAP AFTER");
-            for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
-                System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
-                        StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
-            System.out.println(" ");
-            System.out.println("Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(address));
+            leafNodeIndex = positionMap.getOrDefault(address, null);
+
+            if (leafNodeIndex == null) {
+                logger.error("Unable to look up address: " + address);
+                return null;
+            } else if (leafNodeIndex == DUMMY_LEAF_NODE_INDEX)
+                leafNodeIndex = randomness.nextInt((int) Math.pow(2, L - 1));
+
+//            leafNodeIndex = positionMap.getOrDefault(address, randomness.nextInt((int) (Math.pow(2, L - 1))));
+        } else {
+            if (positionMap.containsKey(addressToLookUp))
+                leafNodeIndex = positionMap.get(addressToLookUp);
+            else
+                leafNodeIndex = randomness.nextInt((int) (Math.pow(2, L - 1)));
+
+            if (print) {
+                System.out.println(prefixString + "Access op: " + op.toString() + ", address: " + address + ", data: " + Util.getShortDataString(data));
+                System.out.println(prefixString + "MAP BEFORE");
+                for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
+                    System.out.print(prefixString + StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
+                            StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
+                System.out.println(prefixString + " ");
+            }
+            positionMap.put(addressToLookUp, newLeafNodeIndex);
+
+            if (print) {
+                System.out.println(prefixString + "MAP AFTER");
+                for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
+                    System.out.print(prefixString + StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
+                            StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
+                System.out.println(prefixString + " ");
+                System.out.println(prefixString + "Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(addressToLookUp));
+            }
         }
 
-        logger.info("Access op: " + op.toString() + ", address: " + address + ", leaf node: " + leafNodeIndex +
-                " -> " + positionMap.get(address));
+        logger.info("Access op: " + op.toString() + ", address: " + addressToLookUp + ", leaf node: " + leafNodeIndex +
+                " -> " + positionMap.get(addressToLookUp));
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
@@ -114,11 +154,17 @@ public class AccessStrategyPath implements AccessStrategy {
         }
 
 //        Line 6 to 9 in pseudo code
-        byte[] res = retrieveDataOverwriteBlock(address, op, data, newLeafNodeIndex);
+        byte[] res = retrieveDataOverwriteBlock(address, op, data, newLeafNodeIndex, recursiveLookup, addressToLookUp);
         if (res == null) {
-            logger.error("Unable to retrieve data from address: " + address);
-            res = new byte[0];
+            logger.error("Something went wrong, when getting data from the block with address: " + address);
+            return null;
         }
+        if (Arrays.equals(res, new byte[0])) {
+            logger.error("Unable to retrieve data from address: " + addressToLookUp);
+            if (recursiveLookup)
+                res = Util.getByteArrayFromMap(Util.getDummyMap(address));
+        }
+
 
 //        Line 10 to 15 in pseudo code.
         boolean writeBack = writeBackPath(leafNodeIndex);
@@ -132,22 +178,22 @@ public class AccessStrategyPath implements AccessStrategy {
             logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
 
-        if (print) System.out.println("Returning data: " + Util.getShortDataString(res));
+        if (print) System.out.println(prefixString + "Returning data: " + Util.getShortDataString(res));
 
         return res;
     }
 
     private boolean readPathToStash(int leafNodeIndex) {
-        if (print) System.out.println("Read path");
+        if (print) System.out.println(prefixString + "Read path");
         boolean res = true;
         List<Integer> positionsToRead = new ArrayList<>();
         for (int l = 0; l < L; l++) {
             int nodeNumber = getNode(leafNodeIndex, l);
             int position = nodeNumber * bucketSize;
-            if (print) System.out.println("    Read node: " + nodeNumber);
+            if (print) System.out.println(prefixString + "    Read node: " + nodeNumber);
 
             for (int i = 0; i < bucketSize; i++)
-                positionsToRead.add(position + i);
+                positionsToRead.add(position + i + offset);
 
         }
 
@@ -164,8 +210,9 @@ public class AccessStrategyPath implements AccessStrategy {
             } else {
 
                 if (print) {
-                    System.out.println("    Found blocks: ");
-                    for (BlockPath b : blocksDecrypted) System.out.println("        " + b.toStringShort());
+                    System.out.println(prefixString + "    Found blocks: ");
+                    for (BlockPath b : blocksDecrypted)
+                        System.out.println(prefixString + "        " + b.toStringShort());
                 }
 
                 stash.addAll(blocksDecrypted);
@@ -181,29 +228,55 @@ public class AccessStrategyPath implements AccessStrategy {
     /**
      * As their might not be a block to overwrite, we keep track of whether or not any block has been overwritten
      *
+     * @param data if recursiveLookup is true, data contains the newLeafLookupIndex for the parent ORAM
      * @return the data the access must return at last
      */
-    private byte[] retrieveDataOverwriteBlock(int address, OperationType op, byte[] data, int newLeadNodeIndex) {
-        if (print) System.out.println("Retrieve data and overwrite block");
+    private byte[] retrieveDataOverwriteBlock(int address, OperationType op, byte[] data, int newLeafNodeIndex,
+                                              boolean recursiveLookup, int addressToLookUp) {
+        if (print) System.out.println(prefixString + "Retrieve data and overwrite block");
         boolean hasOverwrittenBlock = false;
-        byte[] endData = null;
+        byte[] endData = new byte[0];
         for (int i = 0; i < stash.size(); i++) {
-            if (stash.get(i).getAddress() == address) {
+            if (stash.get(i).getAddress() == addressToLookUp) {
                 endData = stash.get(i).getData();
-                if (print) System.out.println("    Retrieving end data: " + Util.getShortDataString(endData));
+                if (print)
+                    System.out.println(prefixString + "    Retrieving end data: " + Util.getShortDataString(endData));
                 if (op.equals(OperationType.WRITE)) {
-                    if (print) System.out.println("    Overwrites with new data");
-                    stash.set(i, new BlockPath(address, data, newLeadNodeIndex));
+                    if (print) System.out.println(prefixString + "    Overwrites with new data");
+                    if (recursiveLookup) {
+                        Map<Integer, Integer> map = Util.getMapFromByteArray(endData);
+
+                        if (map == null) {return null;}
+                        map.put(address, Util.byteArrayToLeInt(data));
+                        stash.set(i, new BlockPath(address, Util.getByteArrayFromMap(map), newLeafNodeIndex));
+                    } else {
+                        stash.set(i, new BlockPath(address, data, newLeafNodeIndex));
+                    }
                     hasOverwrittenBlock = true;
                 } else
-                    stash.get(i).setIndex(newLeadNodeIndex); // Update leaf node index, even for op = READ
+                    stash.get(i).setIndex(newLeafNodeIndex); // Update leaf node index, even for op = READ
                 break;
             }
         }
 
         if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock) {
-            stash.add(new BlockPath(address, data, newLeadNodeIndex));
-            if (print) System.out.println("    Adding new block to stash");
+            if (recursiveLookup) {
+//                Create new dummy map
+                Map<Integer, Integer> map = Util.getDummyMap(address);
+//                Add an input for the current address
+//                SecureRandom randomness= new SecureRandom();
+//                int randomLeafNodeIndex = randomness.nextInt(getNumberOfLeafsInNextLargerORAM());
+//                map.put(Util.leIntToByteArray(address), Util.leIntToByteArray(randomLeafNodeIndex));
+//                Add the map to the block, which is added to the stash
+                if (map == null)
+                    return null;
+                map.put(address, Util.byteArrayToLeInt(data));
+                stash.add(new BlockPath(address, Util.getByteArrayFromMap(map), newLeafNodeIndex));
+                if (print) System.out.println(prefixString + "    Adding new block to stash");
+            } else {
+                stash.add(new BlockPath(address, data, newLeafNodeIndex));
+                if (print) System.out.println(prefixString + "    Adding new block to stash");
+            }
         }
         if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
@@ -213,13 +286,24 @@ public class AccessStrategyPath implements AccessStrategy {
         return endData;
     }
 
+    private int getNumberOfLeafsInNextLargerORAM() {
+        double logOfCurrentSize = Math.log(size + 1) / Math.log(2);
+        double logOfNextSize = logOfCurrentSize + 4;
+        int nextSizePlusOne = ((int) Math.pow(2, logOfNextSize));
+
+        if (print)
+            System.out.println(prefixString + "Log of current size: " + logOfCurrentSize + ", log of next size: " + logOfNextSize + ", next size (plus 1): " + nextSizePlusOne);
+
+        return nextSizePlusOne / 2;
+    }
+
     private boolean writeBackPath(int leafNode) {
         if (print) {
-            System.out.println("Write back path");
-            System.out.println("    Stash:");
-            System.out.print("        ");
-            for (BlockPath b : stash) System.out.print(b.toStringShort() + ", ");
-            System.out.println(" ");
+            System.out.println(prefixString + "Write back path");
+            System.out.println(prefixString + "    Stash:");
+            System.out.print(prefixString + "        ");
+            for (BlockPath b : stash) System.out.print(prefixString + b.toStringShort() + ", ");
+            System.out.println(prefixString + " ");
         }
 
         List<Integer> addressesToWrite = new ArrayList<>();
@@ -227,34 +311,35 @@ public class AccessStrategyPath implements AccessStrategy {
         for (int l = L - 1; l >= 0; l--) {
             int nodeNumber = getNode(leafNode, l);
             int arrayPosition = nodeNumber * bucketSize;
-            if (print) System.out.println("    Node number: " + nodeNumber + ", array position: " + arrayPosition);
+            if (print)
+                System.out.println(prefixString + "    Node number: " + nodeNumber + ", array position: " + arrayPosition);
 
 //            Pick all the blocks from the stash which can be written to the current node
             List<BlockPath> blocksToWrite = getBlocksForNode(nodeNumber);
             if (print) {
-                System.out.println("    Blocks to write to node number: " + nodeNumber);
-                System.out.print("        ");
-                for (BlockPath b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
-                System.out.println(" ");
+                System.out.println(prefixString + "    Blocks to write to node number: " + nodeNumber);
+                System.out.print(prefixString + "        ");
+                for (BlockPath b : blocksToWrite) System.out.print(prefixString + b.toStringShort() + ", ");
+                System.out.println(prefixString + " ");
             }
 
 //            Make sure there are exactly Z blocks to write to the node
             blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite);
             blocksToWrite = permutationStrategy.permutePathBlocks(blocksToWrite);
             if (print) {
-                System.out.println("    Blocks actually written:");
-                System.out.print("        ");
-                for (BlockPath b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
-                System.out.println(" ");
+                System.out.println(prefixString + "    Blocks actually written:");
+                System.out.print(prefixString + "        ");
+                for (BlockPath b : blocksToWrite) System.out.print(prefixString + b.toStringShort() + ", ");
+                System.out.println(prefixString + " ");
             }
 
 //            Remove the blocks from the stash, before they are written to the node
             removeBlocksFromStash(blocksToWrite);
             if (print) {
-                System.out.println("    Stash:");
-                System.out.print("        ");
-                for (BlockPath b : stash) System.out.print(b.toStringShort() + ", ");
-                System.out.println(" ");
+                System.out.println(prefixString + "    Stash:");
+                System.out.print(prefixString + "        ");
+                for (BlockPath b : stash) System.out.print(prefixString + b.toStringShort() + ", ");
+                System.out.println(prefixString + " ");
             }
 
 //            Encrypts all pairs
@@ -264,7 +349,7 @@ public class AccessStrategyPath implements AccessStrategy {
                 return false;
             }
             for (int i = 0; i < blocksToWrite.size(); i++) {
-                addressesToWrite.add(arrayPosition + i);
+                addressesToWrite.add(arrayPosition + i + offset);
                 encryptedBlocksToWrite.add(encryptedBlocksToWriteTmp.get(i));
             }
         }
@@ -369,7 +454,7 @@ public class AccessStrategyPath implements AccessStrategy {
     public List<BlockPath> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks, boolean filterOutDummies) {
         List<BlockPath> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
-//            System.out.println("Decrypt block");
+//            System.out.println(prefixString +"Decrypt block");
             if (block == null) continue;
 //            Address
             byte[] addressBytes = encryptionStrategy.decrypt(block.getAddress(), secretKey);
@@ -392,24 +477,31 @@ public class AccessStrategyPath implements AccessStrategy {
             byte[] indexBytes = encryptionStrategy.decrypt(encryptedIndex, secretKey);
 
             if (data == null || indexBytes == null) {
-                Util.logAndPrint(logger, "Unable to decrypt a Path block");
+                Util.logAndPrint(logger, prefixString + "Unable to decrypt a Path block");
                 return null;
             }
 
             int index = Util.byteArrayToLeInt(indexBytes);
 
-//            System.out.println("    Encrypted data full " + Arrays.toString(encryptedDataFull));
-//            System.out.println("    Encrypted data full size " + encryptedDataFullLength);
-//            System.out.println("    End of data index " + endOfDataIndex);
-//            System.out.println("    Encrypted data " + Arrays.toString(encryptedData));
-//            System.out.println("    Encrypted index " + Arrays.toString(encryptedIndex));
-//            System.out.println("    Date " + Arrays.toString(data));
-//            System.out.println("    Index bytes " + Arrays.toString(indexBytes));
-//            System.out.println("    Index " + index);
+//            System.out.println(prefixString +"    Encrypted data full " + Arrays.toString(encryptedDataFull));
+//            System.out.println(prefixString +"    Encrypted data full size " + encryptedDataFullLength);
+//            System.out.println(prefixString +"    End of data index " + endOfDataIndex);
+//            System.out.println(prefixString +"    Encrypted data " + Arrays.toString(encryptedData));
+//            System.out.println(prefixString +"    Encrypted index " + Arrays.toString(encryptedIndex));
+//            System.out.println(prefixString +"    Date " + Arrays.toString(data));
+//            System.out.println(prefixString +"    Index bytes " + Arrays.toString(indexBytes));
+//            System.out.println(prefixString +"    Index " + index);
 
             res.add(new BlockPath(addressInt, data, index));
         }
         return res;
+    }
+
+    private Map<Integer, Integer> getPositionMap(int address, int newLeafNodeIndex) {
+        byte[] positionMapBytes = accessStrategy.access(OperationType.WRITE, address,
+                Util.leIntToByteArray(newLeafNodeIndex), true);
+
+        return Util.getMapFromByteArray(positionMapBytes);
     }
 
     public int getMaxStashSize() {

@@ -1,13 +1,18 @@
 package oram;
 
-import oram.block.*;
+import oram.block.Block;
+import oram.block.BlockEncrypted;
+import oram.block.BlockLookahead;
+import oram.block.BlockPath;
 import oram.encryption.EncryptionStrategy;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
@@ -20,6 +25,7 @@ import java.util.*;
  */
 
 public class Util {
+    private static final Logger logger = LogManager.getLogger("log");
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] getRandomByteArray(int length) {
@@ -117,7 +123,8 @@ public class Util {
         return Arrays.copyOf(array, i + 1);
     }
 
-    public static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access) {
+    public static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
+                                   String prefixString) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
@@ -127,11 +134,17 @@ public class Util {
 
         List<BlockPath> blockStandards = access.decryptBlockPaths(encrypted, false);
         BlockPath[] array1 = blockStandards.toArray(new BlockPath[array.length]);
-        return printBucket(array1, bucketSize, 0, 1, layers);
+        return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
     }
 
-    public static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers) {
+    public static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers,
+                                     String prefixString) {
         StringBuilder prefix = new StringBuilder();
+
+        double sizeMinusOne = Math.pow(2, maxLayers - 1) - 1;
+        if (index == sizeMinusOne + 1)
+            prefix.append(prefixString);
+
         for (int i = 1; i < layer; i++) {
             prefix.append("        ");
         }
@@ -148,21 +161,21 @@ public class Util {
             if (array.length > currentIndex)
                 builder.append(array[currentIndex].toStringShort());
 
-            builder.append("\n");
+            builder.append("\n").append(prefixString);
         }
 
-        if (index >= Math.pow(2, maxLayers - 1) - 1)
+        if (index >= sizeMinusOne)
             return builder.toString();
 
 
         String rightChild;
         String leftChild;
         if (index == 0) {
-            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers);
-            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers);
+            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers, prefixString);
+            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers, prefixString);
         } else {
-            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
-            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
+            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers, prefixString);
+            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers, prefixString);
         }
 
         builder.insert(0, rightChild);
@@ -362,5 +375,62 @@ public class Util {
             answer = scanner.nextLine();
         }
         return Integer.parseInt(answer);
+    }
+
+    public static Map<Integer, Integer> getMapFromByteArray(byte[] array) {
+        if (Arrays.equals(array, new byte[0])) return new HashMap<>();
+        Map<Integer, Integer> res = null;
+        ByteArrayInputStream bis = new ByteArrayInputStream(array);
+        try (ObjectInputStream ois = new ObjectInputStream(bis)) {
+            res = (Map<Integer, Integer>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            logger.error("Unable to get position map from byte array");
+            logger.error(e);
+            logger.debug("Stacktrace:", e);
+        }
+        return res;
+    }
+
+    public static Map<Integer, Integer> getDummyMap(int addressToInclude) {
+        Integer startAddress = null;
+        for (int i = 0; i < 17; i++) {
+            if (addressToInclude - i % 17 == 1) {
+                startAddress = addressToInclude - i;
+                break;
+            }
+        }
+
+        if (startAddress == null) {
+            logger.error("Unable to find start address for: " + addressToInclude);
+            return null;
+        }
+
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < 17; i++) {
+            map.put(startAddress + i, Constants.DUMMY_LEAF_NODE_INDEX);
+        }
+
+        return map;
+    }
+
+    public static byte[] getByteArrayFromMap(Map<Integer, Integer> map) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(map);
+            oos.flush();
+        } catch (IOException e) {
+            logger.error("Unable to create byte array for dummy position array");
+            logger.error(e);
+            logger.debug("Stacktrace:", e);
+            return null;
+        }
+        return bos.toByteArray();
+    }
+
+    public static String getEmptyStringOfLength(int length) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++)
+            builder.append(" ");
+        return builder.toString();
     }
 }

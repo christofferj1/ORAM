@@ -17,6 +17,15 @@ public class ORAMFactoryPath implements ORAMFactory {
     private int bucketSize;
     private int numberOfBlocks;
     private int numberOfRounds;
+    private int offset;
+
+    public ORAMFactoryPath() {
+        size = Util.getInteger("size");
+        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfRounds = Util.getInteger("number of rounds");
+        bucketSize = Util.getInteger("bucket size");
+        offset = Util.getInteger("offset");
+    }
 
     @Override
     public int getSize() {
@@ -24,10 +33,10 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     @Override
-    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory) {
-        if (accessStrategy == null)
-            accessStrategy = new AccessStrategyPath(size, bucketSize, secretKey, factory);
-        return accessStrategy;
+    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy) {
+        if (this.accessStrategy == null)
+            this.accessStrategy = new AccessStrategyPath(size, bucketSize, secretKey, factory, accessStrategy, offset);
+        return this.accessStrategy;
     }
 
     @Override
@@ -36,11 +45,8 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     @Override
-    public void setParameters() {
-        size = Util.getInteger("size");
-        numberOfBlocks = Util.getInteger("number of blocks");
-        numberOfRounds = Util.getInteger("number of rounds");
-        bucketSize = Util.getInteger("bucket size");
+    public int getOffSet() {
+        return offset;
     }
 
     @Override

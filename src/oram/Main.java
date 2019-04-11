@@ -36,8 +36,7 @@ public class Main {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        ORAMFactory oramFactory = getOramFactory();
-        oramFactory.setParameters();
+        ORAMFactory oramFactory = getOramFactory("main");
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
                 oramFactory.factorySizeParameter1());
 
@@ -54,7 +53,12 @@ public class Main {
         boolean pathORAMChosen = oramFactory instanceof ORAMFactoryPath;
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategy access = oramFactory.getAccessStrategy(key, factory);
+
+//        Create recursive ORAM
+        ORAMFactory oramFactory1 = getOramFactory("1");
+        AccessStrategy access1 = oramFactory1.getAccessStrategy(key, factory, null);
+
+        AccessStrategy access = oramFactory.getAccessStrategy(key, factory, access1);
         if (oramFactory instanceof ORAMFactoryLookahead)
             access.setup(blocks);
 
@@ -67,7 +71,8 @@ public class Main {
         StringBuilder resume = new StringBuilder(oramFactory.getInitString());
         Util.logAndPrint(logger, resume.toString());
 
-        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access);
+        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
+        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
@@ -85,8 +90,8 @@ public class Main {
                 data = null;
             }
 
-            byte[] res = access.access(op, address, data);
-            if (res == null) System.exit(-1);
+            byte[] res = access.access(op, address, data, false);
+            if (res == null) break;
 
 //            res = Util.removeTrailingZeroes(res);
 
@@ -114,7 +119,8 @@ public class Main {
                 System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
             }
             System.out.println(" ");
-            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access);
+            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
+            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {
@@ -145,9 +151,9 @@ public class Main {
         Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
     }
 
-    private static ORAMFactory getOramFactory() {
+    private static ORAMFactory getOramFactory(String name) {
         Scanner scanner = new Scanner(System.in);
-        Util.logAndPrint(logger, "Choose ORAM [l/p/t]");
+        Util.logAndPrint(logger, "Choose ORAM: " + name + " [l/p/t]");
         String answer = scanner.nextLine();
         while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
             System.out.println("Choose ORAM [l/p/t]");
@@ -167,10 +173,11 @@ public class Main {
         }
     }
 
-    private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com, AccessStrategyPath access) {
+    private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,
+                                            AccessStrategyPath access, int offset) {
         BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
         for (int j = 0; j < array.length; j++)
-            array[j] = com.read(j);
-        System.out.println(Util.printTree(array, bucketSize, access));
+            array[j] = com.read(j + offset);
+        System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(offset)));
     }
 }

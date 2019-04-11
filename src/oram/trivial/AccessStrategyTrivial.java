@@ -43,7 +43,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
         logger.info("Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 //        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 

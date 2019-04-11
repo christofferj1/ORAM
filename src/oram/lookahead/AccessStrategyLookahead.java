@@ -36,8 +36,8 @@ import static oram.Util.byteArrayToLeInt;
  */
 
 public class AccessStrategyLookahead implements AccessStrategy {
-    private final SecretKey secretKey;
     private final Logger logger = LogManager.getLogger("log");
+    private final SecretKey secretKey;
     private final int size;
     private final int matrixHeight; // Assumes to be equal to matrix width
     private final CommunicationStrategy communicationStrategy;
@@ -170,7 +170,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
 //        for (int i = 0; i <= size; i++) {
 //            if (i != 0)
 //                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));

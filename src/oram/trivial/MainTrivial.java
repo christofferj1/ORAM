@@ -70,7 +70,7 @@ public class MainTrivial {
                 data = null;
             }
 
-            byte[] res = access.access(op, address, data);
+            byte[] res = access.access(op, address, data, false);
             if (res == null)
                 break;
 

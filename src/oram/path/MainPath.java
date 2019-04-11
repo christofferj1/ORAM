@@ -45,7 +45,7 @@ public class MainPath {
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory);
+        AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory, null, 0);
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
@@ -71,7 +71,7 @@ public class MainPath {
                 data = null;
             }
 
-            byte[] res = access.access(op, address, data);
+            byte[] res = access.access(op, address, data, false);
 
             if (res == null)
                 break;
@@ -130,7 +130,7 @@ public class MainPath {
         BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j);
-        System.out.println(Util.printTree(array, bucketSize, access));
+        System.out.println(Util.printTree(array, bucketSize, access, ""));
     }
 
     private static String stringOf(String s, int number) {

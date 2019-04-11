@@ -12,7 +12,7 @@ import oram.factory.Factory;
 public interface ORAMFactory {
     int getSize();
 
-    AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory);
+    AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy);
 
     int getColumns();
 
@@ -28,7 +28,7 @@ public interface ORAMFactory {
 
     int getNumberOfBlocks();
 
-    void setParameters();
+    int getOffSet();
 
     String getInitString();
 
