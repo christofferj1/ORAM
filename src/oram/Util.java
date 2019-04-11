@@ -434,4 +434,34 @@ public class Util {
             builder.append(" ");
         return builder.toString();
     }
+
+    public static String chooseORAMType(String string) {
+        Scanner scanner = new Scanner(System.in);
+        Util.logAndPrint(logger, string);
+        String answer = scanner.nextLine();
+        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
+            System.out.println("Choose ORAM [l/p/t]");
+            answer = scanner.nextLine();
+        }
+        logger.info(answer);
+        return answer;
+    }
+
+    public static int getLevelSize(int level, int numberOfORAM) {
+        switch (numberOfORAM - level) {
+            case 0:
+                return Constants.SIZE_1;
+            case 1:
+                return Constants.SIZE_2;
+            case 2:
+                return Constants.SIZE_3;
+            case 3:
+                return Constants.SIZE_4;
+            case 4:
+                return Constants.SIZE_5;
+            default:
+                logger.error("Can't get size for level: " + level + ", and number og ORAMs: " + numberOfORAM);
+                return -42;
+        }
+    }
 }

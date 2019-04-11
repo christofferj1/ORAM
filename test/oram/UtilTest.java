@@ -257,4 +257,27 @@ public class UtilTest {
             assertThat("Map including: " + i, tmp, is(map));
         }
     }
+
+    @Test
+    public void shouldBeAbleToComputeLevelSize() {
+        assertThat(Util.getLevelSize(0, 4), is(Constants.SIZE_5));
+        assertThat(Util.getLevelSize(1, 4), is(Constants.SIZE_4));
+        assertThat(Util.getLevelSize(2, 4), is(Constants.SIZE_3));
+        assertThat(Util.getLevelSize(3, 4), is(Constants.SIZE_2));
+        assertThat(Util.getLevelSize(4, 4), is(Constants.SIZE_1));
+
+        assertThat(Util.getLevelSize(0, 3), is(Constants.SIZE_4));
+        assertThat(Util.getLevelSize(1, 3), is(Constants.SIZE_3));
+        assertThat(Util.getLevelSize(2, 3), is(Constants.SIZE_2));
+        assertThat(Util.getLevelSize(3, 3), is(Constants.SIZE_1));
+
+        assertThat(Util.getLevelSize(0, 2), is(Constants.SIZE_3));
+        assertThat(Util.getLevelSize(1, 2), is(Constants.SIZE_2));
+        assertThat(Util.getLevelSize(2, 2), is(Constants.SIZE_1));
+
+        assertThat(Util.getLevelSize(0, 1), is(Constants.SIZE_2));
+        assertThat(Util.getLevelSize(1, 1), is(Constants.SIZE_1));
+
+        assertThat(Util.getLevelSize(0, 0), is(Constants.SIZE_1));
+    }
 }

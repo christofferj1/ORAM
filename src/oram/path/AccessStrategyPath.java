@@ -42,7 +42,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private int maxStashSizeBetweenAccesses;
     private List<BlockPath> stash;
     private Map<Integer, Integer> positionMap;
-    private boolean print = true;
+    private boolean print = false;
     private int dummyCounter = 0;
     private AccessStrategy accessStrategy;
     private String prefixString;
@@ -243,7 +243,7 @@ public class AccessStrategyPath implements AccessStrategy {
                     System.out.println(prefixString + "    Retrieving end data: " + Util.getShortDataString(endData));
                 if (op.equals(OperationType.WRITE)) {
                     if (print) System.out.println(prefixString + "    Overwrites with new data");
-                    if (recursiveLookup) {
+                    if (recursiveLookup) { // TODO Build this in a module, to use other places (e.g. in Util)
                         Map<Integer, Integer> map = Util.getMapFromByteArray(endData);
 
                         if (map == null) {return null;}

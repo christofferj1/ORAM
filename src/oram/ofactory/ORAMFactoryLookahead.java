@@ -18,6 +18,12 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     private int rows;
     private int columns;
 
+    public ORAMFactoryLookahead(int size) {
+        switch (size) {
+
+        }
+    }
+
     public ORAMFactoryLookahead() {
         size = Util.getInteger("size");
         numberOfBlocks = Util.getInteger("number of blocks");
@@ -65,6 +71,11 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     @Override
     public int getNumberOfRounds() {
         return numberOfRounds;
+    }
+
+    @Override
+    public void setNumberOfRounds(int numberOfRounds) {
+        this.numberOfRounds = numberOfRounds;
     }
 
     @Override

@@ -51,7 +51,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
         List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
 
         byte[] res = blocks.get(address).getData();
-        if (op.equals(OperationType.WRITE))
+        if (op.equals(OperationType.WRITE)) // TODO Build this in a module, to use other places (e.g. in Util)
             blocks.get(address).setData(data);
 
         List<BlockEncrypted> blocksToWrite = encryptBlocks(blocks);

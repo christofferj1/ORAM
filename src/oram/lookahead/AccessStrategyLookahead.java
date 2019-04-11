@@ -269,7 +269,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Save data and overwrite if operation is a write
         byte[] res = block.getData();
-        if (op.equals(OperationType.WRITE)) {block.setData(data);}
+        if (op.equals(OperationType.WRITE)) {block.setData(data);} // TODO Build this in a module, to use other places (e.g. in Util)
 
 //        Handle the switch around of the blocks
         BlockLookahead blockToWriteBackToMatrix;

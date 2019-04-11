@@ -7,7 +7,7 @@ import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
-import oram.factory.FactoryCustom;
+import oram.factory.FactoryImpl;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookahead;
 import oram.ofactory.ORAMFactoryPath;
@@ -17,12 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-
-import static oram.factory.FactoryCustom.*;
+import java.util.*;
 
 /**
  * <p> ORAM <br>
@@ -36,11 +31,14 @@ public class Main {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
 
-        ORAMFactory oramFactory = getOramFactory("main");
-        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
-                oramFactory.factorySizeParameter1());
 
-        int numberOfBlocks = oramFactory.getNumberOfBlocks();
+//        ORAMFactory oramFactory = getOramFactory("main");
+//        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
+//                oramFactory.factorySizeParameter1());
+        List<ORAMFactory> oramFactories = getORAMFactories();
+        Factory factory = new FactoryImpl();
+
+        int numberOfBlocks = oramFactories.get(0).getNumberOfBlocks();
 
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
@@ -50,29 +48,42 @@ public class Main {
             blockArray[i] = block;
         }
 
-        boolean pathORAMChosen = oramFactory instanceof ORAMFactoryPath;
+        boolean pathORAMChosen = oramFactories.get(0) instanceof ORAMFactoryPath;
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
 
 //        Create recursive ORAM
-        ORAMFactory oramFactory1 = getOramFactory("1");
-        AccessStrategy access1 = oramFactory1.getAccessStrategy(key, factory, null);
+//        ORAMFactory oramFactory2 = getOramFactory("2");
+//        AccessStrategy access2 = oramFactory2.getAccessStrategy(key, factory, null);
+//
+//        ORAMFactory oramFactory1 = getOramFactory("1");
+//        AccessStrategy access1 = oramFactory1.getAccessStrategy(key, factory, access2);
+//
+//        AccessStrategy access = oramFactory.getAccessStrategy(key, factory, access1);
+//        if (oramFactory instanceof ORAMFactoryLookahead)
+//            access.setup(blocks);
 
-        AccessStrategy access = oramFactory.getAccessStrategy(key, factory, access1);
-        if (oramFactory instanceof ORAMFactoryLookahead)
-            access.setup(blocks);
+        List<AccessStrategy> accesses = getAccessStrategies(oramFactories, key, factory);
+        for (AccessStrategy a : accesses) {
+            if (a instanceof AccessStrategyPath)
+                ((AccessStrategyPath) a).setup();
+        }
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
-        int numberOfRounds = oramFactory.getNumberOfRounds();
+        int numberOfRounds = oramFactories.get(0).getNumberOfRounds();
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
-        StringBuilder resume = new StringBuilder(oramFactory.getInitString());
+        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
         Util.logAndPrint(logger, resume.toString());
 
-        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
-        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
+        for (int j = 0; j < oramFactories.size(); j++) {
+            if (accesses.get(j) instanceof AccessStrategyPath)
+                printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
+        }
+//        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
+//        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
@@ -90,7 +101,7 @@ public class Main {
                 data = null;
             }
 
-            byte[] res = access.access(op, address, data, false);
+            byte[] res = accesses.get(0).access(op, address, data, false);
             if (res == null) break;
 
 //            res = Util.removeTrailingZeroes(res);
@@ -119,8 +130,12 @@ public class Main {
                 System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
             }
             System.out.println(" ");
-            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
-            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
+            for (int j = 0; j < oramFactories.size(); j++) {
+                if (accesses.get(j) instanceof AccessStrategyPath)
+                    printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
+            }
+//            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
+//            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {
@@ -131,7 +146,7 @@ public class Main {
         }
 
         if (pathORAMChosen)
-            Util.logAndPrint(logger, "Max stash size: " + oramFactory.getMaxStashSize() + ", max stash size between accesses: " + oramFactory.getMaxStashSizeBetweenAccesses());
+            Util.logAndPrint(logger, "Max stash size: " + oramFactories.get(0).getMaxStashSize() + ", max stash size between accesses: " + oramFactories.get(0).getMaxStashSizeBetweenAccesses());
 
         Util.logAndPrint(logger, "Overwriting with dummy blocks");
         if (communicationStrategy.sendEndSignal())
@@ -171,6 +186,55 @@ public class Main {
                 System.exit(-1);
                 return null;
         }
+    }
+
+    private static List<ORAMFactory> getORAMFactories() {
+        int numberOfORAMS = Util.getInteger("number of ORAMs");
+        if (numberOfORAMS == 1)
+            return Collections.singletonList(getOramFactory("ONLY ORAM"));
+
+        if (numberOfORAMS > 5) {
+            System.out.println("Can't create higher than 5 recursive ORAMs");
+            System.exit(-1);
+        }
+        int offset = 0;
+        List<ORAMFactory> factories = new ArrayList<>();
+        for (int i = 0; i < numberOfORAMS; i++) {
+            int levelSize = Util.getLevelSize(i, numberOfORAMS);
+            switch (Util.chooseORAMType("ORAM number " + i)) {
+                case "l":
+                    factories.add(new ORAMFactoryLookahead());
+                    offset += levelSize + 2 * Math.sqrt(levelSize);
+                    break;
+                case "p":
+                    factories.add(new ORAMFactoryPath(levelSize, offset));
+                    offset += (levelSize - 1) * Constants.DEFAULT_BUCKET_SIZE;
+                    break;
+                default:
+                    factories.add(new ORAMFactoryTrivial()); // TODO: if this is chosen, the rest should not be there (we can return from here)
+                    offset += levelSize + 1;
+            }
+        }
+        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
+        return factories;
+    }
+
+    private static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
+        List<AccessStrategy> res = new ArrayList<>();
+        for (int i = factories.size() - 1; i >= 0; i++) {
+            ORAMFactory oramFactory = factories.get(i);
+            if (i == factories.size() - 1)
+                res.add(oramFactory.getAccessStrategy(key, factory, null));
+            else
+                res.add(oramFactory.getAccessStrategy(key, factory, res.get(i + 1)));
+        }
+        return res;
+    }
+
+    private static ORAMFactory createORAMFactorForRecusion(int i, Scanner scanner) {
+
+        Util.chooseORAMType("Choose ORAM kind for ORAM: " + i + ", [l/p/t]");
+        return new ORAMFactoryTrivial();
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,

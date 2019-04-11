@@ -63,6 +63,11 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     }
 
     @Override
+    public void setNumberOfRounds(int numberOfRounds) {
+        this.numberOfRounds = numberOfRounds;
+    }
+
+    @Override
     public int getColumns() {
         return 0;
     }

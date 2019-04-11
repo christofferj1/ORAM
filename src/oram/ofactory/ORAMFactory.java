@@ -26,6 +26,8 @@ public interface ORAMFactory {
 
     int getNumberOfRounds();
 
+    void setNumberOfRounds(int numberOfRounds);
+
     int getNumberOfBlocks();
 
     int getOffSet();

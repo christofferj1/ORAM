@@ -5,6 +5,8 @@ import oram.Util;
 import oram.factory.Factory;
 import oram.path.AccessStrategyPath;
 
+import static oram.Constants.DEFAULT_BUCKET_SIZE;
+
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 28-03-2019. <br>
@@ -12,12 +14,19 @@ import oram.path.AccessStrategyPath;
  */
 
 public class ORAMFactoryPath implements ORAMFactory {
-    private AccessStrategyPath accessStrategy;
+        private AccessStrategyPath accessStrategy;
     private int size;
     private int bucketSize;
     private int numberOfBlocks;
     private int numberOfRounds;
     private int offset;
+
+    public ORAMFactoryPath(int size, int offset) {
+        this.offset = offset;
+        numberOfBlocks = size;
+        this.size = size - 1;
+        bucketSize = DEFAULT_BUCKET_SIZE;
+    }
 
     public ORAMFactoryPath() {
         size = Util.getInteger("size");
@@ -68,6 +77,11 @@ public class ORAMFactoryPath implements ORAMFactory {
     @Override
     public int getNumberOfRounds() {
         return numberOfRounds;
+    }
+
+    @Override
+    public void setNumberOfRounds(int numberOfRounds) {
+        this.numberOfRounds = numberOfRounds;
     }
 
     @Override
