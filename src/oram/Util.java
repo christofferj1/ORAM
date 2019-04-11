@@ -141,15 +141,14 @@ public class Util {
                                      String prefixString) {
         StringBuilder prefix = new StringBuilder();
 
-        double sizeMinusOne = Math.pow(2, maxLayers - 1) - 1;
-        if (index == sizeMinusOne + 1)
-            prefix.append(prefixString);
-
-        for (int i = 1; i < layer; i++) {
+        for (int i = 1; i < layer; i++)
             prefix.append("        ");
-        }
 
         StringBuilder builder = new StringBuilder();
+        double sizeMinusOne = Math.pow(2, maxLayers - 1) - 1;
+        if (index == sizeMinusOne + 1)
+            builder.append(prefixString);
+
         for (int i = 0; i < bucketSize; i++) {
             int firstIndexInBucket = index * bucketSize;
             int currentIndex = firstIndexInBucket + i;
@@ -378,6 +377,7 @@ public class Util {
     }
 
     public static Map<Integer, Integer> getMapFromByteArray(byte[] array) {
+        if (array == null) return null;
         if (Arrays.equals(array, new byte[0])) return new HashMap<>();
         Map<Integer, Integer> res = null;
         ByteArrayInputStream bis = new ByteArrayInputStream(array);
@@ -394,7 +394,8 @@ public class Util {
     public static Map<Integer, Integer> getDummyMap(int addressToInclude) {
         Integer startAddress = null;
         for (int i = 0; i < 17; i++) {
-            if (addressToInclude - i % 17 == 1) {
+            int mod17 = (addressToInclude - i) % 17;
+            if (mod17 == 1) {
                 startAddress = addressToInclude - i;
                 break;
             }

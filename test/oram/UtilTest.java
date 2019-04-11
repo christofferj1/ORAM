@@ -5,6 +5,9 @@ import oram.block.BlockStandard;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -230,5 +233,28 @@ public class UtilTest {
                         "                 3: Block{add=[], data=[   0,   0,   0]}\n" +
                         "                    Block{add=[], data=[   0,   0,   0]}\n";
         assertThat(Util.printBucketEncrypted(blocks, 2, 0, 1, 3), is(string));
+    }
+
+    @Test
+    public void shouldBeAbleToCreateDummyMap() {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 1; i <= 17; i++)
+            map.put(i, -42);
+
+        for (int i = 1; i <= 17; i++) {
+            Map<Integer, Integer> tmp = Util.getDummyMap(i);
+            assertThat("Map including: " + i, tmp, is(map));
+        }
+
+        map = new HashMap<>();
+        int newStart = 17 * 4;
+        for (int i = 1; i <= 17; i++) {
+            map.put(i + newStart, -42);
+        }
+
+        for (int i = newStart + 1; i <= newStart + 17; i++) {
+            Map<Integer, Integer> tmp = Util.getDummyMap(i);
+            assertThat("Map including: " + i, tmp, is(map));
+        }
     }
 }

@@ -178,6 +178,6 @@ public class Main {
         BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j + offset);
-        System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(offset)));
+        System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
     }
 }

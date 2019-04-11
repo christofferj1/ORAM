@@ -62,7 +62,7 @@ public class AccessStrategyPath implements AccessStrategy {
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
-        prefixString = Util.getEmptyStringOfLength(offset);
+        prefixString = Util.getEmptyStringOfLength(15);
 
         if (accessStrategy != null)
             this.accessStrategy = accessStrategy;
@@ -125,7 +125,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
             if (print) {
                 System.out.println(prefixString + "Access op: " + op.toString() + ", address: " + address + ", data: " + Util.getShortDataString(data));
-                System.out.println(prefixString + "MAP BEFORE");
+                System.out.print(prefixString + "MAP AFTER\n" + prefixString);
                 for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
                     System.out.print(prefixString + StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
                             StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
@@ -134,17 +134,17 @@ public class AccessStrategyPath implements AccessStrategy {
             positionMap.put(addressToLookUp, newLeafNodeIndex);
 
             if (print) {
-                System.out.println(prefixString + "MAP AFTER");
+                System.out.print(prefixString + "MAP AFTER\n" + prefixString);
                 for (Map.Entry<Integer, Integer> entry : positionMap.entrySet())
-                    System.out.print(prefixString + StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
+                    System.out.print(StringUtils.leftPad(String.valueOf(entry.getKey()), 2) + " -> " +
                             StringUtils.leftPad(String.valueOf(entry.getValue()), 2) + ", ");
                 System.out.println(prefixString + " ");
                 System.out.println(prefixString + "Leaf node changed from: " + leafNodeIndex + " to: " + positionMap.get(addressToLookUp));
             }
         }
 
-        logger.info("Access op: " + op.toString() + ", address: " + addressToLookUp + ", leaf node: " + leafNodeIndex +
-                " -> " + positionMap.get(addressToLookUp));
+        Util.logAndPrint(logger, prefixString + "Access op: " + op.toString() + ", address: " + addressToLookUp +
+                ", leaf node: " + leafNodeIndex + " -> " + newLeafNodeIndex);
 
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
@@ -248,9 +248,9 @@ public class AccessStrategyPath implements AccessStrategy {
 
                         if (map == null) {return null;}
                         map.put(address, Util.byteArrayToLeInt(data));
-                        stash.set(i, new BlockPath(address, Util.getByteArrayFromMap(map), newLeafNodeIndex));
+                        stash.set(i, new BlockPath(addressToLookUp, Util.getByteArrayFromMap(map), newLeafNodeIndex));
                     } else {
-                        stash.set(i, new BlockPath(address, data, newLeafNodeIndex));
+                        stash.set(i, new BlockPath(addressToLookUp, data, newLeafNodeIndex));
                     }
                     hasOverwrittenBlock = true;
                 } else
@@ -271,10 +271,10 @@ public class AccessStrategyPath implements AccessStrategy {
                 if (map == null)
                     return null;
                 map.put(address, Util.byteArrayToLeInt(data));
-                stash.add(new BlockPath(address, Util.getByteArrayFromMap(map), newLeafNodeIndex));
+                stash.add(new BlockPath(addressToLookUp, Util.getByteArrayFromMap(map), newLeafNodeIndex));
                 if (print) System.out.println(prefixString + "    Adding new block to stash");
             } else {
-                stash.add(new BlockPath(address, data, newLeafNodeIndex));
+                stash.add(new BlockPath(addressToLookUp, data, newLeafNodeIndex));
                 if (print) System.out.println(prefixString + "    Adding new block to stash");
             }
         }
@@ -302,7 +302,7 @@ public class AccessStrategyPath implements AccessStrategy {
             System.out.println(prefixString + "Write back path");
             System.out.println(prefixString + "    Stash:");
             System.out.print(prefixString + "        ");
-            for (BlockPath b : stash) System.out.print(prefixString + b.toStringShort() + ", ");
+            for (BlockPath b : stash) System.out.print(b.toStringShort() + ", ");
             System.out.println(prefixString + " ");
         }
 
@@ -319,7 +319,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (print) {
                 System.out.println(prefixString + "    Blocks to write to node number: " + nodeNumber);
                 System.out.print(prefixString + "        ");
-                for (BlockPath b : blocksToWrite) System.out.print(prefixString + b.toStringShort() + ", ");
+                for (BlockPath b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
                 System.out.println(prefixString + " ");
             }
 
@@ -329,7 +329,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (print) {
                 System.out.println(prefixString + "    Blocks actually written:");
                 System.out.print(prefixString + "        ");
-                for (BlockPath b : blocksToWrite) System.out.print(prefixString + b.toStringShort() + ", ");
+                for (BlockPath b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
                 System.out.println(prefixString + " ");
             }
 
@@ -338,7 +338,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (print) {
                 System.out.println(prefixString + "    Stash:");
                 System.out.print(prefixString + "        ");
-                for (BlockPath b : stash) System.out.print(prefixString + b.toStringShort() + ", ");
+                for (BlockPath b : stash) System.out.print(b.toStringShort() + ", ");
                 System.out.println(prefixString + " ");
             }
 
