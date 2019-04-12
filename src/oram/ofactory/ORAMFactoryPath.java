@@ -42,9 +42,11 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     @Override
-    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy) {
+    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy,
+                                            int prefixSize) {
         if (this.accessStrategy == null)
-            this.accessStrategy = new AccessStrategyPath(size, bucketSize, secretKey, factory, accessStrategy, offset);
+            this.accessStrategy = new AccessStrategyPath(size, bucketSize, secretKey, factory, accessStrategy, offset,
+                    prefixSize);
         return this.accessStrategy;
     }
 

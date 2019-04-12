@@ -45,7 +45,7 @@ public class MainPath {
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory, null, 0);
+        AccessStrategyPath access = new AccessStrategyPath(size, bucketSize, key, factory, null, 0, 0);
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();

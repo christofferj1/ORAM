@@ -8,6 +8,7 @@ import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
 import oram.factory.FactoryImpl;
+import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookahead;
 import oram.ofactory.ORAMFactoryPath;
@@ -65,8 +66,8 @@ public class Main {
 
         List<AccessStrategy> accesses = getAccessStrategies(oramFactories, key, factory);
         for (AccessStrategy a : accesses) {
-            if (a instanceof AccessStrategyPath)
-                ((AccessStrategyPath) a).setup();
+            if (a instanceof AccessStrategyLookahead)
+                a.setup(blocks); // TODO
         }
 
         SecureRandom randomness = new SecureRandom();
@@ -75,13 +76,14 @@ public class Main {
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
-        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
-        Util.logAndPrint(logger, resume.toString());
+//        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
+//        Util.logAndPrint(logger, resume.toString());
+        StringBuilder resume = initializeStringBuilder(oramFactories);
 
-        for (int j = 0; j < oramFactories.size(); j++) {
-            if (accesses.get(j) instanceof AccessStrategyPath)
-                printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
-        }
+//        for (int j = 0; j < oramFactories.size(); j++) {
+//            if (accesses.get(j) instanceof AccessStrategyPath)
+//                printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
+//        }
 //        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
 //        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
@@ -124,16 +126,16 @@ public class Main {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
 
-            System.out.println("Block array");
-            for (int j = 0; j < blockArray.length; j++) {
-                BlockStandard b = blockArray[j];
-                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
-            }
+//            System.out.println("Block array");
+//            for (int j = 0; j < blockArray.length; j++) {
+//                BlockStandard b = blockArray[j];
+//                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
+//            }
             System.out.println(" ");
-            for (int j = 0; j < oramFactories.size(); j++) {
-                if (accesses.get(j) instanceof AccessStrategyPath)
-                    printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
-            }
+//            for (int j = 0; j < oramFactories.size(); j++) {
+//                if (accesses.get(j) instanceof AccessStrategyPath)
+//                    printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
+//            }
 //            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
 //            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
@@ -200,7 +202,7 @@ public class Main {
         int offset = 0;
         List<ORAMFactory> factories = new ArrayList<>();
         for (int i = 0; i < numberOfORAMS; i++) {
-            int levelSize = Util.getLevelSize(i, numberOfORAMS);
+            int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
             switch (Util.chooseORAMType("ORAM number " + i)) {
                 case "l":
                     factories.add(new ORAMFactoryLookahead());
@@ -220,15 +222,16 @@ public class Main {
     }
 
     private static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
-        List<AccessStrategy> res = new ArrayList<>();
-        for (int i = factories.size() - 1; i >= 0; i++) {
+        AccessStrategy[] res = new AccessStrategy[factories.size()];
+        for (int i = factories.size() - 1; i >= 0; i--) {
             ORAMFactory oramFactory = factories.get(i);
+            int prefixSize = i * 10;
             if (i == factories.size() - 1)
-                res.add(oramFactory.getAccessStrategy(key, factory, null));
+                res[i] = oramFactory.getAccessStrategy(key, factory, null, prefixSize);
             else
-                res.add(oramFactory.getAccessStrategy(key, factory, res.get(i + 1)));
+                res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
         }
-        return res;
+        return new ArrayList<>(Arrays.asList(res));
     }
 
     private static ORAMFactory createORAMFactorForRecusion(int i, Scanner scanner) {
@@ -243,5 +246,15 @@ public class Main {
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j + offset);
         System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
+    }
+
+    private static StringBuilder initializeStringBuilder(List<ORAMFactory> factories) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < factories.size(); i++) {
+            String string = Util.getEmptyStringOfLength(i * 5) + factories.get(i).getInitString();
+            builder.append(string).append("\n");
+            Util.logAndPrint(logger, string);
+        }
+        return builder;
     }
 }

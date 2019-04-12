@@ -39,7 +39,7 @@ public class AccessStrategyPathTest {
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
         byte[] key = "Some key 0".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         assertThat(accessStrategy.getNode(0, 2), is(3));
@@ -62,7 +62,7 @@ public class AccessStrategyPathTest {
     public void shouldCalculateTheRightNodeIndexFor15Blocks() {
         byte[] key = "Some key 1".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         assertThat(accessStrategy.getNode(0, 3), is(7));
@@ -90,7 +90,7 @@ public class AccessStrategyPathTest {
     public void shouldFindTheRightSubTreePositionsSize7() {
         byte[] key = "Some key 2".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         assertThat(accessStrategy.getSubTreeNodes(3), is(Collections.singletonList(0)));
@@ -108,7 +108,7 @@ public class AccessStrategyPathTest {
     public void shouldFindTheRightSubTreePositionsSize15() {
         byte[] key = "Some key 3".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(15, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         assertThat(accessStrategy.getSubTreeNodes(7), is(Collections.singletonList(0)));
@@ -135,7 +135,7 @@ public class AccessStrategyPathTest {
     public void shouldBeAbleToFillInBlocks() {
         byte[] key = "Some key 4".getBytes();
         FactoryStub factoryStub = new FactoryStub(new CommunicationStrategyStub(7, BUCKET_SIZE));
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes(), false);
@@ -161,7 +161,7 @@ public class AccessStrategyPathTest {
         byte[] key = "Some key 5".getBytes();
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, BUCKET_SIZE);
         FactoryStub factoryStub = new FactoryStub(communicationStrategyStub);
-        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0);
+        AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes(), false);
@@ -292,7 +292,7 @@ public class AccessStrategyPathTest {
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, 1);
         FactoryStub factory = new FactoryStub(communicationStrategyStub);
         factory.setEncryptionStrategy(encryptionStrategy);
-        AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory, null, 0);
+        AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory, null, 0, 0);
 
         List<BlockPath> res = access.decryptBlockPaths(encryptedList, true);
         assertThat(res, hasSize(3));

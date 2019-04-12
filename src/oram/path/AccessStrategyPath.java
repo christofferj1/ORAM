@@ -48,7 +48,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private String prefixString;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory, AccessStrategy accessStrategy,
-                              int offset) {
+                              int offset, int prefixSize) {
         this.size = size;
         this.bucketSize = bucketSize;
         this.offset = offset;
@@ -62,7 +62,7 @@ public class AccessStrategyPath implements AccessStrategy {
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
-        prefixString = Util.getEmptyStringOfLength(15);
+        prefixString = Util.getEmptyStringOfLength(prefixSize);
 
         if (accessStrategy != null)
             this.accessStrategy = accessStrategy;
@@ -90,7 +90,7 @@ public class AccessStrategyPath implements AccessStrategy {
     @Override
     public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
         if (data != null && data.length > Constants.BLOCK_SIZE) {
-            logger.error("Accessed with data length: " + data.length);
+            logger.error(prefixString +"Accessed with data length: " + data.length);
         }
 
         int addressToLookUp = address;
@@ -108,10 +108,10 @@ public class AccessStrategyPath implements AccessStrategy {
             if (positionMap == null)
                 return null;
 
-            leafNodeIndex = positionMap.getOrDefault(address, null);
+            leafNodeIndex = positionMap.getOrDefault(addressToLookUp, null);
 
             if (leafNodeIndex == null) {
-                logger.error("Unable to look up address: " + address);
+                logger.error(prefixString + "Unable to look up address: " + address);
                 return null;
             } else if (leafNodeIndex == DUMMY_LEAF_NODE_INDEX)
                 leafNodeIndex = randomness.nextInt((int) Math.pow(2, L - 1));
@@ -149,18 +149,18 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Line 3 to 5 in pseudo code.
         boolean readPath = readPathToStash(leafNodeIndex);
         if (!readPath) {
-            logger.error("Unable to read path doing access");
+            logger.error(prefixString + "Unable to read path doing access");
             return null;
         }
 
 //        Line 6 to 9 in pseudo code
         byte[] res = retrieveDataOverwriteBlock(address, op, data, newLeafNodeIndex, recursiveLookup, addressToLookUp);
         if (res == null) {
-            logger.error("Something went wrong, when getting data from the block with address: " + address);
+            logger.error(prefixString +"Something went wrong, when getting data from the block with address: " + address);
             return null;
         }
         if (Arrays.equals(res, new byte[0])) {
-            logger.error("Unable to retrieve data from address: " + addressToLookUp);
+            logger.error(prefixString +"Unable to retrieve data from address: " + addressToLookUp + (recursiveLookup ? ", create dummy lookup map" : ""));
             if (recursiveLookup)
                 res = Util.getByteArrayFromMap(Util.getDummyMap(address));
         }
@@ -169,13 +169,13 @@ public class AccessStrategyPath implements AccessStrategy {
 //        Line 10 to 15 in pseudo code.
         boolean writeBack = writeBackPath(leafNodeIndex);
         if (!writeBack) {
-            logger.error("Unable to write back path with doing access");
+            logger.error(prefixString +"Unable to write back path with doing access");
             return null;
         }
 
         if (stash.size() > maxStashSizeBetweenAccesses) {
             maxStashSizeBetweenAccesses = stash.size();
-            logger.info("Max stash size between accesses: " + maxStashSizeBetweenAccesses);
+            logger.info(prefixString +"Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
 
         if (print) System.out.println(prefixString + "Returning data: " + Util.getShortDataString(res));
@@ -200,12 +200,12 @@ public class AccessStrategyPath implements AccessStrategy {
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(positionsToRead);
 
         if (encryptedBlocks == null || bucketSize * L != encryptedBlocks.size()) {
-            logger.error("Did not fetch the right amount of blocks");
+            logger.error(prefixString +"Did not fetch the right amount of blocks");
             res = false;
         } else {
             List<BlockPath> blocksDecrypted = decryptBlockPaths(encryptedBlocks, true);
             if (blocksDecrypted == null) {
-                logger.error("Unable to decrypt path of blocks");
+                logger.error(prefixString +"Unable to decrypt path of blocks");
                 res = false;
             } else {
 
@@ -218,7 +218,7 @@ public class AccessStrategyPath implements AccessStrategy {
                 stash.addAll(blocksDecrypted);
                 if (stash.size() > maxStashSize) {
                     maxStashSize = stash.size();
-                    logger.info("Max stash size: " + maxStashSize);
+                    logger.info(prefixString +"Max stash size: " + maxStashSize);
                 }
             }
         }
@@ -280,7 +280,7 @@ public class AccessStrategyPath implements AccessStrategy {
         }
         if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
-            logger.info("Max stash size: " + maxStashSize);
+            logger.info(prefixString +"Max stash size: " + maxStashSize);
         }
 
         return endData;
@@ -345,7 +345,7 @@ public class AccessStrategyPath implements AccessStrategy {
 //            Encrypts all pairs
             List<BlockEncrypted> encryptedBlocksToWriteTmp = encryptBucketOfBlocks(blocksToWrite);
             if (encryptedBlocksToWriteTmp == null) {
-                logger.error("Returned null when trying to encrypt blocks");
+                logger.error(prefixString +"Returned null when trying to encrypt blocks");
                 return false;
             }
             for (int i = 0; i < blocksToWrite.size(); i++) {
@@ -355,7 +355,7 @@ public class AccessStrategyPath implements AccessStrategy {
         }
 
         if (!communicationStrategy.writeArray(addressesToWrite, encryptedBlocksToWrite)) {
-            logger.error("Writing returned unsuccessful");
+            logger.error(prefixString +"Writing returned unsuccessful");
             return false;
         }
         return true;
@@ -407,7 +407,7 @@ public class AccessStrategyPath implements AccessStrategy {
             byte[] indexCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getIndex()), secretKey);
             byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
             if (addressCipher == null || indexCipher == null || dataCipher == null) {
-                logger.error("Unable to encrypt address: " + block.getAddress() + " or data");
+                logger.error(prefixString +"Unable to encrypt address: " + block.getAddress() + " or data");
                 return null;
             }
             byte[] encryptedDataPlus = ArrayUtils.addAll(dataCipher, indexCipher);

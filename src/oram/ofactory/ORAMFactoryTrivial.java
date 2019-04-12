@@ -28,7 +28,7 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     }
 
     @Override
-    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy) {
+    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy, int prefixSize) {
         return new AccessStrategyTrivial(size, secretKey, factory);
     }
 
