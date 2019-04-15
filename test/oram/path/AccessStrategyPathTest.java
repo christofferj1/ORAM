@@ -138,21 +138,21 @@ public class AccessStrategyPathTest {
         AccessStrategyPath accessStrategy = new AccessStrategyPath(7, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
-        accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes(), false);
-        accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes(), false);
-        accessStrategy.access(OperationType.WRITE, 5, "Test 3".getBytes(), false);
-        accessStrategy.access(OperationType.WRITE, 6, "Test 4".getBytes(), false);
+        accessStrategy.access(OperationType.WRITE, 1, "Test 1".getBytes(), false, false);
+        accessStrategy.access(OperationType.WRITE, 4, "Test 2".getBytes(), false, false);
+        accessStrategy.access(OperationType.WRITE, 5, "Test 3".getBytes(), false, false);
+        accessStrategy.access(OperationType.WRITE, 6, "Test 4".getBytes(), false, false);
 
-        byte[] endObject = accessStrategy.access(OperationType.READ, 1, null, false);
+        byte[] endObject = accessStrategy.access(OperationType.READ, 1, null, false, false);
         assertThat("Value is 'Test 1'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 1"));
 
-        endObject = accessStrategy.access(OperationType.READ, 4, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 'Test 2'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 2"));
 
-        endObject = accessStrategy.access(OperationType.READ, 5, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 5, null, false, false);
         assertThat("Value is 'Test 3'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 3"));
 
-        endObject = accessStrategy.access(OperationType.READ, 6, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 6, null, false, false);
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
     }
 
@@ -164,28 +164,28 @@ public class AccessStrategyPathTest {
         AccessStrategyPath accessStrategy = new AccessStrategyPath(15, BUCKET_SIZE, key, factoryStub, null, 0, 0);
         accessStrategy.setup();
 
-        accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes(), false);
+        accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes(), false, false);
 //        System.out.println("###########################################\n" + server.getTreeString());
-        byte[] endObject = accessStrategy.access(OperationType.READ, 4, null, false);
+        byte[] endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertNotNull(endObject);
         assertThat("Value is 'Test 1'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 1"));
 
 //        System.out.println("###########################################\n" + server.getTreeString());
-        accessStrategy.access(OperationType.WRITE, 4, "42".getBytes(), false);
+        accessStrategy.access(OperationType.WRITE, 4, "42".getBytes(), false, false);
 //        System.out.println("###########################################\n" + server.getTreeString());
-        endObject = accessStrategy.access(OperationType.READ, 4, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 42", new String(TestUtil.removeTrailingZeroes(endObject)), is("42"));
 
 //        System.out.println("###########################################\n" + server.getTreeString());
-        accessStrategy.access(OperationType.WRITE, 4, "1337".getBytes(), false);
+        accessStrategy.access(OperationType.WRITE, 4, "1337".getBytes(), false, false);
 //        System.out.println("###########################################\n" + server.getTreeString());
-        endObject = accessStrategy.access(OperationType.READ, 4, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 1337", new String(TestUtil.removeTrailingZeroes(endObject)), is("1337"));
 
 //        System.out.println("###########################################\n" + server.getTreeString());
-        accessStrategy.access(OperationType.WRITE, 4, "Test 4".getBytes(), false);
+        accessStrategy.access(OperationType.WRITE, 4, "Test 4".getBytes(), false, false);
 //        System.out.println("###########################################\n" + server.getTreeString());
-        endObject = accessStrategy.access(OperationType.READ, 4, null, false);
+        endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
 
 //        System.out.println("###########################################\n" + server.getTreeString());

@@ -452,7 +452,8 @@ public class Util {
     }
 
     public static Map<Integer, Integer> getPositionMap(int address, int newPosition, AccessStrategy access) {
-        byte[] positionMapBytes = access.access(OperationType.WRITE, address, leIntToByteArray(newPosition), true);
+        byte[] positionMapBytes = access.access(OperationType.WRITE, address, leIntToByteArray(newPosition), true,
+                false);
 
         return getMapFromByteArray(positionMapBytes);
     }

@@ -132,7 +132,7 @@ public class AccessStrategyLookaheadOld implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
 //        Fetch stashes
         Map<Integer, Map<Integer, BlockLookahead>> accessStash = getAccessStash();
         BlockLookahead[] swapStash = getSwapStash();

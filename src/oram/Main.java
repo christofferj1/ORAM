@@ -70,7 +70,8 @@ public class Main {
         for (int i = accesses.size(); i > 0; i--) {
             AccessStrategy a = accesses.get(i - 1);
             if (a instanceof AccessStrategyLookahead)
-                a.setup(blocks);
+                if (!a.setup(blocks))
+                    return;
         }
 
         SecureRandom randomness = new SecureRandom();
@@ -107,7 +108,7 @@ public class Main {
                 data = null;
             }
 
-            byte[] res = accesses.get(0).access(op, address, data, false);
+            byte[] res = accesses.get(0).access(op, address, data, false, false);
             if (res == null) break;
 
 //            res = Util.removeTrailingZeroes(res);

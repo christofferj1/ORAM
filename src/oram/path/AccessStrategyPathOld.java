@@ -61,7 +61,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
         for (int i = 0; i < numberOfLeaves; i++) {
 //            System.out.println("Round: " + i + "\n" + communicationStrategy.getTreeString());
             positionMap.put(0, i);
-            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE], false);
+            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE], false, false);
         }
 //        System.out.println("Initialized\n" + communicationStrategy.getTreeString());
         positionMap = new HashMap<>();
@@ -118,7 +118,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
         if (data != null && data.length > Constants.BLOCK_SIZE) {
             logger.error("Accessed with data length: " + data.length);
         }

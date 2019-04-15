@@ -203,15 +203,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
             for (int j = 0; j < Constants.POSITION_BLOCK_SIZE; j++) {
                 int index = (i - 1) * Constants.POSITION_BLOCK_SIZE + j;
 
-                if (print) System.out.print(entries.get(index).getKey() + ", ");
-
-                if (entries.size() > index)
+                if (entries.size() > index) {
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
-                else
+                    if (print) System.out.print(entries.get(index).getKey() + ", ");
+                } else {
                     map.put(index + 1, -42);
+                    if (print) System.out.print(index + ", ");
+                }
             }
             if (print) System.out.println(" ");
-            if (accessStrategy.access(OperationType.WRITE, i, Util.getByteArrayFromMap(map), false) == null) {
+            byte[] byteArrayForMap = Util.getByteArrayFromMap(map);
+            if (accessStrategy.access(OperationType.WRITE, i, byteArrayForMap, false, true) == null) {
                 return false;
             }
         }
@@ -219,7 +221,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
 //        for (int i = 0; i <= size; i++) {
 //            if (i != 0)
 //                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
@@ -239,7 +241,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         Integer position;
         if (positionMap == null) {
-            Map<Integer, Integer> map = Util.getPositionMap(addressToLookUp, -42, this);
+            Map<Integer, Integer> map = Util.getPositionMap(addressToLookUp, -42, accessStrategy);
             if (map == null)
                 return null;
 
@@ -333,9 +335,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
         BlockLookahead swapPartner = swapStash[maintenanceColumnIndex];
         swapStash[maintenanceColumnIndex] = null;
 
-        if (print) System.out.println(prefix + "Block and swap partner: ");
-        if (print) System.out.println(prefix + "    " + block.toStringShort());
-        if (print) System.out.println(prefix + "    " + swapPartner.toStringShort());
+        if (print) {
+            System.out.println(prefix + "Block and swap partner: ");
+            System.out.println(prefix + "    " + block.toStringShort());
+            System.out.println(prefix + "    " + swapPartner.toStringShort());
+        }
 
 //        Set index to index of swap partner and add to access stash
         block.setIndex(swapPartner.getIndex());
@@ -349,15 +353,17 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return null;
         }
 
-        if (print) System.out.println(prefix + "Block and swap partner: ");
-        if (print) System.out.println(prefix + "    " + block.toStringShort());
-        if (print) System.out.println(prefix + "    " + swapPartner.toStringShort());
+        if (print) {
+            System.out.println(prefix + "Block and swap partner: ");
+            System.out.println(prefix + "    " + block.toStringShort());
+            System.out.println(prefix + "    " + swapPartner.toStringShort());
+        }
 
 //        Save data and overwrite if operation is a write
         byte[] res = block.getData();
         if (op.equals(OperationType.WRITE)) {
             if (print) System.out.print(prefix + "Writing data");
-            if (recursiveLookup) {
+            if (recursiveLookup && !lookaheadSetup) {
                 if (print) System.out.print(" recursively\n");
                 Map<Integer, Integer> map = Util.getMapFromByteArray(res);
                 map.put(address, Util.byteArrayToLeInt(data));
@@ -620,7 +626,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (print) System.out.print(prefix + "Update position map (put: " + key + " -> " + value);
         if (positionMap == null) {
             if (print) System.out.print(" recursively\n");
-            if (accessStrategy.access(OperationType.WRITE, key, Util.leIntToByteArray(value), true) == null)
+            if (accessStrategy.access(OperationType.WRITE, key, Util.leIntToByteArray(value), true, false) == null)
                 return false;
         } else {
             if (print) System.out.print(" locally\n");

@@ -77,7 +77,7 @@ public class AccessStrategyPath implements AccessStrategy {
         double numberOfLeaves = Math.pow(2, L - 1);
         for (int i = 0; i < numberOfLeaves; i++) {
             positionMap.put(0, i);
-            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE], false);
+            access(OperationType.WRITE, 0, new byte[Constants.BLOCK_SIZE], false, false);
         }
         positionMap = new HashMap<>();
     }
@@ -88,7 +88,7 @@ public class AccessStrategyPath implements AccessStrategy {
     }
 
     @Override
-    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup) {
+    public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
         if (data != null && data.length > Constants.BLOCK_SIZE) {
             logger.error(prefixString +"Accessed with data length: " + data.length);
         }
@@ -104,7 +104,7 @@ public class AccessStrategyPath implements AccessStrategy {
         Integer leafNodeIndex;
         Integer newLeafNodeIndex = randomness.nextInt((int) (Math.pow(2, L - 1)));
         if (positionMap == null) {
-            Map<Integer, Integer> positionMap = Util.getPositionMap(addressToLookUp, newLeafNodeIndex, this);
+            Map<Integer, Integer> positionMap = Util.getPositionMap(addressToLookUp, newLeafNodeIndex, accessStrategy);
             if (positionMap == null)
                 return null;
 
