@@ -44,7 +44,9 @@ public class Main {
         BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
         List<BlockStandard> blocks = new ArrayList<>();
         for (int i = 1; i <= numberOfBlocks; i++) {
-            BlockStandard block = new BlockStandard(i, Util.getRandomByteArray(Constants.BLOCK_SIZE));
+            int mapBeginning = (i - 1) * Constants.POSITION_BLOCK_SIZE + 1;
+            Map<Integer, Integer> map = Util.getDummyMap(mapBeginning);
+            BlockStandard block = new BlockStandard(i, Util.getByteArrayFromMap(map));
             blocks.add(block);
             blockArray[i] = block;
         }
@@ -65,9 +67,10 @@ public class Main {
 //            access.setup(blocks);
 
         List<AccessStrategy> accesses = getAccessStrategies(oramFactories, key, factory);
-        for (AccessStrategy a : accesses) {
+        for (int i = accesses.size(); i > 0; i--) {
+            AccessStrategy a = accesses.get(i - 1);
             if (a instanceof AccessStrategyLookahead)
-                a.setup(blocks); // TODO
+                a.setup(blocks);
         }
 
         SecureRandom randomness = new SecureRandom();
@@ -145,7 +148,9 @@ public class Main {
                 if (string.contains("0%")) {
                     resume.append("\n").append(string);
                     long tmp = communicationStrategy.speedTest();
-                    Util.logAndPrint(logger, "Ran speed test, took: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms");
+                    String s = "Ran speed test, took: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms";
+                    resume.append(s).append("\n");
+                    Util.logAndPrint(logger, s);
                     if (tmp < 0)
                         break;
                     else
@@ -200,7 +205,8 @@ public class Main {
     }
 
     private static List<ORAMFactory> getORAMFactories() {
-        int numberOfORAMS = Util.getInteger("number of ORAMs");
+        int numberOfORAMS = 2;
+//        int numberOfORAMS = Util.getInteger("number of ORAMs");
         if (numberOfORAMS == 1)
             return Collections.singletonList(getOramFactory("ONLY ORAM"));
 
@@ -213,9 +219,12 @@ public class Main {
         outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch (Util.chooseORAMType("ORAM number " + i)) {
+            switch ("l") {
+//            switch (Util.chooseORAMType("ORAM number " + i)) {
                 case "l":
-                    factories.add(new ORAMFactoryLookahead());
+                    if (levelSize == 1024) levelSize = 36;
+                    if (levelSize == 64) levelSize = 4;
+                    factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);
                     break;
                 case "p":
@@ -227,7 +236,8 @@ public class Main {
                     break outer;
             }
         }
-        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
+        factories.get(0).setNumberOfRounds(100);
+//        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
         return factories;
     }
 
@@ -242,12 +252,6 @@ public class Main {
                 res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
         }
         return new ArrayList<>(Arrays.asList(res));
-    }
-
-    private static ORAMFactory createORAMFactorForRecusion(int i, Scanner scanner) {
-
-        Util.chooseORAMType("Choose ORAM kind for ORAM: " + i + ", [l/p/t]");
-        return new ORAMFactoryTrivial();
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,

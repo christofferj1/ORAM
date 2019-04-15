@@ -42,7 +42,7 @@ public class AccessStrategyLookaheadTest {
         defaultSize = 16;
         defaultMatrixSize = 4;
         factory = new FactoryStub(new CommunicationStrategyStub(0, 0));
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory, 0, null, 0);
     }
 
     @Test
@@ -283,7 +283,7 @@ public class AccessStrategyLookaheadTest {
         EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(defaultKey);
         factory.setEncryptionStrategy(encryptionStrategy);
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory, 0,null, 0);
 
         byte[] rowBytes = Util.leIntToByteArray(rowIndex);
         byte[] colBytes = Util.leIntToByteArray(colIndex);
@@ -347,7 +347,7 @@ public class AccessStrategyLookaheadTest {
         EncryptionStrategy encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(defaultKey);
         factory.setEncryptionStrategy(encryptionStrategy);
-        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory);
+        access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory, 0,null, 0);
 
         List<BlockEncrypted> encryptedBlocks = access.encryptBlocks(Arrays.asList(block0, null, block2));
         assertThat(encryptedBlocks, hasSize(3));
@@ -436,7 +436,7 @@ public class AccessStrategyLookaheadTest {
         communicationStrategyStub.setBlocks(blocksList);
 
         access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey,
-                new FactoryStub(communicationStrategyStub));
+                new FactoryStub(communicationStrategyStub), 0,null, 0);
     }
 
     @Test

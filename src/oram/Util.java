@@ -450,4 +450,10 @@ public class Util {
     public static int getLevelSize(int level, int numberOfORAM) {
         return (int) Math.pow(2, ((numberOfORAM - level) * 4) + 6);
     }
+
+    public static Map<Integer, Integer> getPositionMap(int address, int newPosition, AccessStrategy access) {
+        byte[] positionMapBytes = access.access(OperationType.WRITE, address, leIntToByteArray(newPosition), true);
+
+        return getMapFromByteArray(positionMapBytes);
+    }
 }

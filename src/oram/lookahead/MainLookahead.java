@@ -55,7 +55,7 @@ public class MainLookahead {
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategyLookahead access = new AccessStrategyLookahead(size, rows, key, factory);
+        AccessStrategyLookahead access = new AccessStrategyLookahead(size, rows, key, factory, 0, null, 0);
         access.setup(blocks);
 
         SecureRandom randomness = new SecureRandom();

@@ -104,7 +104,7 @@ public class AccessStrategyPath implements AccessStrategy {
         Integer leafNodeIndex;
         Integer newLeafNodeIndex = randomness.nextInt((int) (Math.pow(2, L - 1)));
         if (positionMap == null) {
-            Map<Integer, Integer> positionMap = getPositionMap(addressToLookUp, newLeafNodeIndex);
+            Map<Integer, Integer> positionMap = Util.getPositionMap(addressToLookUp, newLeafNodeIndex, this);
             if (positionMap == null)
                 return null;
 
@@ -496,13 +496,6 @@ public class AccessStrategyPath implements AccessStrategy {
             res.add(new BlockPath(addressInt, data, index));
         }
         return res;
-    }
-
-    private Map<Integer, Integer> getPositionMap(int address, int newLeafNodeIndex) {
-        byte[] positionMapBytes = accessStrategy.access(OperationType.WRITE, address,
-                Util.leIntToByteArray(newLeafNodeIndex), true);
-
-        return Util.getMapFromByteArray(positionMapBytes);
     }
 
     public int getMaxStashSize() {
