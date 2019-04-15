@@ -448,20 +448,6 @@ public class Util {
     }
 
     public static int getLevelSize(int level, int numberOfORAM) {
-        switch (numberOfORAM - level) {
-            case 0:
-                return Constants.SIZE_1;
-            case 1:
-                return Constants.SIZE_2;
-            case 2:
-                return Constants.SIZE_3;
-            case 3:
-                return Constants.SIZE_4;
-            case 4:
-                return Constants.SIZE_5;
-            default:
-                logger.error("Can't get size for level: " + level + ", and number og ORAMs: " + numberOfORAM);
-                return -42;
-        }
+        return (int) Math.pow(2, ((numberOfORAM - level) * 4) + 6);
     }
 }

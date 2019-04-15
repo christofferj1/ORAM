@@ -23,7 +23,7 @@ public class ORAMFactoryPath implements ORAMFactory {
 
     public ORAMFactoryPath(int size, int offset) {
         this.offset = offset;
-        numberOfBlocks = size;
+        numberOfBlocks = Math.min(size, 1000);
         this.size = size - 1;
         bucketSize = DEFAULT_BUCKET_SIZE;
     }

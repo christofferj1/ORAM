@@ -15,11 +15,19 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     private int size;
     private int numberOfBlocks;
     private int numberOfRounds;
+    private int offset;
+
+    public ORAMFactoryTrivial(int size, int offset) {
+        this.size = size + 1;
+        numberOfBlocks = Math.min(size, 1000);
+        this.offset = offset;
+    }
 
     public ORAMFactoryTrivial() {
         size = Util.getInteger("size");
         numberOfBlocks = Util.getInteger("number of blocks");
         numberOfRounds = Util.getInteger("number of rounds");
+        offset = Util.getInteger("offset");
     }
 
     @Override
@@ -28,8 +36,9 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     }
 
     @Override
-    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy, int prefixSize) {
-        return new AccessStrategyTrivial(size, secretKey, factory);
+    public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy,
+                                            int prefixSize) {
+        return new AccessStrategyTrivial(size, secretKey, factory, offset);
     }
 
     @Override

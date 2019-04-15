@@ -88,6 +88,7 @@ public class Main {
 //        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
         List<Integer> addressesWrittenTo = new ArrayList<>();
+        long speedTestTime = 0;
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
             int address = addresses.get(i % addresses.size());
@@ -139,9 +140,17 @@ public class Main {
 //            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
 //            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
-            String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
+            String string = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
             if (string != null) {
-                if (string.contains("0%")) {resume.append("\n").append(string);}
+                if (string.contains("0%")) {
+                    resume.append("\n").append(string);
+                    long tmp = communicationStrategy.speedTest();
+                    Util.logAndPrint(logger, "Ran speed test, took: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms");
+                    if (tmp < 0)
+                        break;
+                    else
+                        speedTestTime += tmp;
+                }
                 logger.info("\n\n" + string + "\n");
                 System.out.println(string);
             }
@@ -201,6 +210,7 @@ public class Main {
         }
         int offset = 0;
         List<ORAMFactory> factories = new ArrayList<>();
+        outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
             switch (Util.chooseORAMType("ORAM number " + i)) {
@@ -213,8 +223,8 @@ public class Main {
                     offset += (levelSize - 1) * Constants.DEFAULT_BUCKET_SIZE;
                     break;
                 default:
-                    factories.add(new ORAMFactoryTrivial()); // TODO: if this is chosen, the rest should not be there (we can return from here)
-                    offset += levelSize + 1;
+                    factories.add(new ORAMFactoryTrivial(levelSize, offset));
+                    break outer;
             }
         }
         factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));

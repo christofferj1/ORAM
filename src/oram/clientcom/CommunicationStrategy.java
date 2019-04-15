@@ -22,4 +22,6 @@ public interface CommunicationStrategy {
     boolean writeArray(List<Integer> addresses, List<BlockEncrypted> blocks);
 
     boolean sendEndSignal();
+
+    long speedTest();
 }

@@ -246,7 +246,8 @@ public class AccessStrategyPath implements AccessStrategy {
                     if (recursiveLookup) { // TODO Build this in a module, to use other places (e.g. in Util)
                         Map<Integer, Integer> map = Util.getMapFromByteArray(endData);
 
-                        if (map == null) {return null;}
+                        if (map == null)
+                            return null;
                         map.put(address, Util.byteArrayToLeInt(data));
                         stash.set(i, new BlockPath(addressToLookUp, Util.getByteArrayFromMap(map), newLeafNodeIndex));
                     } else {

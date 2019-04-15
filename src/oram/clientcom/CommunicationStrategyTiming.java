@@ -61,6 +61,11 @@ public class CommunicationStrategyTiming implements CommunicationStrategy {
         return communicationStrategy.sendEndSignal();
     }
 
+    @Override
+    public long speedTest() {
+        return communicationStrategy.speedTest();
+    }
+
     public long getTime() {
         return time;
     }

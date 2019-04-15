@@ -270,6 +270,46 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
         return true;
     }
 
+    @Override
+    public long speedTest() {
+        long startTime = System.nanoTime();
+        byte[] data = Util.getRandomByteArray((int) Math.pow(2, 20));
+        try {
+//            Send operation type
+            byte[] operationTypeBytes = Util.leIntToByteArray(3);
+            int length = operationTypeBytes.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(operationTypeBytes);
+
+//            Send number of blocks, just to follow the protocol
+            byte[] numberOfBlocks = Util.leIntToByteArray(0);
+            length = numberOfBlocks.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(numberOfBlocks);
+
+//            Send data
+            length = data.length;
+            dataOutputStream.write(Util.beIntToByteArray(length));
+            dataOutputStream.write(data);
+            dataOutputStream.flush();
+
+            byte[] res = new byte[length];
+            length = dataInputStream.readInt();
+            if (length > 0)
+                dataInputStream.readFully(res, 0, length);
+
+            if (!Arrays.equals(res, data)) {
+                Util.logAndPrint(logger, "Received data unequal to original data");
+                return -1;
+            }
+        } catch (IOException e) {
+            logger.error("Error happened while reading block: " + e);
+            logger.debug("Stacktrace", e);
+            return -1;
+        }
+        return System.nanoTime() - startTime;
+    }
+
     private boolean setupConnection() {
 //        String ipAddress = "18.188.20.110";
         String ipAddress = "127.0.0.1";

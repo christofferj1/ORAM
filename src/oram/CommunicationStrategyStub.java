@@ -74,6 +74,11 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         return true;
     }
 
+    @Override
+    public long speedTest() {
+        return 0;
+    }
+
     public String getTreeString() {
         return Util.printTreeEncrypted(blocks, bucketSize);
     }

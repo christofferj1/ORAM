@@ -1,6 +1,7 @@
 package oram.trivial;
 
 import oram.AccessStrategy;
+import oram.Constants;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
@@ -14,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -30,11 +32,11 @@ public class AccessStrategyTrivial implements AccessStrategy {
     private final EncryptionStrategy encryptionStrategy;
     private final List<Integer> allAddresses;
 
-    public AccessStrategyTrivial(int size, byte[] key, Factory factory) {
+    public AccessStrategyTrivial(int size, byte[] key, Factory factory, int offset) {
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
-        this.allAddresses = IntStream.range(0, size).boxed().collect(Collectors.toList());
+        this.allAddresses = IntStream.range(offset, offset + size).boxed().collect(Collectors.toList());
     }
 
     @Override
@@ -50,10 +52,30 @@ public class AccessStrategyTrivial implements AccessStrategy {
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
         List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
 
-        byte[] res = blocks.get(address).getData();
-        if (op.equals(OperationType.WRITE)) // TODO Build this in a module, to use other places (e.g. in Util)
-            blocks.get(address).setData(data);
+        int addressToLookUp = address;
+        if (recursiveLookup)
+            addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
 
+        BlockStandard block = blocks.get(addressToLookUp);
+        byte[] res = block.getData();
+        if (op.equals(OperationType.WRITE)) {
+            if (recursiveLookup) {
+                Map<Integer, Integer> map;
+                if (block.getAddress() == 0)
+                    map = Util.getDummyMap(address);
+                else
+                    map = Util.getMapFromByteArray(res);
+
+                res = Util.getByteArrayFromMap(map);
+
+                if (map == null)
+                    return null;
+                map.put(address, Util.byteArrayToLeInt(data));
+                blocks.get(addressToLookUp).setData(Util.getByteArrayFromMap(map));
+                blocks.get(addressToLookUp).setAddress(addressToLookUp);
+            } else
+                blocks.get(addressToLookUp).setData(data);
+        }
         List<BlockEncrypted> blocksToWrite = encryptBlocks(blocks);
 
         boolean writeStatus = communicationStrategy.writeArray(allAddresses, blocksToWrite);
