@@ -47,7 +47,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
     private AccessStrategy accessStrategy;
-    private boolean print = true;
+    private boolean print = false;
     private int offset;
     private String prefix;
 
@@ -154,7 +154,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //        Encrypt and write blocks to server
         List<BlockEncrypted> encryptedList = encryptBlocks(res);
         if (encryptedList.isEmpty()) {
-            logger.error("Unable to decrypt when initializing the ORAM");
+            logger.error(prefix + "Unable to decrypt when initializing the ORAM");
             return false;
         }
 
@@ -164,7 +164,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //            addresses.add(i);
 
         if (!communicationStrategy.writeArray(addresses, encryptedList)) {
-            logger.error("Writing blocks were unsuccessful when initializing the ORAM");
+            logger.error(prefix + "Writing blocks were unsuccessful when initializing the ORAM");
             return false;
         }
 
@@ -248,7 +248,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             Integer flatArrayIndex = map.getOrDefault(addressToLookUp, null);
 
             if (flatArrayIndex == null) {
-                logger.error("Unable to look up address: " + addressToLookUp);
+                logger.error(prefix + "Unable to look up address: " + addressToLookUp);
                 return null;
             }
             position = flatArrayIndex;
@@ -256,7 +256,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             position = positionMap.getOrDefault(addressToLookUp, null);
 
         if (position == null) {
-            logger.error("Unable to look up position for address: " + addressToLookUp);
+            logger.error(prefix + "Unable to look up position for address: " + addressToLookUp);
             return null;
         }
         Index indexOfCurrentAddress = getIndexFromFlatArrayIndex(position);
@@ -268,7 +268,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     "), maintenance column: " + maintenanceColumnIndex);
 
 
-        logger.info("Access op: " + op.toString() + ", address: " + addressToLookUp + ", index: ("
+        logger.info(prefix + "Access op: " + op.toString() + ", address: " + addressToLookUp + ", index: ("
                 + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
                 "), maintenance column: " + maintenanceColumnIndex);
 
@@ -281,14 +281,14 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         List<BlockLookahead> blocks = readBlocks(indexOfCurrentAddress, maintenanceColumnIndex, blockInColumn);
         if (blocks == null) {
-            logger.error("Blocks read from server were null");
+            logger.error(prefix + "Blocks read from server were null");
             return null;
         }
 
 //        If the block is found in the column, we fetch one less
         int numberOfBlocksToFetch = blockInColumn ? matrixHeight * 3 : matrixHeight * 3 + 1;
         if (blocks.size() != numberOfBlocksToFetch) {
-            logger.error("The number of blocks read from the server: " + blocks.size() + " should be: "
+            logger.error(prefix + "The number of blocks read from the server: " + blocks.size() + " should be: "
                     + numberOfBlocksToFetch);
         }
 
@@ -314,20 +314,20 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 blockFoundInAccessStash = false;
                 Pair<BlockLookahead, Integer> pair = findBlockInSwapStash(swapStash, addressToLookUp);
                 if (pair == null) {
-                    logger.error("Unable to locate block, address: " + addressToLookUp);
+                    logger.error(prefix + "Unable to locate block, address: " + addressToLookUp);
                     return null;
                 } else {
                     block = pair.getKey();
                     swapCount = pair.getValue();
-                    logger.info("Block found in swap stash: " + block.toStringShort());
+                    logger.debug(prefix + "Block found in swap stash: " + block.toStringShort());
                     if (print) System.out.println(prefix + "Block found in swap stash: " + block.toStringShort());
                 }
             } else {
-                logger.info("Block found in access stash: " + block.toStringShort());
+                logger.debug(prefix + "Block found in access stash: " + block.toStringShort());
                 if (print) System.out.println(prefix + "Block found in access stash: " + block.toStringShort());
             }
         } else {
-            logger.info("Block found in matrix: " + block.toStringShort());
+            logger.debug(prefix + "Block found in matrix: " + block.toStringShort());
             if (print) System.out.println(prefix + "Block found in matrix: " + block.toStringShort());
         }
 
@@ -349,7 +349,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         swapPartner.setIndex(indexOfCurrentAddress);
         BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
         if (encryptedSwapPartner == null) {
-            logger.error("Encrypting swap partner failed");
+            logger.error(prefix + "Encrypting swap partner failed");
             return null;
         }
 
@@ -410,7 +410,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         pickNewFutureSwapPartner(swapStash);
         List<BlockLookahead> blocksFromMaintenance = maintenanceJob(column, accessStash, swapStash);
         if (blocksFromMaintenance == null) {
-            logger.error("Failed doing maintenance");
+            logger.error(prefix + "Failed doing maintenance");
             return null;
         }
 
@@ -434,7 +434,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
         List<BlockEncrypted> encryptedBlocks = encryptBlocks(blocksFromMaintenance);
         if (encryptedBlocks == null) {
-            logger.error("Unable to encrypt blocks");
+            logger.error(prefix + "Unable to encrypt blocks");
             return null;
         }
 
@@ -444,7 +444,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //            System.out.println("  Index: " + addresses.get(i) + ", " + blocksFromMaintenance.get(i).toStringShort());
         boolean writeStatus = communicationStrategy.writeArray(addresses, encryptedBlocks);
         if (!writeStatus) {
-            logger.error("Unable to write blocks to server");
+            logger.error(prefix + "Unable to write blocks to server");
             return null;
         }
 
@@ -468,13 +468,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (print) System.out.println(prefix + "Read addresses: " + Arrays.toString(indices.toArray()));
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(indices);
         if (encryptedBlocks == null) {
-            logger.error("Unable to read blocks");
+            logger.error(prefix + "Unable to read blocks");
             return null;
         }
 
         List<BlockLookahead> blocks = decryptLookaheadBlocks(encryptedBlocks);
         if (blocks == null) {
-            logger.error("Unable to decrypt blocks");
+            logger.error(prefix + "Unable to decrypt blocks");
             return null;
         }
         return blocks;
@@ -516,7 +516,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             int address = blockLookahead.getAddress();
             if (!Util.isDummyAddress(address)) {
                 System.out.println(prefix + "AAAAAAAAAAAAAAAAAAAAAAAAARRRRH");
-                logger.error("Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
+                logger.error(prefix + "Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
                         columnIndex + "), but place were not filled with dummy block");
                 return null;
             }
@@ -758,7 +758,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         for (BlockEncrypted b : encryptedBlocks) {
             BlockLookahead block = decryptToLookaheadBlock(b);
             if (block == null) {
-                logger.error("Unable to decrypt block");
+                logger.error(prefix + "Unable to decrypt block");
                 return null;
             }
             res.add(block);
@@ -780,7 +780,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         byte[] indices = encryptionStrategy.decrypt(encryptedIndex, secretKey);
 
         if (data == null) {
-            logger.info("Tried to turn an encrypted block with value = null into a Lookahead block");
+            logger.info(prefix + "Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
         }
 //        System.out.println("    Data: " + Arrays.toString(data));
@@ -840,7 +840,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 //            System.out.println("    Dat bytes: " + block.getData().length + ", " + Arrays.toString(block.getData()));
 
             if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
-                logger.error("Unable to encrypt block: " + block.toStringShort());
+                logger.error(prefix + "Unable to encrypt block: " + block.toStringShort());
                 return new ArrayList<>();
             }
 

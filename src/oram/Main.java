@@ -136,7 +136,7 @@ public class Main {
 //                BlockStandard b = blockArray[j];
 //                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
 //            }
-            System.out.println(" ");
+//            System.out.println(" ");
 //            for (int j = 0; j < oramFactories.size(); j++) {
 //                if (accesses.get(j) instanceof AccessStrategyPath)
 //                    printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
@@ -144,21 +144,21 @@ public class Main {
 //            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
 //            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
-            String string = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
-            if (string != null) {
-                if (string.contains("0%")) {
-                    resume.append("\n").append(string);
-                    long tmp = communicationStrategy.speedTest();
-                    String s = "Ran speed test, took: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms";
-                    resume.append(s).append("\n");
-                    Util.logAndPrint(logger, s);
-                    if (tmp < 0)
-                        break;
-                    else
-                        speedTestTime += tmp;
-                }
-                logger.info("\n\n" + string + "\n");
-                System.out.println(string);
+            String percentString = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
+            if (percentString != null) {
+                long tmp = communicationStrategy.speedTest();
+                percentString += ", speed test: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms";
+
+                if (tmp < 0)
+                    break;
+                else
+                    speedTestTime += tmp;
+
+                if (percentString.contains("0%"))
+                    resume.append("\n").append(percentString);
+
+                logger.info("\n\n" + percentString + "\n");
+                System.out.println(percentString);
             }
         }
 
@@ -206,8 +206,7 @@ public class Main {
     }
 
     private static List<ORAMFactory> getORAMFactories() {
-        int numberOfORAMS = 2;
-//        int numberOfORAMS = Util.getInteger("number of ORAMs");
+        int numberOfORAMS = Util.getInteger("number of ORAMs");
         if (numberOfORAMS == 1)
             return Collections.singletonList(getOramFactory("ONLY ORAM"));
 
@@ -220,11 +219,8 @@ public class Main {
         outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch ("l") {
-//            switch (Util.chooseORAMType("ORAM number " + i)) {
+            switch (Util.chooseORAMType("ORAM number " + i)) {
                 case "l":
-                    if (levelSize == 1024) levelSize = 36;
-                    if (levelSize == 64) levelSize = 4;
                     factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);
                     break;
@@ -237,8 +233,7 @@ public class Main {
                     break outer;
             }
         }
-        factories.get(0).setNumberOfRounds(100);
-//        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
+        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
         return factories;
     }
 
