@@ -147,7 +147,7 @@ public class Main {
             String percentString = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
             if (percentString != null) {
                 long tmp = communicationStrategy.speedTest();
-                percentString += ", speed test: " + (tmp / 1000000) + " ms, " + ((tmp * 16) / 1000000) + " Mb/ms";
+                percentString += ", speed test: " + (tmp / 1000000) + " ms, " + (16 / (tmp / 1000000)) + " Mb/ms";
 
                 if (tmp < 0)
                     break;
