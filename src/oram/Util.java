@@ -457,4 +457,11 @@ public class Util {
 
         return getMapFromByteArray(positionMapBytes);
     }
+
+    public static List<String> getAddressStrings(int from, int to) {
+        List<String> addresses = new ArrayList<>();
+        for (int i = from; i < to; i++)
+            addresses.add(String.valueOf(i));
+        return addresses;
+    }
 }

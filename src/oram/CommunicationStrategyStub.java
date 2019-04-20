@@ -2,9 +2,15 @@ package oram;
 
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
+import oram.blockcreator.LookaheadBlockCreator;
+import oram.blockcreator.PathBlockCreator;
+import oram.blockcreator.StandardBlockCreator;
 import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
+import oram.ofactory.ORAMFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +22,7 @@ import java.util.List;
  */
 
 public class CommunicationStrategyStub implements CommunicationStrategy {
-    //    List<BlockEncrypted> blocks;
+    private static final Logger logger = LogManager.getLogger("log");
     private BlockEncrypted[] blocks;
     private int bucketSize;
 
@@ -32,9 +38,49 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         blocks = new BlockEncrypted[size * bucketSize];
     }
 
+    public CommunicationStrategyStub(List<ORAMFactory> factories) {
+        int offset = 0;
+        int newOffset;
+        List<String> addresses;
+
+        List<BlockEncrypted> blocksList = new ArrayList<>();
+        List<BlockEncrypted> blocksTmp;
+
+        outer:
+        for (int i = 0; i < factories.size(); i++) {
+            int levelSize = (int) Math.pow(2, (((factories.size() - 1) - i) * 4) + 6);
+            switch (factories.get(i).getClass().getSimpleName()) {
+                case "ORAMFactoryLookahead":
+                    newOffset = offset + levelSize + (int) (2 * Math.sqrt(levelSize));
+                    addresses = Util.getAddressStrings(offset, newOffset);
+                    offset = newOffset;
+
+                    blocksTmp = new LookaheadBlockCreator().createBlocks(addresses);
+                    blocksList.addAll(blocksTmp);
+                    break;
+                case "ORAMFactoryPath":
+                    newOffset = offset + (levelSize - 1) * Constants.DEFAULT_BUCKET_SIZE;
+                    addresses = Util.getAddressStrings(offset, newOffset);
+                    offset = newOffset;
+
+                    blocksTmp = new PathBlockCreator().createBlocks(addresses);
+                    blocksList.addAll(blocksTmp);
+                    break;
+                default:
+                    newOffset = offset + levelSize + 1;
+                    addresses = Util.getAddressStrings(offset, newOffset);
+
+                    blocksTmp = new StandardBlockCreator().createBlocks(addresses);
+                    blocksList.addAll(blocksTmp);
+                    break outer;
+            }
+        }
+        blocks = blocksList.toArray(new BlockEncrypted[0]);
+    }
+
     @Override
     public boolean start() {
-        return false;
+        return true;
     }
 
     @Override

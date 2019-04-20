@@ -15,6 +15,7 @@ The check boxes is to mark when something is added to the report
    - [ ] Each ORAM strategy handle their individual data format
    - [ ] The server uses its own blocks (like Path blocks), which carries the address on the server, which is not send back to the client
  - [ ] The server strategy can be switched out with a fake/stub, to simply run the local experiments, where it just manipulates an in memory array
+ - [ ] Some of the code is duplicated in the two project, client and server, which could have been avoided with a common library.
 
 * Lookahead
  - [ ] Matrix is indexed such that the first 'matrixHeight' blocks are in the first column
