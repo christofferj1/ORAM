@@ -43,7 +43,7 @@ public class MainTrivial {
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
-        AccessStrategyTrivial access = new AccessStrategyTrivial(size, key, factory, 0);
+        AccessStrategyTrivial access = new AccessStrategyTrivial(size, key, factory, 0, 0);
         access.setup(new ArrayList<>(Arrays.asList(new BlockStandard[size])));
 
         SecureRandom randomness = new SecureRandom();

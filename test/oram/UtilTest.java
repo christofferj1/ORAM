@@ -241,20 +241,28 @@ public class UtilTest {
         for (int i = 1; i <= 17; i++)
             map.put(i, -42);
 
+        Map<Integer, Integer> tmp;
         for (int i = 1; i <= 17; i++) {
-            Map<Integer, Integer> tmp = Util.getDummyMap(i);
+            tmp = Util.getDummyMap(i);
             assertThat("Map including: " + i, tmp, is(map));
         }
 
         map = new HashMap<>();
         int newStart = 17 * 4;
         for (int i = 1; i <= 17; i++) {
-            map.put(i + newStart, -42);
+            map.put(i + newStart, Constants.DUMMY_LEAF_NODE_INDEX);
         }
 
         for (int i = newStart + 1; i <= newStart + 17; i++) {
-            Map<Integer, Integer> tmp = Util.getDummyMap(i);
+                        tmp = Util.getDummyMap(i);
             assertThat("Map including: " + i, tmp, is(map));
+        }
+
+        tmp = Util.getDummyMap(0);
+        assertNotNull("Map is not null", tmp);
+        for (int i = -16; i <= 0; i++ ) {
+            assertTrue("Maps contains: " + i, tmp.containsKey(i));
+            assertThat("Maps " + i + " to -42", tmp.get(i), is(Constants.DUMMY_LEAF_NODE_INDEX));
         }
     }
 

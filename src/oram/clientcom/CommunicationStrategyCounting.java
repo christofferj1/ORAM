@@ -61,4 +61,8 @@ public class CommunicationStrategyCounting implements CommunicationStrategy {
     public int getBlocksSent() {
         return blocksSent;
     }
+
+    public void resetBlockSent() {
+        blocksSent = 0;
+    }
 }

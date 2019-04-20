@@ -395,8 +395,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
 //        Update position map
-        updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
-        updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()));
+        updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex())); // TODO should check if this returns false
+        updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex())); // TODO should check if this returns false
+//        Doing the update again, to not disclose if a second swap stash block was changed or not
+        if (blockFoundInMatrix || blockFoundInAccessStash)
+            updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex())); // TODO should check if this returns false
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
@@ -626,7 +629,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (print) System.out.print(prefix + "Update position map (put: " + key + " -> " + value);
         if (positionMap == null) {
             if (print) System.out.print(" recursively\n");
-            if (accessStrategy.access(OperationType.WRITE, key, Util.leIntToByteArray(value), true, false) == null)
+            byte[] valueBytes = Util.leIntToByteArray(value);
+            if (accessStrategy.access(OperationType.WRITE, key, valueBytes, true, false) == null)
                 return false;
         } else {
             if (print) System.out.print(" locally\n");

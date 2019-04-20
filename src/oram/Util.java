@@ -392,12 +392,17 @@ public class Util {
     }
 
     public static Map<Integer, Integer> getDummyMap(int addressToInclude) {
-        Integer startAddress = null;
-        for (int i = 0; i < 17; i++) {
-            int mod17 = (addressToInclude - i) % 17;
-            if (mod17 == 1) {
-                startAddress = addressToInclude - i;
-                break;
+        Integer startAddress;
+        if (addressToInclude == 0) {
+            startAddress = -16;
+        } else {
+            startAddress = null;
+            for (int i = 0; i < 17; i++) {
+                int mod17 = (addressToInclude - i) % 17;
+                if (mod17 == 1) {
+                    startAddress = addressToInclude - i;
+                    break;
+                }
             }
         }
 
@@ -452,7 +457,8 @@ public class Util {
     }
 
     public static Map<Integer, Integer> getPositionMap(int address, int newPosition, AccessStrategy access) {
-        byte[] positionMapBytes = access.access(OperationType.WRITE, address, leIntToByteArray(newPosition), true,
+        byte[] newPositionBytes = leIntToByteArray(newPosition);
+        byte[] positionMapBytes = access.access(OperationType.WRITE, address, newPositionBytes, true,
                 false);
 
         return getMapFromByteArray(positionMapBytes);

@@ -37,8 +37,4 @@ public class EncryptionStrategyCounting implements EncryptionStrategy {
     public int getBlocksEncrypted() {
         return blocksEncrypted;
     }
-
-    public void resetBlocksEncrypted() {
-        blocksEncrypted = 0;
-    }
 }

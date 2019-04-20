@@ -31,12 +31,14 @@ public class AccessStrategyTrivial implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final List<Integer> allAddresses;
+    private String prefixString;
 
-    public AccessStrategyTrivial(int size, byte[] key, Factory factory, int offset) {
+    public AccessStrategyTrivial(int size, byte[] key, Factory factory, int offset, int prefixSize) {
         this.communicationStrategy = factory.getCommunicationStrategy();
         this.encryptionStrategy = factory.getEncryptionStrategy();
         this.secretKey = encryptionStrategy.generateSecretKey(key);
         this.allAddresses = IntStream.range(offset, offset + size).boxed().collect(Collectors.toList());
+        prefixString = Util.getEmptyStringOfLength(prefixSize);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
-        logger.info("Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
+        logger.info(prefixString + "Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 //        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
@@ -91,7 +93,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
             byte[] data = encryptionStrategy.decrypt(b.getData(), secretKey);
 
             if (addressBytes == null || data == null) {
-                logger.error("Unable to decrypt either address or data");
+                logger.error(prefixString + "Unable to decrypt either address or data");
                 res = null;
                 break;
             }
@@ -110,7 +112,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
             byte[] dataCipher = encryptionStrategy.encrypt(b.getData(), secretKey);
 
             if (addressCipher == null || dataCipher == null) {
-                logger.error("Unable to encrypt either address or data");
+                logger.error(prefixString + "Unable to encrypt either address or data");
                 res = null;
                 break;
             }

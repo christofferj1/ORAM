@@ -92,8 +92,8 @@ public class MainLocal {
 //        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
 
         EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
-        if (encryptionStrategy instanceof EncryptionStrategyCounting)
-            ((EncryptionStrategyCounting) encryptionStrategy).resetBlocksEncrypted();
+        if (communicationStrategy instanceof CommunicationStrategyCounting)
+            ((CommunicationStrategyCounting) communicationStrategy).resetBlockSent();
 
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long startTime = System.nanoTime();
