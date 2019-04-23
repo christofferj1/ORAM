@@ -391,15 +391,16 @@ public class AccessStrategyLookahead implements AccessStrategy {
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-            updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex()));
+            if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
+                return null;
         }
 
 //        Update position map
-        updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex())); // TODO should check if this returns false
-        updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex())); // TODO should check if this returns false
+        if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+        if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
         if (blockFoundInMatrix || blockFoundInAccessStash)
-            updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex())); // TODO should check if this returns false
+            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
