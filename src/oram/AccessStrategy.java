@@ -1,6 +1,6 @@
 package oram;
 
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
  */
 
 public interface AccessStrategy {
-    boolean setup(List<BlockStandard> blocks);
+    boolean setup(List<BlockTrivial> blocks);
 
     //    TODO: add an access method which takes a position (bytes for it) map as parameter, and sets it before it calls
 //     the original access method

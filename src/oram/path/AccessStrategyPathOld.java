@@ -5,7 +5,7 @@ import oram.Constants;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -34,7 +34,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
     private final PermutationStrategy permutationStrategy;
     public int maxStashSize;
     public int maxStashSizeBetweenAccesses;
-    private List<BlockStandard> stash;
+    private List<BlockTrivial> stash;
     private Map<Integer, Integer> positionMap;
     private boolean print = false;
     private int dummyCounter = 0;
@@ -69,7 +69,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setup(List<BlockTrivial> blocks) {
         SecureRandom randomness = new SecureRandom();
 
         for (int i = 0; i < blocks.size(); i++) {
@@ -85,7 +85,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
                 if (nodesHandled.contains(nodeIndex))
                     continue;
 
-                List<BlockStandard> bucketOfBlocks = getBlocksForNode(nodeIndex);
+                List<BlockTrivial> bucketOfBlocks = getBlocksForNode(nodeIndex);
                 bucketOfBlocks = fillBucketWithDummyBlocks(bucketOfBlocks);
 
                 removeBlocksFromStash(bucketOfBlocks);
@@ -193,11 +193,11 @@ public class AccessStrategyPathOld implements AccessStrategy {
             if (print) System.out.println("    Read node: " + nodeNumber);
 
             if (bucket.size() == bucketSize) {
-                List<BlockStandard> blocksDecrypted = decryptBlockPaths(bucket);
+                List<BlockTrivial> blocksDecrypted = decryptBlockPaths(bucket);
 
                 if (print) {
                     System.out.print("        Found blocks: ");
-                    for (BlockStandard b : blocksDecrypted) System.out.print(b.toStringShort() + ", ");
+                    for (BlockTrivial b : blocksDecrypted) System.out.print(b.toStringShort() + ", ");
                     System.out.println(" ");
                 }
 
@@ -228,7 +228,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
             if (stash.get(i).getAddress() == address) {
                 endData = stash.get(i).getData();
                 if (op.equals(OperationType.WRITE)) {
-                    stash.set(i, new BlockStandard(address, data));
+                    stash.set(i, new BlockTrivial(address, data));
                     hasOverwrittenBlock = true;
                 }
                 break;
@@ -236,7 +236,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
         }
 
         if (op.equals(OperationType.WRITE) && !hasOverwrittenBlock)
-            stash.add(new BlockStandard(address, data));
+            stash.add(new BlockTrivial(address, data));
         if (stash.size() > maxStashSize) {
             maxStashSize = stash.size();
             logger.info("Max stash size: " + maxStashSize);
@@ -251,7 +251,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
             System.out.println("Write back path");
             System.out.println("    Stash:");
             System.out.print("        ");
-            for (BlockStandard b : stash) System.out.print(b.toStringShort() + ", ");
+            for (BlockTrivial b : stash) System.out.print(b.toStringShort() + ", ");
             System.out.println(" ");
         }
 
@@ -261,21 +261,21 @@ public class AccessStrategyPathOld implements AccessStrategy {
             if (print) System.out.println("    Node number: " + nodeNumber + ", array position: " + arrayPosition);
 
 //            Pick all the blocks from the stash which can be written to the current node
-            List<BlockStandard> blocksToWrite = getBlocksForNode(nodeNumber);
+            List<BlockTrivial> blocksToWrite = getBlocksForNode(nodeNumber);
             if (print) {
                 System.out.println("    Blocks to write to node number: " + nodeNumber);
                 System.out.print("        ");
-                for (BlockStandard b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
+                for (BlockTrivial b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
                 System.out.println(" ");
             }
 
 //            Make sure there are exactly Z blocks to write to the node
             blocksToWrite = fillBucketWithDummyBlocks(blocksToWrite);
-            blocksToWrite = permutationStrategy.permuteStandardBlocks(blocksToWrite);
+            blocksToWrite = permutationStrategy.permuteTrivialBlocks(blocksToWrite);
             if (print) {
                 System.out.println("    Blocks actually written:");
                 System.out.print("        ");
-                for (BlockStandard b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
+                for (BlockTrivial b : blocksToWrite) System.out.print(b.toStringShort() + ", ");
                 System.out.println(" ");
             }
 
@@ -284,7 +284,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
             if (print) {
                 System.out.println("    Stash:");
                 System.out.print("        ");
-                for (BlockStandard b : stash) System.out.print(b.toStringShort() + ", ");
+                for (BlockTrivial b : stash) System.out.print(b.toStringShort() + ", ");
                 System.out.println(" ");
             }
 
@@ -305,17 +305,17 @@ public class AccessStrategyPathOld implements AccessStrategy {
         return true;
     }
 
-    private List<BlockStandard> getBlocksForNode(int nodeIndex) {
+    private List<BlockTrivial> getBlocksForNode(int nodeIndex) {
         List<Integer> indices = getSubTreeNodes(nodeIndex);
-        List<BlockStandard> res = new ArrayList<>();
-        for (BlockStandard s : stash) {
+        List<BlockTrivial> res = new ArrayList<>();
+        for (BlockTrivial s : stash) {
             if (indices.contains(positionMap.get(s.getAddress())))
                 res.add(s);
         }
         return res;
     }
 
-    private List<BlockStandard> fillBucketWithDummyBlocks(List<BlockStandard> blocksToWrite) {
+    private List<BlockTrivial> fillBucketWithDummyBlocks(List<BlockTrivial> blocksToWrite) {
         if (blocksToWrite.size() > bucketSize) {
 //            System.out.println("Bucket size: " + bucketSize + ", blocks to right size: " + blocksToWrite.size());
             for (int i = blocksToWrite.size(); i > bucketSize; i--)
@@ -326,16 +326,16 @@ public class AccessStrategyPathOld implements AccessStrategy {
         return blocksToWrite;
     }
 
-    private void removeBlocksFromStash(List<BlockStandard> blocksToWrite) {
+    private void removeBlocksFromStash(List<BlockTrivial> blocksToWrite) {
         for (int i = stash.size() - 1; i >= 0; i--) {
             if (blocksToWrite.contains(stash.get(i)))
                 stash.remove(i);
         }
     }
 
-    private List<BlockEncrypted> encryptBucketOfBlocks(List<BlockStandard> blocksToWrite) {
+    private List<BlockEncrypted> encryptBucketOfBlocks(List<BlockTrivial> blocksToWrite) {
         List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
-        for (BlockStandard block : blocksToWrite) {
+        for (BlockTrivial block : blocksToWrite) {
             byte[] addressCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
             byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
             if (addressCipher == null || dataCipher == null) {
@@ -349,10 +349,10 @@ public class AccessStrategyPathOld implements AccessStrategy {
     }
 
 
-    private List<BlockStandard> fillWithDummy(List<BlockStandard> temp) {
+    private List<BlockTrivial> fillWithDummy(List<BlockTrivial> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {
-            temp.add(new BlockStandard(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE]));
-//            temp.add(new BlockStandard(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
+            temp.add(new BlockTrivial(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE]));
+//            temp.add(new BlockTrivial(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
         }
         return temp;
     }
@@ -382,8 +382,8 @@ public class AccessStrategyPathOld implements AccessStrategy {
         return res;
     }
 
-    List<BlockStandard> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
-        List<BlockStandard> res = new ArrayList<>();
+    List<BlockTrivial> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks) {
+        List<BlockTrivial> res = new ArrayList<>();
         for (BlockEncrypted block : encryptedBlocks) {
             if (block == null) continue;
             byte[] message = encryptionStrategy.decrypt(block.getData(), secretKey);
@@ -394,7 +394,7 @@ public class AccessStrategyPathOld implements AccessStrategy {
 
             if (message == null || Util.isDummyAddress(addressInt)) continue;
 
-            res.add(new BlockStandard(addressInt, message));
+            res.add(new BlockTrivial(addressInt, message));
         }
         return res;
     }

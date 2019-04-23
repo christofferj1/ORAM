@@ -3,7 +3,7 @@ package oram.permutation;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.block.BlockPath;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 
 import java.security.SecureRandom;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class PermutationStrategyImpl implements PermutationStrategy {
     }
 
     @Override
-    public List<BlockStandard> permuteStandardBlocks(List<BlockStandard> blocks) {
+    public List<BlockTrivial> permuteTrivialBlocks(List<BlockTrivial> blocks) {
         if (blocks == null || blocks.isEmpty()) return blocks;
 
         SecureRandom randomness = new SecureRandom();

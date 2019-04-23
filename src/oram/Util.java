@@ -132,8 +132,8 @@ public class Util {
 
         List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
 
-        List<BlockPath> blockStandards = access.decryptBlockPaths(encrypted, false);
-        BlockPath[] array1 = blockStandards.toArray(new BlockPath[array.length]);
+        List<BlockPath> blockPaths = access.decryptBlockPaths(encrypted, false);
+        BlockPath[] array1 = blockPaths.toArray(new BlockPath[array.length]);
         return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
     }
 

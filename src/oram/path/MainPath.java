@@ -4,7 +4,7 @@ import oram.Constants;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
@@ -39,7 +39,7 @@ public class MainPath {
         int size = 31;
         int numberOfRounds = 350;
 
-        BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
+        BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
 
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, bucketSize);
 
@@ -95,7 +95,7 @@ public class MainPath {
             } else
                 addressesWrittenTo.add(address);
 
-            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
+            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockTrivial(address, data);
 
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {

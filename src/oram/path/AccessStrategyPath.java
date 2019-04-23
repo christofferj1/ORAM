@@ -6,7 +6,7 @@ import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -83,7 +83,7 @@ public class AccessStrategyPath implements AccessStrategy {
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setup(List<BlockTrivial> blocks) {
         return true;
     }
 
@@ -425,7 +425,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private List<BlockPath> fillWithDummy(List<BlockPath> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {
             temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE], 0));
-//            temp.add(new BlockStandard(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
+//            temp.add(new BlockTrivial(Constants.DUMMY_BLOCK_ADDRESS, Util.sizedByteArrayWithInt(dummyCounter++, Constants.BLOCK_SIZE)));
         }
         return temp;
     }

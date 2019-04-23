@@ -5,7 +5,7 @@ import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
@@ -43,10 +43,10 @@ public class MainLookahead {
         int size = 100;
         int numberOfRounds = 1000;
 
-        BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
-        List<BlockStandard> blocks = new ArrayList<>();
+        BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
+        List<BlockTrivial> blocks = new ArrayList<>();
         for (int i = 1; i <= numberOfBlocks; i++) {
-            BlockStandard block = new BlockStandard(i, Util.getRandomByteArray(Constants.BLOCK_SIZE));
+            BlockTrivial block = new BlockTrivial(i, Util.getRandomByteArray(Constants.BLOCK_SIZE));
             blocks.add(block);
             blockArray[i] = block;
         }
@@ -97,7 +97,7 @@ public class MainLookahead {
                 break;
             }
 
-            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
+            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockTrivial(address, data);
 
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {

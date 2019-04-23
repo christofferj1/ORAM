@@ -4,7 +4,7 @@ import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.blockcreator.LookaheadBlockCreator;
 import oram.blockcreator.PathBlockCreator;
-import oram.blockcreator.StandardBlockCreator;
+import oram.blockcreator.TrivialBlockCreator;
 import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
@@ -70,7 +70,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                     newOffset = offset + levelSize + 1;
                     addresses = Util.getAddressStrings(offset, newOffset);
 
-                    blocksTmp = new StandardBlockCreator().createBlocks(addresses);
+                    blocksTmp = new TrivialBlockCreator().createBlocks(addresses);
                     blocksList.addAll(blocksTmp);
                     break outer;
             }

@@ -1,7 +1,7 @@
 package oram;
 
 import oram.block.BlockEncrypted;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ public class UtilTest {
     public void shouldReturnTrueIffAllBytesOfAnArrayIsZero() {
         assertFalse(Util.isDummyBlock(null));
 
-        BlockStandard block = new BlockStandard();
+        BlockTrivial block = new BlockTrivial();
         assertFalse(Util.isDummyBlock(block));
 
         block.setData(new byte[0]);

@@ -17,7 +17,7 @@ import java.util.List;
  * Master Thesis 2019 </p>
  */
 
-public class StandardBlockCreator implements BlockCreator {
+public class TrivialBlockCreator implements BlockCreator {
     private static final Logger logger = LogManager.getLogger("log");
 
     @Override
@@ -34,7 +34,7 @@ public class StandardBlockCreator implements BlockCreator {
         EncryptionStrategyImpl encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(Constants.KEY_BYTES);
         int numberOfFiles = addresses.size();
-        Util.logAndPrint(logger, "Overwriting " + numberOfFiles + " Standard files, from: " + addresses.get(0) + ", to: " + addresses.get(addresses.size() - 1));
+        Util.logAndPrint(logger, "Overwriting " + numberOfFiles + " Trivial files, from: " + addresses.get(0) + ", to: " + addresses.get(addresses.size() - 1));
         List<BlockEncrypted> res = new ArrayList<>();
         for (int i = 0; i < numberOfFiles; i++) {
 

@@ -5,7 +5,7 @@ import oram.Constants;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -42,7 +42,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setup(List<BlockTrivial> blocks) {
         return true;
     }
 
@@ -52,13 +52,13 @@ public class AccessStrategyTrivial implements AccessStrategy {
 //        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
-        List<BlockStandard> blocks = decryptBlocks(encryptedBlocks);
+        List<BlockTrivial> blocks = decryptBlocks(encryptedBlocks);
 
         int addressToLookUp = address;
         if (recursiveLookup)
             addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
 
-        BlockStandard block = blocks.get(addressToLookUp);
+        BlockTrivial block = blocks.get(addressToLookUp);
         byte[] res = block.getData();
         if (op.equals(OperationType.WRITE)) {
             if (recursiveLookup) {
@@ -75,8 +75,10 @@ public class AccessStrategyTrivial implements AccessStrategy {
                 map.put(address, Util.byteArrayToLeInt(data));
                 blocks.get(addressToLookUp).setData(Util.getByteArrayFromMap(map));
                 blocks.get(addressToLookUp).setAddress(addressToLookUp);
-            } else
+            } else {
                 blocks.get(addressToLookUp).setData(data);
+                blocks.get(addressToLookUp).setAddress(addressToLookUp);
+            }
         }
         List<BlockEncrypted> blocksToWrite = encryptBlocks(blocks);
 
@@ -86,8 +88,8 @@ public class AccessStrategyTrivial implements AccessStrategy {
         return res;
     }
 
-    private List<BlockStandard> decryptBlocks(List<BlockEncrypted> blocks) {
-        List<BlockStandard> res = new ArrayList<>();
+    private List<BlockTrivial> decryptBlocks(List<BlockEncrypted> blocks) {
+        List<BlockTrivial> res = new ArrayList<>();
         for (BlockEncrypted b : blocks) {
             byte[] addressBytes = encryptionStrategy.decrypt(b.getAddress(), secretKey);
             byte[] data = encryptionStrategy.decrypt(b.getData(), secretKey);
@@ -99,14 +101,14 @@ public class AccessStrategyTrivial implements AccessStrategy {
             }
 
             int address = Util.byteArrayToLeInt(addressBytes);
-            res.add(new BlockStandard(address, data));
+            res.add(new BlockTrivial(address, data));
         }
         return res;
     }
 
-    private List<BlockEncrypted> encryptBlocks(List<BlockStandard> blocks) {
+    private List<BlockEncrypted> encryptBlocks(List<BlockTrivial> blocks) {
         List<BlockEncrypted> res = new ArrayList<>();
-        for (BlockStandard b : blocks) {
+        for (BlockTrivial b : blocks) {
             byte[] addressBytes = Util.leIntToByteArray(b.getAddress());
             byte[] addressCipher = encryptionStrategy.encrypt(addressBytes, secretKey);
             byte[] dataCipher = encryptionStrategy.encrypt(b.getData(), secretKey);

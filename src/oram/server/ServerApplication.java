@@ -1,6 +1,6 @@
 package oram.server;
 
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
  */
 
 public interface ServerApplication {
-    List<BlockStandard> read(List<String> address);
+    List<BlockTrivial> read(List<String> address);
 
     boolean write(List<String> addresses, List<byte[]> dataArrays);
 }

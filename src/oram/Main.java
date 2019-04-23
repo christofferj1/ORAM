@@ -1,7 +1,7 @@
 package oram;
 
 import oram.block.BlockEncrypted;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
@@ -41,12 +41,12 @@ public class Main {
 
         int numberOfBlocks = oramFactories.get(0).getNumberOfBlocks();
 
-        BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
-        List<BlockStandard> blocks = new ArrayList<>();
+        BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
+        List<BlockTrivial> blocks = new ArrayList<>();
         for (int i = 1; i <= numberOfBlocks; i++) {
             int mapBeginning = (i - 1) * Constants.POSITION_BLOCK_SIZE + 1;
             Map<Integer, Integer> map = Util.getDummyMap(mapBeginning);
-            BlockStandard block = new BlockStandard(i, Util.getByteArrayFromMap(map));
+            BlockTrivial block = new BlockTrivial(i, Util.getByteArrayFromMap(map));
             blocks.add(block);
             blockArray[i] = block;
         }
@@ -129,11 +129,11 @@ public class Main {
             } else
                 addressesWrittenTo.add(address);
 
-            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
+            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockTrivial(address, data);
 
 //            System.out.println("Block array");
 //            for (int j = 0; j < blockArray.length; j++) {
-//                BlockStandard b = blockArray[j];
+//                BlockTrivial b = blockArray[j];
 //                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
 //            }
 //            System.out.println(" ");

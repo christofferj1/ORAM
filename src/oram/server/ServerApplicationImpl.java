@@ -1,6 +1,6 @@
 package oram.server;
 
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,13 +21,13 @@ public class ServerApplicationImpl implements ServerApplication {
     private final Logger logger = LogManager.getLogger("log");
 
     @Override
-    public List<BlockStandard> read(List<String> addresses) {
-        List<BlockStandard> res = new ArrayList<>();
+    public List<BlockTrivial> read(List<String> addresses) {
+        List<BlockTrivial> res = new ArrayList<>();
         for (String address : addresses) {
             byte[] data = readFile(address);
             if (data == null) return null;
 
-            res.add(new BlockStandard(Integer.parseInt(address), data));
+            res.add(new BlockTrivial(Integer.parseInt(address), data));
         }
         return res;
     }

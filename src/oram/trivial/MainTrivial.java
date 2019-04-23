@@ -3,7 +3,7 @@ package oram.trivial;
 import oram.Constants;
 import oram.OperationType;
 import oram.Util;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
@@ -37,14 +37,14 @@ public class MainTrivial {
         int size = 190;
         int numberOfRounds = 1000;
 
-        BlockStandard[] blockArray = new BlockStandard[(numberOfBlocks + 1)];
+        BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
 
         Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, size, 1);
 
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
         AccessStrategyTrivial access = new AccessStrategyTrivial(size, key, factory, 0, 0);
-        access.setup(new ArrayList<>(Arrays.asList(new BlockStandard[size])));
+        access.setup(new ArrayList<>(Arrays.asList(new BlockTrivial[size])));
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
@@ -88,7 +88,7 @@ public class MainTrivial {
             } else
                 addressesWrittenTo.add(address);
 
-            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockStandard(address, data);
+            if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockTrivial(address, data);
 
             String string = Util.getPercentageDoneString(startTime, numberOfRounds, i);
             if (string != null) {

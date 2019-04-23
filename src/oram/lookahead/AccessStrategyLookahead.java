@@ -7,7 +7,7 @@ import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -75,12 +75,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocksGiven) {
-        List<BlockStandard> blocks = new ArrayList<>(blocksGiven);
+    public boolean setup(List<BlockTrivial> blocksGiven) {
+        List<BlockTrivial> blocks = new ArrayList<>(blocksGiven);
         Util.logAndPrint(logger, prefix + "Starting setup");
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
-            blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
+            blocks.add(new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]));
         }
 
         for (int i = blocks.size(); i > size; i--) {
@@ -90,8 +90,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         Util.logAndPrint(logger, prefix + "    Created dummy blocks");
 
 //        Shuffle and convert
-        blocks = permutationStrategy.permuteStandardBlocks(blocks);
-        List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
+        blocks = permutationStrategy.permuteTrivialBlocks(blocks);
+        List<BlockLookahead> blockLookaheads = trivialToLookaheadBlocksForSetup(blocks);
 
 //        Pick swap partners
         SecureRandom randomness = new SecureRandom();
@@ -873,15 +873,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return new Index(row, column);
     }
 
-    List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
+    List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = 0; i < matrixHeight; i++) { // Columns
             for (int j = 0; j < matrixHeight; j++) { // Rows
                 Index index = new Index(j, i);
-                BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
-                res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
-                if (blockStandard.getAddress() != 0)
-                    positionMap.put(blockStandard.getAddress(), getFlatArrayIndex(index));
+                BlockTrivial blockTrivial = blocks.get(getFlatArrayIndex(index));
+                res.add(new BlockLookahead(blockTrivial.getAddress(), blockTrivial.getData(), j, i));
+                if (blockTrivial.getAddress() != 0)
+                    positionMap.put(blockTrivial.getAddress(), getFlatArrayIndex(index));
             }
         }
         return res;

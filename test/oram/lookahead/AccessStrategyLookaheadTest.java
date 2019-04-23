@@ -5,7 +5,7 @@ import oram.Constants;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.util.FactoryStub;
@@ -46,27 +46,27 @@ public class AccessStrategyLookaheadTest {
     }
 
     @Test
-    public void shouldBeAbleToConvertStandardBlocksToLookaheadBlocks() {
-        BlockStandard block1 = new BlockStandard(11, "Block 1".getBytes());
-        BlockStandard block2 = new BlockStandard(2, "Block 2".getBytes());
-        BlockStandard block3 = new BlockStandard(8, "Block 3".getBytes());
-        BlockStandard block4 = new BlockStandard(15, "Block 4".getBytes());
-        BlockStandard block5 = new BlockStandard(4, "Block 5".getBytes());
-        BlockStandard block6 = new BlockStandard(6, "Block 6".getBytes());
-        BlockStandard block7 = new BlockStandard(13, "Block 7".getBytes());
-        BlockStandard block8 = new BlockStandard(3, "Block 8".getBytes());
-        BlockStandard block9 = new BlockStandard(9, "Block 9".getBytes());
-        BlockStandard block10 = new BlockStandard(10, "Block 10".getBytes());
-        BlockStandard block11 = new BlockStandard(1, "Block 11".getBytes());
-        BlockStandard block12 = new BlockStandard(12, "Block 12".getBytes());
-        BlockStandard block13 = new BlockStandard(7, "Block 13".getBytes());
-        BlockStandard block14 = new BlockStandard(14, "Block 14".getBytes());
-        BlockStandard block15 = new BlockStandard(5, "Block 15".getBytes());
-        BlockStandard block16 = new BlockStandard(0, new byte[Constants.BLOCK_SIZE]);
-        List<BlockStandard> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
+    public void shouldBeAbleToConvertTrivialBlocksToLookaheadBlocks() {
+        BlockTrivial block1 = new BlockTrivial(11, "Block 1".getBytes());
+        BlockTrivial block2 = new BlockTrivial(2, "Block 2".getBytes());
+        BlockTrivial block3 = new BlockTrivial(8, "Block 3".getBytes());
+        BlockTrivial block4 = new BlockTrivial(15, "Block 4".getBytes());
+        BlockTrivial block5 = new BlockTrivial(4, "Block 5".getBytes());
+        BlockTrivial block6 = new BlockTrivial(6, "Block 6".getBytes());
+        BlockTrivial block7 = new BlockTrivial(13, "Block 7".getBytes());
+        BlockTrivial block8 = new BlockTrivial(3, "Block 8".getBytes());
+        BlockTrivial block9 = new BlockTrivial(9, "Block 9".getBytes());
+        BlockTrivial block10 = new BlockTrivial(10, "Block 10".getBytes());
+        BlockTrivial block11 = new BlockTrivial(1, "Block 11".getBytes());
+        BlockTrivial block12 = new BlockTrivial(12, "Block 12".getBytes());
+        BlockTrivial block13 = new BlockTrivial(7, "Block 13".getBytes());
+        BlockTrivial block14 = new BlockTrivial(14, "Block 14".getBytes());
+        BlockTrivial block15 = new BlockTrivial(5, "Block 15".getBytes());
+        BlockTrivial block16 = new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]);
+        List<BlockTrivial> blocks = new ArrayList<>(Arrays.asList(block1, block2, block3, block4, block5, block6,
                 block7, block8, block9, block10, block11, block12, block13, block14, block15, block16));
 
-        List<BlockLookahead> res = access.standardToLookaheadBlocksForSetup(blocks);
+        List<BlockLookahead> res = access.trivialToLookaheadBlocksForSetup(blocks);
         assertThat(res, hasSize(16));
         assertThat(res.get(0), is(new BlockLookahead(block1.getAddress(), block1.getData(), 0, 0)));
         assertThat(res.get(1), is(new BlockLookahead(block2.getAddress(), block2.getData(), 1, 0)));

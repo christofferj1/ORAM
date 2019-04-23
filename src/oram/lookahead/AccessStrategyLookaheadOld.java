@@ -7,7 +7,7 @@ import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
-import oram.block.BlockStandard;
+import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
@@ -64,15 +64,15 @@ public class AccessStrategyLookaheadOld implements AccessStrategy {
     }
 
     @Override
-    public boolean setup(List<BlockStandard> blocks) {
+    public boolean setup(List<BlockTrivial> blocks) {
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
-            blocks.add(new BlockStandard(0, new byte[Constants.BLOCK_SIZE]));
+            blocks.add(new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]));
         }
 
 //        Shuffle and convert
-        blocks = permutationStrategy.permuteStandardBlocks(blocks);
-        List<BlockLookahead> blockLookaheads = standardToLookaheadBlocksForSetup(blocks);
+        blocks = permutationStrategy.permuteTrivialBlocks(blocks);
+        List<BlockLookahead> blockLookaheads = trivialToLookaheadBlocksForSetup(blocks);
 
 //        Pick swap partners
         SecureRandom randomness = new SecureRandom();
@@ -509,15 +509,15 @@ public class AccessStrategyLookaheadOld implements AccessStrategy {
         return res;
     }
 
-    List<BlockLookahead> standardToLookaheadBlocksForSetup(List<BlockStandard> blocks) {
+    List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = 0; i < matrixHeight; i++) { // Columns
             for (int j = 0; j < matrixHeight; j++) { // Rows
                 Index index = new Index(j, i);
-                BlockStandard blockStandard = blocks.get(getFlatArrayIndex(index));
-                res.add(new BlockLookahead(blockStandard.getAddress(), blockStandard.getData(), j, i));
-                if (blockStandard.getAddress() != 0)
-                    positionMap.put(blockStandard.getAddress(), index);
+                BlockTrivial blockTrivial = blocks.get(getFlatArrayIndex(index));
+                res.add(new BlockLookahead(blockTrivial.getAddress(), blockTrivial.getData(), j, i));
+                if (blockTrivial.getAddress() != 0)
+                    positionMap.put(blockTrivial.getAddress(), index);
             }
         }
         return res;
