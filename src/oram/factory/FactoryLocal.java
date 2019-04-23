@@ -20,14 +20,16 @@ import java.util.List;
 
 public class FactoryLocal implements Factory {
     private final List<ORAMFactory> oramFactories;
+    private final int numberOfORAMLayers;
     private EncryptionStrategyImpl encryptionStrategy;
     private EncryptionStrategyCounting encryptionStrategyCounting;
     private CommunicationStrategyStub communicationStrategyStub;
     private CommunicationStrategyCounting communicationStrategyCounting;
     private PermutationStrategyImpl permutationStrategy;
 
-    public FactoryLocal(List<ORAMFactory> oramFactories) {
+    public FactoryLocal(List<ORAMFactory> oramFactories, int numberOfORAMLayers) {
         this.oramFactories = oramFactories;
+        this.numberOfORAMLayers = numberOfORAMLayers;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class FactoryLocal implements Factory {
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
         if (communicationStrategyStub == null) {
-            communicationStrategyStub = new CommunicationStrategyStub(oramFactories);
+            communicationStrategyStub = new CommunicationStrategyStub(oramFactories, numberOfORAMLayers);
             communicationStrategyCounting = new CommunicationStrategyCounting(communicationStrategyStub);
         }
         return communicationStrategyCounting;

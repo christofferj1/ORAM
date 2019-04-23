@@ -1,5 +1,6 @@
 package oram;
 
+import javafx.util.Pair;
 import oram.block.BlockEncrypted;
 import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
@@ -36,8 +37,9 @@ public class MainLocal {
 //        ORAMFactory oramFactory = getOramFactory("main");
 //        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
 //                oramFactory.factorySizeParameter1());
-        List<ORAMFactory> oramFactories = getORAMFactories();
-        Factory factory = new FactoryLocal(oramFactories);
+        Pair<List<ORAMFactory>, Integer> oramFactoryPair = getORAMFactories();
+        List<ORAMFactory> oramFactories = oramFactoryPair.getKey();
+        Factory factory = new FactoryLocal(oramFactories, oramFactoryPair.getValue());
 
         int numberOfBlocks = oramFactories.get(0).getNumberOfBlocks();
 
@@ -199,10 +201,10 @@ public class MainLocal {
         }
     }
 
-    private static List<ORAMFactory> getORAMFactories() {
+    private static Pair<List<ORAMFactory>,Integer> getORAMFactories() {
         int numberOfORAMS = Util.getInteger("number of ORAMs");
         if (numberOfORAMS == 1)
-            return Collections.singletonList(getOramFactory("ONLY ORAM"));
+            return new Pair<>(Collections.singletonList(getOramFactory("ONLY ORAM")), 1);
 
         if (numberOfORAMS > 5) {
             System.out.println("Can't create higher than 5 recursive ORAMs");
@@ -228,7 +230,7 @@ public class MainLocal {
             }
         }
         factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
-        return factories;
+        return new Pair<>(factories, numberOfORAMS);
     }
 
     private static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {

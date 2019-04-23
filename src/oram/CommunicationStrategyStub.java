@@ -38,7 +38,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         blocks = new BlockEncrypted[size * bucketSize];
     }
 
-    public CommunicationStrategyStub(List<ORAMFactory> factories) {
+    public CommunicationStrategyStub(List<ORAMFactory> factories, int numberOfORAMLayers) {
         int offset = 0;
         int newOffset;
         List<String> addresses;
@@ -48,7 +48,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
 
         outer:
         for (int i = 0; i < factories.size(); i++) {
-            int levelSize = (int) Math.pow(2, (((factories.size() - 1) - i) * 4) + 6);
+            int levelSize = (int) Math.pow(2, (((numberOfORAMLayers - 1) - i) * 4) + 6);
             switch (factories.get(i).getClass().getSimpleName()) {
                 case "ORAMFactoryLookahead":
                     newOffset = offset + levelSize + (int) (2 * Math.sqrt(levelSize));

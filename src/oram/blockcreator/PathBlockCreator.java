@@ -95,7 +95,7 @@ public class PathBlockCreator implements BlockCreator {
 
             double percent = ((double) (i + 1) / blockPaths.size()) * 100;
             if (percent % 1 == 0)
-                Util.logAndPrint(logger, "    Done with " + ((int) percent) + "% of the files");
+                Util.logAndPrint(logger, "    Done with encrypting " + ((int) percent) + "% of the files");
         }
         return res;
     }
