@@ -172,6 +172,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             if (!writePositionMap())
                 return false;
             positionMap = null;
+        } else {
+            positionMap.put(0, -42);
         }
 
         Util.logAndPrint(logger, prefix + "    Blocks written to server");
@@ -238,13 +240,23 @@ public class AccessStrategyLookahead implements AccessStrategy {
         int addressToLookUp = address;
         if (recursiveLookup)
             addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
+        if (print) System.out.println(prefix + "Address to look up: " + addressToLookUp);
 
         Integer position;
         if (positionMap == null) {
+            if (print) System.out.println(prefix + "Getting position map from underlying ORAM");
+            if (addressToLookUp == 17)
+                System.out.println("jfldsjfldsj");
             Map<Integer, Integer> map = Util.getPositionMap(addressToLookUp, -42, accessStrategy);
             if (map == null)
                 return null;
 
+            if (print) {
+                System.out.print(prefix + "Position map received\n" + prefix);
+                for (Map.Entry e : map.entrySet())
+                    System.out.print(e.getKey() + " -> " + e.getValue() + ", ");
+                System.out.println(" ");
+            }
             Integer flatArrayIndex = map.getOrDefault(addressToLookUp, null);
 
             if (flatArrayIndex == null) {
@@ -391,12 +403,23 @@ public class AccessStrategyLookahead implements AccessStrategy {
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-            if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
-                return null;
+
+            if (swapReplacement.getAddress() == 0) {
+                if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            } else {
+                if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
+                    return null;
+            }
+//            if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
+//                return null;
         }
 
 //        Update position map
-        if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+        if (swapPartner.getAddress() == 0) {
+            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+        } else {
+            if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+        }
         if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
         if (blockFoundInMatrix || blockFoundInAccessStash)
@@ -618,23 +641,23 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
         res.addAll(swapStashList);
 
-        if (print) {
-            System.out.println(prefix + "Blocks returned from maintenance job, size: " + res.size());
-            for (BlockLookahead b : res)
-                System.out.println(prefix + "    " + b.toStringShort());
-        }
+//        if (print) {
+//            System.out.println(prefix + "Blocks returned from maintenance job, size: " + res.size());
+//            for (BlockLookahead b : res)
+//                System.out.println(prefix + "    " + b.toStringShort());
+//        }
         return res;
     }
 
     private boolean updatePositionMap(int key, int value) {
         if (print) System.out.print(prefix + "Update position map (put: " + key + " -> " + value);
         if (positionMap == null) {
-            if (print) System.out.print(" recursively\n");
+            if (print) System.out.print(" recursively)\n");
             byte[] valueBytes = Util.leIntToByteArray(value);
             if (accessStrategy.access(OperationType.WRITE, key, valueBytes, true, false) == null)
                 return false;
         } else {
-            if (print) System.out.print(" locally\n");
+            if (print) System.out.print(" locally)\n");
             positionMap.put(key, value);
         }
         return true;
