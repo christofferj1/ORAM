@@ -80,7 +80,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         Util.logAndPrint(logger, prefix + "Starting setup");
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
-            blocks.add(new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]));
+            blocks.add(new BlockTrivial(0, new byte[0])); // TODO: does this make any difference?
+//            blocks.add(new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]));
         }
 
         for (int i = blocks.size(); i > size; i--) {
@@ -106,8 +107,11 @@ public class AccessStrategyLookahead implements AccessStrategy {
             }
             futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
             accessCounter++;
-            int flatArrayIndex = getFlatArrayIndex(index);
-            swapPartners.add(blockLookaheads.get(flatArrayIndex));
+
+            BlockLookahead block = blockLookaheads.get(getFlatArrayIndex(index));
+            if (Util.isDummyAddress(0))
+                block.setData(Util.getRandomByteArray(Constants.BLOCK_SIZE)); // TODO: do I need more changes?
+            swapPartners.add(block);
         }
 //        System.out.println("Initial swap partners: ");
 //        for (SwapPartnerData s : futureSwapPartners)

@@ -25,3 +25,6 @@ The check boxes is to mark when something is added to the report
 
 * Trivial
  - [ ] This needs a setup to create a position map
+
+* Path
+ - [ ] Using bucket size 4
