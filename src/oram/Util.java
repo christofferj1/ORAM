@@ -382,7 +382,10 @@ public class Util {
         Map<Integer, Integer> res = null;
         ByteArrayInputStream bis = new ByteArrayInputStream(array);
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
-            res = (Map<Integer, Integer>) ois.readObject();
+            Map<byte[], byte[]> tmp = (Map<byte[], byte[]>) ois.readObject();
+            res = new HashMap<>();
+            for (Map.Entry e : tmp.entrySet())
+                res.put(byteArrayToLeInt((byte[]) e.getKey()), byteArrayToLeInt((byte[]) e.getValue()));
         } catch (IOException | ClassNotFoundException e) {
             logger.error("Unable to get position map from byte array");
             logger.error(e);
@@ -420,9 +423,13 @@ public class Util {
     }
 
     public static byte[] getByteArrayFromMap(Map<Integer, Integer> map) {
+        Map<byte[], byte[] > tmp = new HashMap<>();
+        for (Map.Entry e : map.entrySet())
+            tmp.put(leIntToByteArray((Integer) e.getKey()), leIntToByteArray((Integer) e.getValue()));
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(map);
+            oos.writeObject(tmp);
             oos.flush();
         } catch (IOException e) {
             logger.error("Unable to create byte array for dummy position array");

@@ -288,4 +288,14 @@ public class UtilTest {
 
         assertThat(Util.getLevelSize(0, 0), is(Constants.SIZE_1));
     }
+
+    @Test
+    public void shouldBeAbleToConvertBetweenByteArraysAndMaps() {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(1,2);
+        map.put(0,0);
+        map.put(-42, 321432432);
+        byte[] bytes = Util.getByteArrayFromMap(map);
+        assertThat(Util.getMapFromByteArray(bytes), is(map));
+    }
 }
