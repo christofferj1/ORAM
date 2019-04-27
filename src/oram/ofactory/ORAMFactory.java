@@ -37,4 +37,6 @@ public interface ORAMFactory {
     int getMaxStashSize();
 
     int getMaxStashSizeBetweenAccesses();
+
+    int getTotalSize();
 }

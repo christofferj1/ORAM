@@ -16,11 +16,13 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     private int numberOfBlocks;
     private int numberOfRounds;
     private int offset;
+    private int totalSize;
 
     public ORAMFactoryTrivial(int size, int offset) {
         this.size = size + 1;
         numberOfBlocks = Math.min(size, 1000);
         this.offset = offset;
+        totalSize = size + 1;
     }
 
     public ORAMFactoryTrivial() {
@@ -28,6 +30,7 @@ public class ORAMFactoryTrivial implements ORAMFactory {
         numberOfBlocks = Util.getInteger("number of blocks");
         numberOfRounds = Util.getInteger("number of rounds");
         offset = Util.getInteger("offset");
+        totalSize = size + 1;
     }
 
     @Override
@@ -64,6 +67,11 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     @Override
     public int getMaxStashSizeBetweenAccesses() {
         return -42;
+    }
+
+    @Override
+    public int getTotalSize() {
+        return totalSize;
     }
 
     @Override

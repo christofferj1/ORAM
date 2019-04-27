@@ -9,8 +9,6 @@ import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.List;
  */
 
 public class CommunicationStrategyStub implements CommunicationStrategy {
-    private static final Logger logger = LogManager.getLogger("log");
     private BlockEncrypted[] blocks;
     private int bucketSize;
 
@@ -39,9 +36,25 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     public CommunicationStrategyStub(List<ORAMFactory> factories, int numberOfORAMLayers) {
+        List<String> addresses;
+        if (factories.size() == 1) {
+            ORAMFactory oramFactory = factories.get(0);
+            addresses = Util.getAddressStrings(0, oramFactory.getTotalSize());
+            switch (oramFactory.getClass().getSimpleName()) {
+                case "ORAMFactoryLookahead":
+                    blocks = new LookaheadBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
+                    return;
+                case "ORAMFactoryPath":
+                    blocks = new PathBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
+                    return;
+                default:
+                    blocks = new TrivialBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
+                    return;
+            }
+        }
+
         int offset = 0;
         int newOffset;
-        List<String> addresses;
 
         List<BlockEncrypted> blocksList = new ArrayList<>();
         List<BlockEncrypted> blocksTmp;

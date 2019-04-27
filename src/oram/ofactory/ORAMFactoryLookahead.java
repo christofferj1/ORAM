@@ -18,6 +18,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     private int rows;
     private int columns;
     private int offset;
+    private int totalSize;
 
     public ORAMFactoryLookahead(int size, int offSet) {
         this.size = size;
@@ -25,6 +26,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
         numberOfBlocks = Math.min(size, 1000);
         rows = (int) Math.sqrt(size);
         columns = rows + 2;
+        totalSize = (int) (size + 2 * Math.sqrt(size));
     }
 
     public ORAMFactoryLookahead() {
@@ -33,6 +35,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
         numberOfRounds = Util.getInteger("number of rounds");
         rows = Util.getInteger("number of rows");
         columns = rows + 2;
+        totalSize = (int) (size + 2 * Math.sqrt(size));
     }
 
     @Override
@@ -70,6 +73,11 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     @Override
     public int getMaxStashSizeBetweenAccesses() {
         return -42;
+    }
+
+    @Override
+    public int getTotalSize() {
+        return totalSize;
     }
 
     @Override

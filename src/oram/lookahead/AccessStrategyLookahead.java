@@ -249,8 +249,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
         Integer position;
         if (positionMap == null) {
             if (print) System.out.println(prefix + "Getting position map from underlying ORAM");
-            if (addressToLookUp == 17)
-                System.out.println("jfldsjfldsj");
             Map<Integer, Integer> map = Util.getPositionMap(addressToLookUp, -42, accessStrategy);
             if (map == null)
                 return null;

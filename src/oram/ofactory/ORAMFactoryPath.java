@@ -20,12 +20,14 @@ public class ORAMFactoryPath implements ORAMFactory {
     private int numberOfBlocks;
     private int numberOfRounds;
     private int offset;
+    private int totalSize;
 
     public ORAMFactoryPath(int size, int offset) {
         this.offset = offset;
         numberOfBlocks = Math.min(size, 1000);
         this.size = size - 1;
         bucketSize = DEFAULT_BUCKET_SIZE;
+        totalSize = size * bucketSize;
     }
 
     public ORAMFactoryPath() {
@@ -34,6 +36,7 @@ public class ORAMFactoryPath implements ORAMFactory {
         numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
         offset = Util.getInteger("offset");
+        totalSize = size * bucketSize;
     }
 
     @Override
@@ -74,6 +77,11 @@ public class ORAMFactoryPath implements ORAMFactory {
     @Override
     public int getMaxStashSizeBetweenAccesses() {
         return accessStrategy.getMaxStashSizeBetweenAccesses();
+    }
+
+    @Override
+    public int getTotalSize() {
+        return totalSize;
     }
 
     @Override

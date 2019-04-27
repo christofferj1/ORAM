@@ -49,17 +49,17 @@ public class Util {
         return address == 0;
     }
 
-    //    The following two functions are from
-//    The one for big endian integers is an adoption of those
-//    https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
-//        TODO: Needs testing. All numbers from 0 to like 100.
+    /**
+     * The following two functions are from
+     * https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
+     * The one for big endian integers is an adoption of those
+     */
     public static int byteArrayToLeInt(byte[] b) {
         final ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         return bb.getInt();
     }
 
-    //        TODO: Needs testing. All numbers from 0 to like 100.
     public static byte[] leIntToByteArray(int i) {
         final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
         bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -67,7 +67,6 @@ public class Util {
         return bb.array();
     }
 
-    //        TODO: Needs testing. All numbers from 0 to like 100.
     public static byte[] beIntToByteArray(int i) {
         final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
         bb.order(ByteOrder.BIG_ENDIAN);
@@ -84,7 +83,6 @@ public class Util {
         return count;
     }
 
-    //    TODO: Test, and for bytes with negative values
     public static String printByteArray(byte[] array, boolean trimEnd) {
         if (array == null) return null;
 
