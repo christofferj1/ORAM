@@ -5,6 +5,10 @@ import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.block.BlockPath;
 import oram.encryption.EncryptionStrategy;
+import oram.factory.Factory;
+import oram.lookahead.AccessStrategyDummy;
+import oram.ofactory.ORAMFactory;
+import oram.ofactory.ORAMFactoryLookaheadTrivial;
 import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
@@ -442,8 +446,8 @@ public class Util {
         Scanner scanner = new Scanner(System.in);
         Util.logAndPrint(logger, string);
         String answer = scanner.nextLine();
-        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
-            System.out.println("Choose ORAM [l/p/t]");
+        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t") || answer.equals("lt"))) {
+            System.out.println("Choose ORAM [l/lt/p/t]");
             answer = scanner.nextLine();
         }
         logger.info(answer);
@@ -467,5 +471,21 @@ public class Util {
         for (int i = from; i < to; i++)
             addresses.add(String.valueOf(i));
         return addresses;
+    }
+
+    public static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
+        AccessStrategy[] res = new AccessStrategy[factories.size()];
+        for (int i = factories.size() - 1; i >= 0; i--) {
+            ORAMFactory oramFactory = factories.get(i);
+            int prefixSize = i * 10;
+
+            if (i == factories.size() - 1)
+                res[i] = oramFactory.getAccessStrategy(key, factory, null, prefixSize);
+            else if (oramFactory instanceof ORAMFactoryLookaheadTrivial)
+                res[i] = oramFactory.getAccessStrategy(key, factory, new AccessStrategyDummy(), prefixSize);
+            else
+                res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
+        }
+        return new ArrayList<>(Arrays.asList(res));
     }
 }

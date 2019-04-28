@@ -10,10 +10,8 @@ import oram.encryption.EncryptionStrategyCounting;
 import oram.factory.Factory;
 import oram.factory.FactoryLocal;
 import oram.lookahead.AccessStrategyLookahead;
-import oram.ofactory.ORAMFactory;
-import oram.ofactory.ORAMFactoryLookahead;
-import oram.ofactory.ORAMFactoryPath;
-import oram.ofactory.ORAMFactoryTrivial;
+import oram.lookahead.AccessStrategyLookaheadTrivial;
+import oram.ofactory.*;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,10 +66,10 @@ public class MainLocal {
 //        if (oramFactory instanceof ORAMFactoryLookahead)
 //            access.setup(blocks);
 
-        List<AccessStrategy> accesses = getAccessStrategies(oramFactories, key, factory);
+        List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
         for (int i = accesses.size(); i > 0; i--) {
             AccessStrategy a = accesses.get(i - 1);
-            if (a instanceof AccessStrategyLookahead)
+            if (a instanceof AccessStrategyLookahead || a instanceof AccessStrategyLookaheadTrivial)
                 if (!a.setup(blocks))
                     return;
         }
@@ -181,15 +179,17 @@ public class MainLocal {
 
     private static ORAMFactory getOramFactory(String name) {
         Scanner scanner = new Scanner(System.in);
-        Util.logAndPrint(logger, "Choose ORAM: " + name + " [l/p/t]");
+        Util.logAndPrint(logger, "Choose ORAM: " + name + " [l/lt/p/t]");
         String answer = scanner.nextLine();
-        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
-            System.out.println("Choose ORAM [l/p/t]");
+        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t") || answer.equals("lt"))) {
+            System.out.println("Choose ORAM [l/lt/p/t]");
             answer = scanner.nextLine();
         }
         switch (answer) {
             case "l":
                 return new ORAMFactoryLookahead();
+            case "lt":
+                return new ORAMFactoryLookaheadTrivial();
             case "p":
                 return new ORAMFactoryPath();
             case "t":
@@ -201,7 +201,7 @@ public class MainLocal {
         }
     }
 
-    private static Pair<List<ORAMFactory>,Integer> getORAMFactories() {
+    private static Pair<List<ORAMFactory>, Integer> getORAMFactories() {
         int numberOfORAMS = Util.getInteger("number of ORAMs");
         if (numberOfORAMS == 1)
             return new Pair<>(Collections.singletonList(getOramFactory("ONLY ORAM")), 1);
@@ -220,6 +220,9 @@ public class MainLocal {
                     factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);
                     break;
+                case "lt":
+                    factories.add(new ORAMFactoryLookaheadTrivial(levelSize, offset));
+                    break outer;
                 case "p":
                     factories.add(new ORAMFactoryPath(levelSize, offset));
                     offset += (levelSize - 1) * Constants.DEFAULT_BUCKET_SIZE;
@@ -231,19 +234,6 @@ public class MainLocal {
         }
         factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
         return new Pair<>(factories, numberOfORAMS);
-    }
-
-    private static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
-        AccessStrategy[] res = new AccessStrategy[factories.size()];
-        for (int i = factories.size() - 1; i >= 0; i--) {
-            ORAMFactory oramFactory = factories.get(i);
-            int prefixSize = i * 10;
-            if (i == factories.size() - 1)
-                res[i] = oramFactory.getAccessStrategy(key, factory, null, prefixSize);
-            else
-                res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
-        }
-        return new ArrayList<>(Arrays.asList(res));
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,

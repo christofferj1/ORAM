@@ -42,6 +42,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
             addresses = Util.getAddressStrings(0, oramFactory.getTotalSize());
             switch (oramFactory.getClass().getSimpleName()) {
                 case "ORAMFactoryLookahead":
+                case "ORAMFactoryLookaheadTrivial":
                     blocks = new LookaheadBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
                     return;
                 case "ORAMFactoryPath":
@@ -65,6 +66,14 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
             switch (factories.get(i).getClass().getSimpleName()) {
                 case "ORAMFactoryLookahead":
                     newOffset = offset + levelSize + (int) (2 * Math.sqrt(levelSize));
+                    addresses = Util.getAddressStrings(offset, newOffset);
+                    offset = newOffset;
+
+                    blocksTmp = new LookaheadBlockCreator().createBlocks(addresses);
+                    blocksList.addAll(blocksTmp);
+                    break;
+                case "ORAMFactoryLookaheadTrivial":
+                    newOffset = (int) (offset + levelSize + (int) (2 * Math.sqrt(levelSize)) + (Math.ceil((double) levelSize / Constants.POSITION_BLOCK_SIZE)));
                     addresses = Util.getAddressStrings(offset, newOffset);
                     offset = newOffset;
 
