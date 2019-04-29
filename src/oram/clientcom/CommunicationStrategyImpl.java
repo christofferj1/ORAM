@@ -22,7 +22,6 @@ import java.util.List;
  */
 
 public class CommunicationStrategyImpl implements CommunicationStrategy {
-    private static final int ENCRYPTED_INTEGER_SIZE = 32;
     private final Logger logger = LogManager.getLogger("log");
     private Socket socket;
     private DataOutputStream dataOutputStream;
@@ -62,8 +61,8 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
                 dataInputStream.readFully(data, 0, length);
             }
 
-            byte[] blockAddress = Arrays.copyOfRange(data, 0, ENCRYPTED_INTEGER_SIZE);
-            byte[] blockData = Arrays.copyOfRange(data, ENCRYPTED_INTEGER_SIZE, length);
+            byte[] blockAddress = Arrays.copyOfRange(data, 0, Constants.ENCRYPTED_INTEGER_SIZE);
+            byte[] blockData = Arrays.copyOfRange(data, Constants.ENCRYPTED_INTEGER_SIZE, length);
 
             res = new BlockEncrypted(blockAddress, blockData);
         } catch (IOException e) {
@@ -92,7 +91,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             dataOutputStream.write(Util.beIntToByteArray(length));
             dataOutputStream.write(addressBytes);
 
-            if (block.getAddress().length != ENCRYPTED_INTEGER_SIZE) {
+            if (block.getAddress().length != Constants.ENCRYPTED_INTEGER_SIZE) {
                 logger.error("Address byte array has wrong size: " + block.getAddress().length);
                 return false;
             }
@@ -162,8 +161,8 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
                     dataInputStream.readFully(data, 0, length);
                 }
 
-                byte[] blockAddress = Arrays.copyOfRange(data, 0, ENCRYPTED_INTEGER_SIZE);
-                byte[] blockData = Arrays.copyOfRange(data, ENCRYPTED_INTEGER_SIZE, length);
+                byte[] blockAddress = Arrays.copyOfRange(data, 0, Constants.ENCRYPTED_INTEGER_SIZE);
+                byte[] blockData = Arrays.copyOfRange(data, Constants.ENCRYPTED_INTEGER_SIZE, length);
 
                 res.add(new BlockEncrypted(blockAddress, blockData));
             }
@@ -199,7 +198,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
                 dataOutputStream.write(Util.beIntToByteArray(length));
                 dataOutputStream.write(addressBytes);
 
-                if (blocks.get(i).getAddress().length != ENCRYPTED_INTEGER_SIZE) {
+                if (blocks.get(i).getAddress().length != Constants.ENCRYPTED_INTEGER_SIZE) {
                     logger.error("Address byte array has wrong size: " + blocks.get(i).getAddress().length);
                     res = false;
                     break;
@@ -311,7 +310,7 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     }
 
     private boolean setupConnection() {
-        String ipAddress = "18.188.20.110";
+        String ipAddress = "18.191.44.113";
 //        String ipAddress = "127.0.0.1";
 //        String ipAddress = "10.192.103.247";
 

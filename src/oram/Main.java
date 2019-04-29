@@ -219,7 +219,7 @@ public class Main {
         outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch (Util.chooseORAMType("ORAM number " + i)) {
+            switch (Util.chooseORAMType("ORAM number " + i + " [l/lt/p/t]")) {
                 case "l":
                     factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);

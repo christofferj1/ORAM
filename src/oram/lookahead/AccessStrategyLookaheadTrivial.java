@@ -208,11 +208,11 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         List<BlockEncrypted> encryptedBlocks = new ArrayList<>();
 
         int positionMapBlocks = (int) Math.ceil((double) size / Constants.POSITION_BLOCK_SIZE);
-        for (int i = 1; i <= positionMapBlocks; i++) {
-            if (print) System.out.print(prefix + "    Indices in map " + i + ": ");
+        for (int i = 0; i < positionMapBlocks; i++) {
+            if (print) System.out.print(prefix + "    Indices in map " + (i + 1) + ": ");
             Map<Integer, Integer> map = new HashMap<>();
             for (int j = 0; j < Constants.POSITION_BLOCK_SIZE; j++) {
-                int index = (i - 1) * Constants.POSITION_BLOCK_SIZE + j;
+                int index = i * Constants.POSITION_BLOCK_SIZE + j;
 
                 if (entries.size() > index) { // Fill the rest with dummy mappings
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
@@ -225,7 +225,8 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             if (print) System.out.println(" ");
             addresses.add(positionMapOffSet + i);
             byte[] encryptedData = encryptionStrategy.encrypt(Util.getByteArrayFromMap(map), secretKey);
-            encryptedBlocks.add(new BlockEncrypted(null, encryptedData));
+            byte[] addressBytes = Util.getRandomByteArray(Constants.ENCRYPTED_INTEGER_SIZE);
+            encryptedBlocks.add(new BlockEncrypted(addressBytes, encryptedData));
         }
         return communicationStrategy.writeArray(addresses, encryptedBlocks);
     }

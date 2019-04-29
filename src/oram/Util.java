@@ -479,10 +479,10 @@ public class Util {
             ORAMFactory oramFactory = factories.get(i);
             int prefixSize = i * 10;
 
-            if (i == factories.size() - 1)
-                res[i] = oramFactory.getAccessStrategy(key, factory, null, prefixSize);
-            else if (oramFactory instanceof ORAMFactoryLookaheadTrivial)
+            if (oramFactory instanceof ORAMFactoryLookaheadTrivial)
                 res[i] = oramFactory.getAccessStrategy(key, factory, new AccessStrategyDummy(), prefixSize);
+            else if (i == factories.size() - 1)
+                res[i] = oramFactory.getAccessStrategy(key, factory, null, prefixSize);
             else
                 res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
         }

@@ -27,7 +27,7 @@ public class ORAMFactoryLookaheadTrivial implements ORAMFactory {
         numberOfBlocks = Math.min(size, 1000);
         rows = (int) Math.sqrt(size);
         columns = rows + 2;
-        totalSize = (int) (size + 2 * Math.sqrt(size) + Math.ceil(size / Constants.POSITION_BLOCK_SIZE));
+        totalSize = (int) (size + 2 * Math.sqrt(size) + Math.ceil((double) size / Constants.POSITION_BLOCK_SIZE));
     }
 
     public ORAMFactoryLookaheadTrivial() {
@@ -36,7 +36,7 @@ public class ORAMFactoryLookaheadTrivial implements ORAMFactory {
         numberOfRounds = Util.getInteger("number of rounds");
         rows = Util.getInteger("number of rows");
         columns = rows + 2;
-        totalSize = (int) (size + 2 * Math.sqrt(size) + Math.ceil(size / Constants.POSITION_BLOCK_SIZE));
+        totalSize = (int) (size + 2 * Math.sqrt(size) + Math.ceil((double) size / Constants.POSITION_BLOCK_SIZE));
     }
 
     @Override
