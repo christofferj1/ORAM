@@ -365,11 +365,11 @@ public class AccessStrategyLookaheadMult implements AccessStrategy {
 
 //        Update swap partner index and encrypt it
         swapPartner.setIndex(indexOfCurrentAddress);
-        BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
-        if (encryptedSwapPartner == null) {
-            logger.error(prefix + "Encrypting swap partner failed");
-            return null;
-        }
+//        BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
+//        if (encryptedSwapPartner == null) {
+//            logger.error(prefix + "Encrypting swap partner failed");
+//            return null;
+//        }
 
         if (print) {
             System.out.println(prefix + "Block and swap partner: ");
@@ -431,7 +431,7 @@ public class AccessStrategyLookaheadMult implements AccessStrategy {
         if (blockFoundInMatrix || blockFoundInAccessStash)
             if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 
-        //        Write block back to the matrix
+//        Write block back to the matrix
         BlockEncrypted encryptedBlockToWriteBackToServer = encryptBlock(blockToWriteBackToMatrix);
         if (encryptedBlockToWriteBackToServer == null) {
             logger.error(prefix + "Unable to encrypt block to write back to server");

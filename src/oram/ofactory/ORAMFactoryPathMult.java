@@ -19,11 +19,9 @@ public class ORAMFactoryPathMult implements ORAMFactory {
     private int bucketSize;
     private int numberOfBlocks;
     private int numberOfRounds;
-    private int offset;
     private int totalSize;
 
-    public ORAMFactoryPathMult(int size, int offset) {
-        this.offset = offset;
+    public ORAMFactoryPathMult(int size) {
         numberOfBlocks = Math.min(size, 1000);
         this.size = size - 1;
         bucketSize = DEFAULT_BUCKET_SIZE;
@@ -35,7 +33,6 @@ public class ORAMFactoryPathMult implements ORAMFactory {
         numberOfBlocks = Util.getInteger("number of blocks");
         numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
-        offset = Util.getInteger("offset");
         totalSize = size * bucketSize;
     }
 
@@ -48,8 +45,8 @@ public class ORAMFactoryPathMult implements ORAMFactory {
     public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy,
                                             int prefixSize) {
         if (this.accessStrategy == null)
-            this.accessStrategy = new AccessStrategyPathMult(size, bucketSize, secretKey, factory, accessStrategy,
-                    offset, prefixSize);
+            this.accessStrategy = new AccessStrategyPathMult(size, bucketSize, secretKey, factory, accessStrategy, 0,
+                    prefixSize);
         return this.accessStrategy;
     }
 
@@ -60,7 +57,7 @@ public class ORAMFactoryPathMult implements ORAMFactory {
 
     @Override
     public int getOffSet() {
-        return offset;
+        return 0;
     }
 
     @Override

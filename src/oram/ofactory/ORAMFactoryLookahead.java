@@ -56,7 +56,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
 
     @Override
     public int getOffSet() {
-        return 0;
+        return offset;
     }
 
     @Override

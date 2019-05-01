@@ -17,12 +17,10 @@ public class ORAMFactoryLookaheadMult implements ORAMFactory {
     private int numberOfRounds;
     private int rows;
     private int columns;
-    private int offset;
     private int totalSize;
 
-    public ORAMFactoryLookaheadMult(int size, int offSet) {
+    public ORAMFactoryLookaheadMult(int size) {
         this.size = size;
-        this.offset = offSet;
         numberOfBlocks = Math.min(size, 1000);
         rows = (int) Math.sqrt(size);
         columns = rows + 2;
@@ -46,7 +44,7 @@ public class ORAMFactoryLookaheadMult implements ORAMFactory {
     @Override
     public AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy,
                                             int prefixSize) {
-        return new AccessStrategyLookaheadMult(size, rows, secretKey, factory, offset, accessStrategy, prefixSize);
+        return new AccessStrategyLookaheadMult(size, rows, secretKey, factory, 0, accessStrategy, prefixSize);
     }
 
     @Override

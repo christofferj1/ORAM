@@ -42,10 +42,12 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
             addresses = Util.getAddressStrings(0, oramFactory.getTotalSize());
             switch (oramFactory.getClass().getSimpleName()) {
                 case "ORAMFactoryLookahead":
+                case "ORAMFactoryLookaheadMult":
                 case "ORAMFactoryLookaheadTrivial":
                     blocks = new LookaheadBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
                     return;
                 case "ORAMFactoryPath":
+                case "ORAMFactoryPathMult":
                     blocks = new PathBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
                     return;
                 default:

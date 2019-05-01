@@ -3,14 +3,17 @@ package oram;
 import oram.block.BlockEncrypted;
 import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
+import oram.clientcom.CommunicationStrategyCounting;
 import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
-import oram.factory.FactoryImpl;
-import oram.lookahead.AccessStrategyLookahead;
-import oram.lookahead.AccessStrategyLookaheadTrivial;
-import oram.ofactory.*;
+import oram.factory.FactoryLocal;
+import oram.lookahead.AccessStrategyLookaheadMult;
+import oram.ofactory.ORAMFactory;
+import oram.ofactory.ORAMFactoryLookaheadMult;
+import oram.ofactory.ORAMFactoryPath;
+import oram.ofactory.ORAMFactoryPathMult;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,10 +37,10 @@ public class MainMult {
 //        ORAMFactory oramFactory = getOramFactory("main");
 //        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
 //                oramFactory.factorySizeParameter1());
-        List<ORAMFactory> oramFactories = getORAMFactories();
-        Factory factory = new FactoryImpl();
+        ORAMFactory oramFactory = getORAMFactory();
+        Factory factory = new FactoryLocal(Collections.singletonList(oramFactory), 1);
 
-        int numberOfBlocks = oramFactories.get(0).getNumberOfBlocks();
+        int numberOfBlocks = oramFactory.getNumberOfBlocks();
 
         BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
         List<BlockTrivial> blocks = new ArrayList<>();
@@ -49,7 +52,7 @@ public class MainMult {
             blockArray[i] = block;
         }
 
-        boolean pathORAMChosen = oramFactories.get(0) instanceof ORAMFactoryPath;
+        boolean pathORAMChosen = oramFactory instanceof ORAMFactoryPath;
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
         communicationStrategy.start();
 
@@ -64,23 +67,23 @@ public class MainMult {
 //        if (oramFactory instanceof ORAMFactoryLookahead)
 //            access.setup(blocks);
 
-        List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
-        for (int i = accesses.size(); i > 0; i--) {
-            AccessStrategy a = accesses.get(i - 1);
-            if (a instanceof AccessStrategyLookahead || a instanceof AccessStrategyLookaheadTrivial)
-                if (!a.setup(blocks))
-                    return;
-        }
+        AccessStrategy access = oramFactory.getAccessStrategy(key, factory, null, 0);
+        if (access instanceof AccessStrategyLookaheadMult)
+            if (!access.setup(blocks))
+                return;
 
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
-        int numberOfRounds = oramFactories.get(0).getNumberOfRounds();
+        int numberOfRounds = oramFactory.getNumberOfRounds();
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
 //        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
 //        Util.logAndPrint(logger, resume.toString());
-        StringBuilder resume = initializeStringBuilder(oramFactories);
+//        StringBuilder resume = initializeStringBuilder(oramFactory);
+        StringBuilder resume = new StringBuilder(oramFactory.getInitString());
+        resume.append("\n");
+        Util.logAndPrint(logger, oramFactory.getInitString());
 
 //        for (int j = 0; j < oramFactories.size(); j++) {
 //            if (accesses.get(j) instanceof AccessStrategyPath)
@@ -106,7 +109,7 @@ public class MainMult {
                 data = null;
             }
 
-            byte[] res = accesses.get(0).access(op, address, data, false, false);
+            byte[] res = access.access(op, address, data, false, false);
             if (res == null) break;
 
 //            res = Util.removeTrailingZeroes(res);
@@ -145,7 +148,8 @@ public class MainMult {
             String percentString = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
             if (percentString != null) {
                 long tmp = communicationStrategy.speedTest();
-                percentString += ", speed test: " + (tmp / 1000000) + " ms, " + (16 / (tmp / 1000000)) + " Mb/ms";
+                if (!(communicationStrategy instanceof CommunicationStrategyCounting))
+                    percentString += ", speed test: " + (tmp / 1000000) + " ms, " + (16 / (tmp / 1000000)) + " Mb/ms";
 
                 if (tmp < 0)
                     break;
@@ -161,7 +165,7 @@ public class MainMult {
         }
 
         if (pathORAMChosen)
-            Util.logAndPrint(logger, "Max stash size: " + oramFactories.get(0).getMaxStashSize() + ", max stash size between accesses: " + oramFactories.get(0).getMaxStashSizeBetweenAccesses());
+            Util.logAndPrint(logger, "Max stash size: " + oramFactory.getMaxStashSize() + ", max stash size between accesses: " + oramFactory.getMaxStashSizeBetweenAccesses());
 
         Util.logAndPrint(logger, "Overwriting with dummy blocks");
         if (communicationStrategy.sendEndSignal())
@@ -181,63 +185,27 @@ public class MainMult {
         Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
     }
 
-    private static ORAMFactory getOramFactory(String name) {
+    private static ORAMFactory getORAMFactory() {
+        int size = Util.getInteger("Size");
+
         Scanner scanner = new Scanner(System.in);
-        Util.logAndPrint(logger, "Choose ORAM: " + name + " [l/lt/p/t]");
+        Util.logAndPrint(logger, "Choose ORAM [l/p]");
         String answer = scanner.nextLine();
-        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t") || answer.equals("lt"))) {
-            System.out.println("Choose ORAM [l/lt/p/t]");
+        while (!(answer.equals("l") || answer.equals("p"))) {
+            System.out.println("Choose ORAM [l/p]");
             answer = scanner.nextLine();
         }
-        switch (answer) {
-            case "l":
-                return new ORAMFactoryLookahead();
-            case "lt":
-                return new ORAMFactoryLookaheadTrivial();
-            case "p":
-                return new ORAMFactoryPath();
-            case "t":
-                return new ORAMFactoryTrivial();
-            default:
-                logger.error("Unable to find ORAM factory for: " + answer);
-                System.exit(-1);
-                return null;
-        }
-    }
+        logger.info(answer);
 
-    private static List<ORAMFactory> getORAMFactories() {
-        int numberOfORAMS = Util.getInteger("number of ORAMs");
-        if (numberOfORAMS == 1)
-            return Collections.singletonList(getOramFactory("ONLY ORAM"));
+        ORAMFactory res;
 
-        if (numberOfORAMS > 5) {
-            System.out.println("Can't create higher than 5 recursive ORAMs");
-            System.exit(-1);
-        }
-        int offset = 0;
-        List<ORAMFactory> factories = new ArrayList<>();
-        outer:
-        for (int i = 0; i < numberOfORAMS; i++) {
-            int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch (Util.chooseORAMType("ORAM number " + i + " [l/lt/p/t]")) {
-                case "l":
-                    factories.add(new ORAMFactoryLookahead(levelSize, offset));
-                    offset += levelSize + 2 * Math.sqrt(levelSize);
-                    break;
-                case "lt":
-                    factories.add(new ORAMFactoryLookaheadTrivial(levelSize, offset));
-                    break outer;
-                case "p":
-                    factories.add(new ORAMFactoryPath(levelSize, offset));
-                    offset += (levelSize - 1) * Constants.DEFAULT_BUCKET_SIZE;
-                    break;
-                default:
-                    factories.add(new ORAMFactoryTrivial(levelSize, offset));
-                    break outer;
-            }
-        }
-        factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
-        return factories;
+        if (answer.equals("l"))
+            res = new ORAMFactoryLookaheadMult(size);
+        else
+            res = new ORAMFactoryPathMult(size);
+
+        res.setNumberOfRounds(Util.getInteger("Number of rounds"));
+        return res;
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,
@@ -246,15 +214,5 @@ public class MainMult {
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j + offset);
         System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
-    }
-
-    private static StringBuilder initializeStringBuilder(List<ORAMFactory> factories) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < factories.size(); i++) {
-            String string = Util.getEmptyStringOfLength(i * 5) + factories.get(i).getInitString();
-            builder.append(string).append("\n");
-            Util.logAndPrint(logger, string);
-        }
-        return builder;
     }
 }
