@@ -8,7 +8,7 @@ import oram.clientcom.CommunicationStrategyTiming;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
-import oram.factory.FactoryLocal;
+import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookaheadMult;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookaheadMult;
@@ -38,7 +38,7 @@ public class MainMult {
 //        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
 //                oramFactory.factorySizeParameter1());
         ORAMFactory oramFactory = getORAMFactory();
-        Factory factory = new FactoryLocal(Collections.singletonList(oramFactory), 1);
+        Factory factory = new FactoryImpl();
 
         int numberOfBlocks = oramFactory.getNumberOfBlocks();
 

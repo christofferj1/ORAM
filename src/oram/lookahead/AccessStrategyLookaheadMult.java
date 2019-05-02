@@ -499,6 +499,9 @@ public class AccessStrategyLookaheadMult implements AccessStrategy {
             column.add(block);
         }
 
+        for (int i = 0; i < matrixHeight; i++)
+            column.get(i).setIndex(new Index(i, columnIndex));
+
 //        Move blocks from access stash to column
         if (print) {
             System.out.println(prefix + "    Move blocks from access stash to column");
