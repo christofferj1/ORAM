@@ -49,6 +49,7 @@ public class MainContinue {
 
         for (int j = 0; j < oramFactories.size(); j++) {
             ORAMFactory oramFactory = oramFactories.get(j);
+            oramFactory.setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
 
             BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
