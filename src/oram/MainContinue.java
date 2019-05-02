@@ -55,9 +55,7 @@ public class MainContinue {
             BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
             List<BlockTrivial> blocks = new ArrayList<>();
             for (int i = 1; i <= numberOfBlocks; i++) {
-                int mapBeginning = (i - 1) * Constants.POSITION_BLOCK_SIZE + 1;
-                Map<Integer, Integer> map = Util.getDummyMap(mapBeginning);
-                BlockTrivial block = new BlockTrivial(i, Util.getByteArrayFromMap(map));
+                BlockTrivial block = new BlockTrivial(i, new byte[Constants.BLOCK_SIZE]);
                 blocks.add(block);
                 blockArray[i] = block;
             }
