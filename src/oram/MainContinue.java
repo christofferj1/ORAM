@@ -36,7 +36,7 @@ public class MainContinue {
 //                oramFactory.factorySizeParameter1());
 
         List<ORAMFactory> oramFactories = new ArrayList<>();
-        int size = 64;
+        int size = Util.getInteger("size");
         ORAMFactoryLookahead oramFactoryLookahead = new ORAMFactoryLookahead(size, 0);
         oramFactories.add(oramFactoryLookahead);
         ORAMFactoryPath oramFactoryPath = new ORAMFactoryPath(size, 0);
@@ -45,7 +45,7 @@ public class MainContinue {
         oramFactories.add(oramFactoryTrivial);
 
         int numberOfBlocks = Math.min(size, 1000);
-        int numberOfRounds = 40;
+        int numberOfRounds = Util.getInteger("number of rounds");
 
         for (int j = 0; j < oramFactories.size(); j++) {
             ORAMFactory oramFactory = oramFactories.get(j);
