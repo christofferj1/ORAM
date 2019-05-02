@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 apply plugin: 'application'
 
-mainClassName = 'oram.Main'
+mainClassName = 'oram.MainContinue'
 
 sourceSets {
     main {
