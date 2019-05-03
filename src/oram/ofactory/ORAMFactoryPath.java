@@ -32,10 +32,10 @@ public class ORAMFactoryPath implements ORAMFactory {
 
     public ORAMFactoryPath() {
         size = Util.getInteger("size");
-        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfBlocks = Math.min(size, 1000);
         numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
-        offset = Util.getInteger("offset");
+        offset = 0;
         totalSize = size * bucketSize;
     }
 
