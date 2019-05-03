@@ -31,9 +31,9 @@ public class ORAMFactoryLookahead implements ORAMFactory {
 
     public ORAMFactoryLookahead() {
         size = Util.getInteger("size");
-        numberOfBlocks = Util.getInteger("number of blocks");
+        numberOfBlocks = Math.min(size, 1000);
         numberOfRounds = Util.getInteger("number of rounds");
-        rows = Util.getInteger("number of rows");
+        rows = (int) Math.sqrt(size);
         columns = rows + 2;
         totalSize = (int) (size + 2 * Math.sqrt(size));
     }
