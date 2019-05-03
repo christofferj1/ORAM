@@ -56,7 +56,7 @@ public class ORAMFactoryTrivial implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds;
+        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package oram.ofactory;
 
 import oram.AccessStrategy;
+import oram.Constants;
 import oram.Util;
 import oram.factory.Factory;
 import oram.lookahead.AccessStrategyLookahead;
@@ -62,7 +63,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     @Override
     public String getInitString() {
         return "Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
-                ", rounds: " + numberOfRounds;
+                ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
     }
 
     @Override
