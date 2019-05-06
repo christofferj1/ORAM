@@ -334,7 +334,8 @@ public class Util {
             percent = percentDoneInt < 100 ? " " + percent : percent;
             return "Done with " + percent + "%, time spend: " + getTimeString(timeElapsed) +
                     ", estimated time left: " + getTimeString(timeLeft) + ", done: " + getClockString(timeLeft) +
-                    " (estimated total: " + getTimeString(timeElapsed + timeLeft) + ")";
+                    " (estimated total: " + getTimeString(timeElapsed + timeLeft) + ")" + " block size: "
+                    + Constants.BLOCK_SIZE;
         }
         return null;
     }

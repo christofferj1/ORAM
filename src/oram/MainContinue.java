@@ -10,13 +10,18 @@ import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
-import oram.ofactory.*;
+import oram.ofactory.ORAMFactory;
+import oram.ofactory.ORAMFactoryLookahead;
+import oram.ofactory.ORAMFactoryPath;
+import oram.ofactory.ORAMFactoryTrivial;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * <p> ORAM <br>
@@ -44,10 +49,14 @@ public class MainContinue {
         ORAMFactoryTrivial oramFactoryTrivial = new ORAMFactoryTrivial(size, 0);
         oramFactories.add(oramFactoryTrivial);
 
-        int numberOfBlocks = Math.min(size, 1000);
-        int numberOfRounds = Util.getInteger("number of rounds");
+        int numberOfBlocks = Math.min(size, 100);
+        int[] numberOfRoundsArray = new int[3];
+        numberOfRoundsArray[0] = Util.getInteger("Number of rounds for Lookahead");
+        numberOfRoundsArray[1] = Util.getInteger("Number of rounds for Path");
+        numberOfRoundsArray[2] = Util.getInteger("Number of rounds for Trivial");
 
         for (int j = 0; j < oramFactories.size(); j++) {
+            int numberOfRounds = numberOfRoundsArray[j];
             ORAMFactory oramFactory = oramFactories.get(j);
             oramFactory.setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
