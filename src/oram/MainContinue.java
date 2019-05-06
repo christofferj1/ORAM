@@ -49,18 +49,34 @@ public class MainContinue {
         ORAMFactoryTrivial oramFactoryTrivial = new ORAMFactoryTrivial(size, 0);
         oramFactories.add(oramFactoryTrivial);
 
-        int numberOfBlocks = Math.min(size, 100);
+        int size2 = Util.getInteger("size 2");
+        ORAMFactoryLookahead oramFactoryLookahead2 = new ORAMFactoryLookahead(size2, 0);
+        oramFactories.add(oramFactoryLookahead2);
+        ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size2, 0);
+        oramFactories.add(oramFactoryPath2);
+        ORAMFactoryTrivial oramFactoryTrivial2 = new ORAMFactoryTrivial(size2, 0);
+        oramFactories.add(oramFactoryTrivial2);
+
+        int[] numberOfBlocksArray = new int[6];
+        numberOfBlocksArray[0] = Math.min(size, 100);
+        numberOfBlocksArray[1] = Math.min(size, 100);
+        numberOfBlocksArray[2] = Math.min(size, 100);
+        numberOfBlocksArray[3] = Math.min(size2, 100);
+        numberOfBlocksArray[4] = Math.min(size2, 100);
+        numberOfBlocksArray[5] = Math.min(size2, 100);
+
         int[] numberOfRoundsArray = new int[3];
         numberOfRoundsArray[0] = Util.getInteger("Number of rounds for Lookahead");
         numberOfRoundsArray[1] = Util.getInteger("Number of rounds for Path");
         numberOfRoundsArray[2] = Util.getInteger("Number of rounds for Trivial");
 
         for (int j = 0; j < oramFactories.size(); j++) {
-            int numberOfRounds = numberOfRoundsArray[j];
+            int numberOfRounds = numberOfRoundsArray[j % 3];
             ORAMFactory oramFactory = oramFactories.get(j);
             oramFactory.setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
 
+            int numberOfBlocks = numberOfBlocksArray[j];
             BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
             List<BlockTrivial> blocks = new ArrayList<>();
             for (int i = 1; i <= numberOfBlocks; i++) {
