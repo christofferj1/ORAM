@@ -41,7 +41,8 @@ public class MainContinue {
 //                oramFactory.factorySizeParameter1());
 
         List<ORAMFactory> oramFactories = new ArrayList<>();
-        int size = Util.getInteger("size");
+
+        int size = 1024;
         ORAMFactoryLookahead oramFactoryLookahead = new ORAMFactoryLookahead(size, 0);
         oramFactories.add(oramFactoryLookahead);
         ORAMFactoryPath oramFactoryPath = new ORAMFactoryPath(size, 0);
@@ -49,7 +50,7 @@ public class MainContinue {
         ORAMFactoryTrivial oramFactoryTrivial = new ORAMFactoryTrivial(size, 0);
         oramFactories.add(oramFactoryTrivial);
 
-        int size2 = Util.getInteger("size 2");
+        int size2 = 64;
         ORAMFactoryLookahead oramFactoryLookahead2 = new ORAMFactoryLookahead(size2, 0);
         oramFactories.add(oramFactoryLookahead2);
         ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size2, 0);
@@ -57,18 +58,29 @@ public class MainContinue {
         ORAMFactoryTrivial oramFactoryTrivial2 = new ORAMFactoryTrivial(size2, 0);
         oramFactories.add(oramFactoryTrivial2);
 
-        int[] numberOfBlocksArray = new int[6];
+        int size3 = 16;
+        ORAMFactoryLookahead oramFactoryLookahead3 = new ORAMFactoryLookahead(size3, 0);
+        oramFactories.add(oramFactoryLookahead3);
+        ORAMFactoryPath oramFactoryPath3 = new ORAMFactoryPath(size3, 0);
+        oramFactories.add(oramFactoryPath3);
+        ORAMFactoryTrivial oramFactoryTrivial3 = new ORAMFactoryTrivial(size3, 0);
+        oramFactories.add(oramFactoryTrivial3);
+
+        int[] numberOfBlocksArray = new int[9];
         numberOfBlocksArray[0] = Math.min(size, 100);
         numberOfBlocksArray[1] = Math.min(size, 100);
         numberOfBlocksArray[2] = Math.min(size, 100);
         numberOfBlocksArray[3] = Math.min(size2, 100);
         numberOfBlocksArray[4] = Math.min(size2, 100);
         numberOfBlocksArray[5] = Math.min(size2, 100);
+        numberOfBlocksArray[6] = Math.min(size3, 100);
+        numberOfBlocksArray[7] = Math.min(size3, 100);
+        numberOfBlocksArray[8] = Math.min(size3, 100);
 
         int[] numberOfRoundsArray = new int[3];
-        numberOfRoundsArray[0] = Util.getInteger("Number of rounds for Lookahead");
-        numberOfRoundsArray[1] = Util.getInteger("Number of rounds for Path");
-        numberOfRoundsArray[2] = Util.getInteger("Number of rounds for Trivial");
+        numberOfRoundsArray[0] = 4000;
+        numberOfRoundsArray[1] = 4000;
+        numberOfRoundsArray[2] = 1000;
 
         for (int j = 0; j < oramFactories.size(); j++) {
             int numberOfRounds = numberOfRoundsArray[j % 3];

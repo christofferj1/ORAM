@@ -268,25 +268,31 @@ public class UtilTest {
 
     @Test
     public void shouldBeAbleToComputeLevelSize() {
-        assertThat(Util.getLevelSize(0, 4), is(Constants.SIZE_5));
-        assertThat(Util.getLevelSize(1, 4), is(Constants.SIZE_4));
-        assertThat(Util.getLevelSize(2, 4), is(Constants.SIZE_3));
-        assertThat(Util.getLevelSize(3, 4), is(Constants.SIZE_2));
-        assertThat(Util.getLevelSize(4, 4), is(Constants.SIZE_1));
+        int SIZE_1 = 64;
+        int SIZE_2 = 1024;
+        int SIZE_3 = 16384;
+        int SIZE_4 = 262144;
+        int SIZE_5 = 4194304;
 
-        assertThat(Util.getLevelSize(0, 3), is(Constants.SIZE_4));
-        assertThat(Util.getLevelSize(1, 3), is(Constants.SIZE_3));
-        assertThat(Util.getLevelSize(2, 3), is(Constants.SIZE_2));
-        assertThat(Util.getLevelSize(3, 3), is(Constants.SIZE_1));
+        assertThat(Util.getLevelSize(0, 4), is(SIZE_5));
+        assertThat(Util.getLevelSize(1, 4), is(SIZE_4));
+        assertThat(Util.getLevelSize(2, 4), is(SIZE_3));
+        assertThat(Util.getLevelSize(3, 4), is(SIZE_2));
+        assertThat(Util.getLevelSize(4, 4), is(SIZE_1));
 
-        assertThat(Util.getLevelSize(0, 2), is(Constants.SIZE_3));
-        assertThat(Util.getLevelSize(1, 2), is(Constants.SIZE_2));
-        assertThat(Util.getLevelSize(2, 2), is(Constants.SIZE_1));
+        assertThat(Util.getLevelSize(0, 3), is(SIZE_4));
+        assertThat(Util.getLevelSize(1, 3), is(SIZE_3));
+        assertThat(Util.getLevelSize(2, 3), is(SIZE_2));
+        assertThat(Util.getLevelSize(3, 3), is(SIZE_1));
 
-        assertThat(Util.getLevelSize(0, 1), is(Constants.SIZE_2));
-        assertThat(Util.getLevelSize(1, 1), is(Constants.SIZE_1));
+        assertThat(Util.getLevelSize(0, 2), is(SIZE_3));
+        assertThat(Util.getLevelSize(1, 2), is(SIZE_2));
+        assertThat(Util.getLevelSize(2, 2), is(SIZE_1));
 
-        assertThat(Util.getLevelSize(0, 0), is(Constants.SIZE_1));
+        assertThat(Util.getLevelSize(0, 1), is(SIZE_2));
+        assertThat(Util.getLevelSize(1, 1), is(SIZE_1));
+
+        assertThat(Util.getLevelSize(0, 0), is(SIZE_1));
     }
 
     @Test

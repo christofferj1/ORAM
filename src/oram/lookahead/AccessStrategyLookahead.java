@@ -406,12 +406,14 @@ public class AccessStrategyLookahead implements AccessStrategy {
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
 
-            if (swapReplacement.getAddress() == 0) {
-                if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
-            } else {
-                if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
-                    return null;
-            }
+//            if (swapReplacement.getAddress() == 0) {
+//                if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+//            } else {
+//                if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
+//                    return null;
+//            }
+
+
 //            if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
 //                return null;
         }
