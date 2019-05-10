@@ -195,7 +195,7 @@ public class Main {
             case "lt":
                 return new ORAMFactoryLookaheadTrivial();
             case "p":
-                return new ORAMFactoryPath();
+                return new ORAMFactoryPath(Util.getInteger("number of rounds"));
             case "t":
                 return new ORAMFactoryTrivial();
             default:

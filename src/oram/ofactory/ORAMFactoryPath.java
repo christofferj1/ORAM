@@ -2,7 +2,6 @@ package oram.ofactory;
 
 import oram.AccessStrategy;
 import oram.Constants;
-import oram.Util;
 import oram.factory.Factory;
 import oram.path.AccessStrategyPath;
 
@@ -31,11 +30,11 @@ public class ORAMFactoryPath implements ORAMFactory {
         totalSize = size * bucketSize;
     }
 
-    public ORAMFactoryPath() {
-        size = Util.getInteger("size");
-        numberOfBlocks = Math.min(size, 1000);
-        numberOfRounds = Util.getInteger("number of rounds");
-        bucketSize = Util.getInteger("bucket size");
+    public ORAMFactoryPath(int numberOfRounds) {
+        size = 65536;
+        numberOfBlocks = 65536;
+        this.numberOfRounds = numberOfRounds;
+        bucketSize = Constants.DEFAULT_BUCKET_SIZE;
         offset = 0;
         totalSize = size * bucketSize;
     }

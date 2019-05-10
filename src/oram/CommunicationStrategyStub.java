@@ -6,6 +6,7 @@ import oram.blockcreator.LookaheadBlockCreator;
 import oram.blockcreator.PathBlockCreator;
 import oram.blockcreator.TrivialBlockCreator;
 import oram.clientcom.CommunicationStrategy;
+import oram.encryption.EncryptionStrategy;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +36,8 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         blocks = new BlockEncrypted[size * bucketSize];
     }
 
-    public CommunicationStrategyStub(List<ORAMFactory> factories, int numberOfORAMLayers) {
+    public CommunicationStrategyStub(List<ORAMFactory> factories, int numberOfORAMLayers,
+                                     EncryptionStrategy encryptionStrategy) {
         List<String> addresses;
         if (factories.size() == 1) {
             ORAMFactory oramFactory = factories.get(0);
@@ -48,7 +50,8 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                     return;
                 case "ORAMFactoryPath":
                 case "ORAMFactoryPathMult":
-                    blocks = new PathBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
+                    blocks = new PathBlockCreator(encryptionStrategy).createBlocks(addresses).
+                            toArray(new BlockEncrypted[0]);
                     return;
                 default:
                     blocks = new TrivialBlockCreator().createBlocks(addresses).toArray(new BlockEncrypted[0]);
@@ -87,7 +90,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
                     addresses = Util.getAddressStrings(offset, newOffset);
                     offset = newOffset;
 
-                    blocksTmp = new PathBlockCreator().createBlocks(addresses);
+                    blocksTmp = new PathBlockCreator(encryptionStrategy).createBlocks(addresses);
                     blocksList.addAll(blocksTmp);
                     break;
                 default:

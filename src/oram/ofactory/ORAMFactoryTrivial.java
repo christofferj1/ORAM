@@ -1,6 +1,7 @@
 package oram.ofactory;
 
 import oram.AccessStrategy;
+import oram.Constants;
 import oram.Util;
 import oram.factory.Factory;
 import oram.trivial.AccessStrategyTrivial;
@@ -56,7 +57,8 @@ public class ORAMFactoryTrivial implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
+        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " +
+                Constants.BLOCK_SIZE;
     }
 
     @Override

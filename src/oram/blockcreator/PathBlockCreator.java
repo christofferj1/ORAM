@@ -4,7 +4,7 @@ import oram.Constants;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
-import oram.encryption.EncryptionStrategyImpl;
+import oram.encryption.EncryptionStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,6 +20,11 @@ import java.util.List;
 
 public class PathBlockCreator implements BlockCreator {
     private static final Logger logger = LogManager.getLogger("log");
+    private EncryptionStrategy encryptionStrategy;
+
+    public PathBlockCreator(EncryptionStrategy encryptionStrategy) {
+        this.encryptionStrategy = encryptionStrategy;
+    }
 
     @Override
     public List<BlockEncrypted> createBlocks(List<String> addresses) {
@@ -40,7 +45,6 @@ public class PathBlockCreator implements BlockCreator {
 
         Util.logAndPrint(logger, "    " + numberOfFiles + " dummy blocks created");
 
-        EncryptionStrategyImpl encryptionStrategy = new EncryptionStrategyImpl();
         List<BlockEncrypted> encryptedList = encryptBlocks(blocks, encryptionStrategy,
                 encryptionStrategy.generateSecretKey(Constants.KEY_BYTES));
 
@@ -69,7 +73,7 @@ public class PathBlockCreator implements BlockCreator {
 //        return true;
     }
 
-    private List<BlockEncrypted> encryptBlocks(List<BlockPath> blockPaths, EncryptionStrategyImpl encryptionStrategy,
+    private List<BlockEncrypted> encryptBlocks(List<BlockPath> blockPaths, EncryptionStrategy encryptionStrategy,
                                                SecretKey secretKey) {
         List<BlockEncrypted> res = new ArrayList<>();
         for (int i = 0; i < blockPaths.size(); i++) {
@@ -93,9 +97,9 @@ public class PathBlockCreator implements BlockCreator {
 
             res.add(new BlockEncrypted(addressCipher, encryptedDataPlus));
 
-            double percent = ((double) (i + 1) / blockPaths.size()) * 100;
-            if (percent % 1 == 0)
-                Util.logAndPrint(logger, "    Done with encrypting " + ((int) percent) + "% of the files");
+//            double percent = ((double) (i + 1) / blockPaths.size()) * 100;
+//            if (percent % 1 == 0)
+//                Util.logAndPrint(logger, "    Done with encrypting " + ((int) percent) + "% of the files");
         }
         return res;
     }

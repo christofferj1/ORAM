@@ -43,8 +43,12 @@ public class FactoryLocal implements Factory {
 
     @Override
     public CommunicationStrategy getCommunicationStrategy() {
+        if (encryptionStrategy == null)
+            encryptionStrategy = new EncryptionStrategyImpl();
+
         if (communicationStrategyStub == null) {
-            communicationStrategyStub = new CommunicationStrategyStub(oramFactories, numberOfORAMLayers);
+            communicationStrategyStub = new CommunicationStrategyStub(oramFactories, numberOfORAMLayers,
+                    encryptionStrategy);
             communicationStrategyCounting = new CommunicationStrategyCounting(communicationStrategyStub);
         }
         return communicationStrategyCounting;
