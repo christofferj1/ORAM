@@ -12,7 +12,6 @@ import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryPath;
-import oram.ofactory.ORAMFactoryTrivial;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,47 +40,54 @@ public class MainContinue {
 
         List<ORAMFactory> oramFactories = new ArrayList<>();
 
-//        int size = 1024;
-//        ORAMFactoryLookahead oramFactoryLookahead = new ORAMFactoryLookahead(size, 0);
-//        oramFactories.add(oramFactoryLookahead);
-//        ORAMFactoryPath oramFactoryPath = new ORAMFactoryPath(size, 0);
-//        oramFactories.add(oramFactoryPath);
-//        ORAMFactoryTrivial oramFactoryTrivial = new ORAMFactoryTrivial(size, 0);
-//        oramFactories.add(oramFactoryTrivial);
+        int size = 1024;
+        ORAMFactoryPath oramFactoryPath0 = new ORAMFactoryPath(size, 0);
+        ORAMFactoryPath oramFactoryPath1 = new ORAMFactoryPath(size, 0);
+        ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size, 0);
+        oramFactories.add(oramFactoryPath0);
+        oramFactories.add(oramFactoryPath1);
+        oramFactories.add(oramFactoryPath2);
 
-        int size2 = 64;
+//        int size2 = 64;
 //        ORAMFactoryLookahead oramFactoryLookahead2 = new ORAMFactoryLookahead(size2, 0);
 //        oramFactories.add(oramFactoryLookahead2);
 //        ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size2, 0);
 //        oramFactories.add(oramFactoryPath2);
-        ORAMFactoryTrivial oramFactoryTrivial2 = new ORAMFactoryTrivial(size2, 0);
-        oramFactories.add(oramFactoryTrivial2);
+//        ORAMFactoryTrivial oramFactoryTrivial2 = new ORAMFactoryTrivial(size2, 0);
+//        oramFactories.add(oramFactoryTrivial2);
 
-        int size3 = 16;
+//        int size3 = 16;
 //        ORAMFactoryLookahead oramFactoryLookahead3 = new ORAMFactoryLookahead(size3, 0);
 //        oramFactories.add(oramFactoryLookahead3);
 //        ORAMFactoryPath oramFactoryPath3 = new ORAMFactoryPath(size3, 0);
 //        oramFactories.add(oramFactoryPath3);
-        ORAMFactoryTrivial oramFactoryTrivial3 = new ORAMFactoryTrivial(size3, 0);
-        oramFactories.add(oramFactoryTrivial3);
+//        ORAMFactoryTrivial oramFactoryTrivial3 = new ORAMFactoryTrivial(size3, 0);
+//        oramFactories.add(oramFactoryTrivial3);
 
-        int[] numberOfBlocksArray = new int[9];
-        numberOfBlocksArray[0] = Math.min(size2, 100);
-        numberOfBlocksArray[1] = Math.min(size3, 100);
+//        int[] numberOfBlocksArray = new int[9];
+//        numberOfBlocksArray[0] = Math.min(size2, 100);
+//        numberOfBlocksArray[1] = Math.min(size3, 100);
 
 //        int[] numberOfRoundsArray = new int[3];
 //        numberOfRoundsArray[0] = 4000;
 //        numberOfRoundsArray[1] = 4000;
 //        numberOfRoundsArray[2] = 1000;
 
+        int[] blockSize = new int[3];
+        blockSize[0] = 512;
+        blockSize[1] = 65536;
+        blockSize[2] = 262144;
+
+        int numberOfRounds = Util.getInteger("number of rounds");
         for (int j = 0; j < oramFactories.size(); j++) {
-            int numberOfRounds = 1000;
+            Constants.BLOCK_SIZE = blockSize[j];
 //            int numberOfRounds = numberOfRoundsArray[j % 3];
             ORAMFactory oramFactory = oramFactories.get(j);
             oramFactory.setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
 
-            int numberOfBlocks = numberOfBlocksArray[j];
+            int numberOfBlocks = 100;
+//            int numberOfBlocks = numberOfBlocksArray[j];
             BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
             List<BlockTrivial> blocks = new ArrayList<>();
             for (int i = 1; i <= numberOfBlocks; i++) {
