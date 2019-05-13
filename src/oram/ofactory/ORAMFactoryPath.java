@@ -31,7 +31,7 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     public ORAMFactoryPath(int numberOfRounds) {
-        size = 65536;
+        size = 65535;
         numberOfBlocks = 65536;
         this.numberOfRounds = numberOfRounds;
         bucketSize = Constants.DEFAULT_BUCKET_SIZE;
