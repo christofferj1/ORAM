@@ -28,10 +28,12 @@ public class MainPath {
 
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
-        int numberOfRounds = Util.getInteger("number of rounds");
+        int numberOfRounds = 65536;
+//        int numberOfRounds = Util.getInteger("number of rounds");
 
 //        for (int z = 1; z <= 5; z++) {
-        Constants.DEFAULT_BUCKET_SIZE = Util.getInteger("bucket size");
+        Constants.DEFAULT_BUCKET_SIZE = 2;
+//        Constants.DEFAULT_BUCKET_SIZE = Util.getInteger("bucket size");
 //            for (int rounds = 0; rounds < 5; rounds++) {
         Util.logAndPrint(logger, "Bucket size: " + Constants.DEFAULT_BUCKET_SIZE);
 

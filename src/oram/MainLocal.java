@@ -1,6 +1,5 @@
 package oram;
 
-import javafx.util.Pair;
 import oram.block.BlockEncrypted;
 import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
@@ -13,6 +12,8 @@ import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.AccessStrategyLookaheadTrivial;
 import oram.ofactory.*;
 import oram.path.AccessStrategyPath;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -204,7 +205,7 @@ public class MainLocal {
     private static Pair<List<ORAMFactory>, Integer> getORAMFactories() {
         int numberOfORAMS = Util.getInteger("number of ORAMs");
         if (numberOfORAMS == 1)
-            return new Pair<>(Collections.singletonList(getOramFactory("ONLY ORAM")), 1);
+            return new ImmutablePair<>(Collections.singletonList(getOramFactory("ONLY ORAM")), 1);
 
         if (numberOfORAMS > 5) {
             System.out.println("Can't create higher than 5 recursive ORAMs");
@@ -233,7 +234,7 @@ public class MainLocal {
             }
         }
         factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
-        return new Pair<>(factories, numberOfORAMS);
+        return new ImmutablePair<>(factories, numberOfORAMS);
     }
 
     private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,

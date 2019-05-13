@@ -162,11 +162,11 @@ public class AccessStrategyPath implements AccessStrategy {
             logger.error(prefixString + "Something went wrong, when getting data from the block with address: " + address);
             return null;
         }
-        if (Arrays.equals(res, new byte[0])) {
-            logger.error(prefixString + "Unable to retrieve data from address: " + addressToLookUp + (recursiveLookup ? ", create dummy lookup map" : ""));
-            if (recursiveLookup)
-                res = Util.getByteArrayFromMap(Util.getDummyMap(address));
-        }
+//        if (Arrays.equals(res, new byte[0])) {
+//            logger.error(prefixString + "Unable to retrieve data from address: " + addressToLookUp + (recursiveLookup ? ", create dummy lookup map" : ""));
+//            if (recursiveLookup)
+//                res = Util.getByteArrayFromMap(Util.getDummyMap(address));
+//        }
 
 
 //        Line 10 to 15 in pseudo code.
