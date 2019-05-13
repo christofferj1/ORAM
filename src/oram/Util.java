@@ -386,7 +386,7 @@ public class Util {
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
             res = (Map<Integer, Integer>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            logger.error("Unable to get position map from byte array");
+            logger.error("Unable to get position map from byte array: " + Arrays.toString(array));
             logger.error(e);
             logger.debug("Stacktrace:", e);
         }
@@ -399,9 +399,9 @@ public class Util {
             startAddress = -16;
         } else {
             startAddress = null;
-            for (int i = 0; i < 17; i++) {
-                int mod17 = (addressToInclude - i) % 17;
-                if (mod17 == 1) {
+            for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++) {
+                int modBlockSize = (addressToInclude - i) % Constants.POSITION_BLOCK_SIZE;
+                if (modBlockSize == 1) {
                     startAddress = addressToInclude - i;
                     break;
                 }
@@ -414,7 +414,7 @@ public class Util {
         }
 
         Map<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < 17; i++) {
+        for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++) {
             map.put(startAddress + i, Constants.DUMMY_LEAF_NODE_INDEX);
         }
 

@@ -109,7 +109,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
             accessCounter++;
 
             BlockLookahead block = blockLookaheads.get(getFlatArrayIndex(index));
-            if (Util.isDummyAddress(0))
+            if (Util.isDummyAddress(block.getAddress()))
                 block.setData(Util.getRandomByteArray(Constants.BLOCK_SIZE)); // TODO: do I need more changes?
             swapPartners.add(block);
         }
