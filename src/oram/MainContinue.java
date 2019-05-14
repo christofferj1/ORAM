@@ -38,56 +38,27 @@ public class MainContinue {
 //        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
 //                oramFactory.factorySizeParameter1());
 
-        List<ORAMFactory> oramFactories = new ArrayList<>();
+        int offset = 0;
+        List<ORAMFactory> oramFactories = new ArrayList<>(Arrays.asList(
+                new ORAMFactoryPath(1024, offset),
+                new ORAMFactoryPath(1024, offset),
+                new ORAMFactoryPath(1024, offset)));
 
-        int size = 1024;
-        ORAMFactoryPath oramFactoryPath0 = new ORAMFactoryPath(size, 0);
-        ORAMFactoryPath oramFactoryPath1 = new ORAMFactoryPath(size, 0);
-        ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size, 0);
-        oramFactories.add(oramFactoryPath0);
-        oramFactories.add(oramFactoryPath1);
-        oramFactories.add(oramFactoryPath2);
+        int[] numberOfBlocksArray = new int[]{100, 100, 100};
 
-//        int size2 = 64;
-//        ORAMFactoryLookahead oramFactoryLookahead2 = new ORAMFactoryLookahead(size2, 0);
-//        oramFactories.add(oramFactoryLookahead2);
-//        ORAMFactoryPath oramFactoryPath2 = new ORAMFactoryPath(size2, 0);
-//        oramFactories.add(oramFactoryPath2);
-//        ORAMFactoryTrivial oramFactoryTrivial2 = new ORAMFactoryTrivial(size2, 0);
-//        oramFactories.add(oramFactoryTrivial2);
+        int[] numberOfRoundsArray = new int[]{2000, 2000, 2000};
 
-//        int size3 = 16;
-//        ORAMFactoryLookahead oramFactoryLookahead3 = new ORAMFactoryLookahead(size3, 0);
-//        oramFactories.add(oramFactoryLookahead3);
-//        ORAMFactoryPath oramFactoryPath3 = new ORAMFactoryPath(size3, 0);
-//        oramFactories.add(oramFactoryPath3);
-//        ORAMFactoryTrivial oramFactoryTrivial3 = new ORAMFactoryTrivial(size3, 0);
-//        oramFactories.add(oramFactoryTrivial3);
+        int[] blockSize = new int[]{512, 65536, 262144};
 
-//        int[] numberOfBlocksArray = new int[9];
-//        numberOfBlocksArray[0] = Math.min(size2, 100);
-//        numberOfBlocksArray[1] = Math.min(size3, 100);
-
-//        int[] numberOfRoundsArray = new int[3];
-//        numberOfRoundsArray[0] = 4000;
-//        numberOfRoundsArray[1] = 4000;
-//        numberOfRoundsArray[2] = 1000;
-
-        int[] blockSize = new int[3];
-        blockSize[0] = 512;
-        blockSize[1] = 65536;
-        blockSize[2] = 262144;
-
-        int numberOfRounds = Util.getInteger("number of rounds");
         for (int j = 0; j < oramFactories.size(); j++) {
             Constants.BLOCK_SIZE = blockSize[j];
-//            int numberOfRounds = numberOfRoundsArray[j % 3];
+            int numberOfRounds = numberOfRoundsArray[j];
             ORAMFactory oramFactory = oramFactories.get(j);
             oramFactory.setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
 
-            int numberOfBlocks = 100;
-//            int numberOfBlocks = numberOfBlocksArray[j];
+//            int numberOfBlocks = 100;
+            int numberOfBlocks = numberOfBlocksArray[j];
             BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
             List<BlockTrivial> blocks = new ArrayList<>();
             for (int i = 1; i <= numberOfBlocks; i++) {

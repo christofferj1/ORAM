@@ -310,9 +310,9 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     }
 
     private boolean setupConnection() {
-//        String ipAddress = "3.16.160.158";
+        String ipAddress = "3.16.160.158";
 //        String ipAddress = "127.0.0.1";
-        String ipAddress = "13.57.11.93";
+//        String ipAddress = "13.57.11.93";
 
         try {
 //            TODO: sleep and try over
