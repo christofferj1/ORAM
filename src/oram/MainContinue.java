@@ -40,15 +40,15 @@ public class MainContinue {
 
         int offset = 0;
         List<ORAMFactory> oramFactories = new ArrayList<>(Arrays.asList(
-                new ORAMFactoryPath(1024, offset),
-                new ORAMFactoryPath(1024, offset),
+                new ORAMFactoryPath(16, offset),
+                new ORAMFactoryPath(64, offset),
                 new ORAMFactoryPath(1024, offset)));
 
         int[] numberOfBlocksArray = new int[]{100, 100, 100};
 
-        int[] numberOfRoundsArray = new int[]{2000, 2000, 2000};
+        int[] numberOfRoundsArray = new int[]{2, 2, 2};
 
-        int[] blockSize = new int[]{512, 65536, 262144};
+        int[] blockSize = new int[]{262144, 262144, 262144};
 
         for (int j = 0; j < oramFactories.size(); j++) {
             Constants.BLOCK_SIZE = blockSize[j];
