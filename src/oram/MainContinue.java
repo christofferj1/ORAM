@@ -11,6 +11,7 @@ import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
+import oram.ofactory.ORAMFactoryLookahead;
 import oram.ofactory.ORAMFactoryPath;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
@@ -40,15 +41,16 @@ public class MainContinue {
 
         int offset = 0;
         List<ORAMFactory> oramFactories = new ArrayList<>(Arrays.asList(
-                new ORAMFactoryPath(16, offset),
                 new ORAMFactoryPath(64, offset),
-                new ORAMFactoryPath(1024, offset)));
+                new ORAMFactoryPath(1024, offset),
+                new ORAMFactoryLookahead(64, offset),
+                new ORAMFactoryLookahead(1024, offset)));
 
-        int[] numberOfBlocksArray = new int[]{100, 100, 100};
+        int[] numberOfBlocksArray = new int[]{100, 100, 100, 100};
 
-        int[] numberOfRoundsArray = new int[]{2, 2, 2};
+        int[] numberOfRoundsArray = new int[]{2000, 2000, 2000, 2000};
 
-        int[] blockSize = new int[]{262144, 262144, 262144};
+        int[] blockSize = new int[]{262144, 262144, 262144, 262144};
 
         for (int j = 0; j < oramFactories.size(); j++) {
             Constants.BLOCK_SIZE = blockSize[j];
