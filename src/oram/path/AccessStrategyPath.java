@@ -219,10 +219,10 @@ public class AccessStrategyPath implements AccessStrategy {
                 }
 
                 stash.addAll(blocksDecrypted);
-                if (stash.size() > maxStashSize) {
-                    maxStashSize = stash.size();
-                    logger.info(prefixString + "Max stash size: " + maxStashSize);
-                }
+//                if (stash.size() > maxStashSize) {
+//                    maxStashSize = stash.size();
+//                    logger.info(prefixString + "Max stash size: " + maxStashSize);
+//                }
             }
         }
         return res;
@@ -282,10 +282,10 @@ public class AccessStrategyPath implements AccessStrategy {
                 if (print) System.out.println(prefixString + "    Adding new block to stash");
             }
         }
-        if (stash.size() > maxStashSize) {
-            maxStashSize = stash.size();
-            logger.info(prefixString + "Max stash size: " + maxStashSize);
-        }
+//        if (stash.size() > maxStashSize) {
+//            maxStashSize = stash.size();
+//            logger.info(prefixString + "Max stash size: " + maxStashSize);
+//        }
 
         return endData;
     }
