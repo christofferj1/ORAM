@@ -14,7 +14,7 @@ import static oram.Constants.DEFAULT_BUCKET_SIZE;
  */
 
 public class ORAMFactoryPath implements ORAMFactory {
-        private AccessStrategyPath accessStrategy;
+    private AccessStrategyPath accessStrategy;
     private int size;
     private int bucketSize;
     private int numberOfBlocks;
@@ -65,7 +65,7 @@ public class ORAMFactoryPath implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
+        return "Path, size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
                 ", doing rounds: " + numberOfRounds;
     }
 

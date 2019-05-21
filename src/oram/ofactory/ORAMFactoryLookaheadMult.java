@@ -59,7 +59,7 @@ public class ORAMFactoryLookaheadMult implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
+        return "Lookahead-MULT, size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
                 ", rounds: " + numberOfRounds;
     }
 

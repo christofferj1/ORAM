@@ -10,9 +10,8 @@ import oram.encryption.EncryptionStrategyTiming;
 import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
-import oram.ofactory.ORAMFactory;
-import oram.ofactory.ORAMFactoryLookahead;
-import oram.ofactory.ORAMFactoryPath;
+import oram.lookahead.AccessStrategyLookaheadTrivial;
+import oram.ofactory.*;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,23 +40,23 @@ public class MainContinue {
 //                oramFactory.factorySizeParameter1());
 
         int offset = 0;
-        List<ORAMFactory> oramFactories = new ArrayList<>(Arrays.asList(
-                new ORAMFactoryPath(64, offset),
-                new ORAMFactoryPath(1024, offset),
-                new ORAMFactoryLookahead(64, offset),
-                new ORAMFactoryLookahead(1024, offset)));
+        List<List<ORAMFactory>> oramFactoriesTotal = new ArrayList<>(Arrays.asList(
+                Collections.singletonList(new ORAMFactoryLookahead(64, offset)),
+                Collections.singletonList(new ORAMFactoryLookahead(1024, offset)),
+                Collections.singletonList(new ORAMFactoryLookaheadTrivial(1024, 0)),
+                Arrays.asList(new ORAMFactoryLookahead(1024, 0), new ORAMFactoryTrivial(64, 1088))));
 
-        int[] numberOfBlocksArray = new int[]{100, 100, 100, 100};
+        int[] numberOfBlocksArray = new int[]{64, 100, 100, 100};
 
         int[] numberOfRoundsArray = new int[]{2000, 2000, 2000, 2000};
 
-        int[] blockSize = new int[]{262144, 262144, 262144, 262144};
+        int[] blockSize = new int[]{262144, 262144, 65536, 65536};
 
-        for (int j = 0; j < oramFactories.size(); j++) {
+        for (int j = 0; j < oramFactoriesTotal.size(); j++) {
             Constants.BLOCK_SIZE = blockSize[j];
             int numberOfRounds = numberOfRoundsArray[j];
-            ORAMFactory oramFactory = oramFactories.get(j);
-            oramFactory.setNumberOfRounds(numberOfRounds);
+            List<ORAMFactory> oramFactories = oramFactoriesTotal.get(j);
+            oramFactories.get(0).setNumberOfRounds(numberOfRounds);
             Factory factory = new FactoryImpl();
 
 //            int numberOfBlocks = 100;
@@ -69,7 +69,7 @@ public class MainContinue {
                 blockArray[i] = block;
             }
 
-            boolean pathORAMChosen = oramFactory instanceof ORAMFactoryPath;
+            boolean pathORAMChosen = oramFactories.get(0) instanceof ORAMFactoryPath;
             CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
             communicationStrategy.start();
 
@@ -84,10 +84,13 @@ public class MainContinue {
 //        if (oramFactory instanceof ORAMFactoryLookahead)
 //            access.setup(blocks);
 
-            AccessStrategy access = oramFactory.getAccessStrategy(key, factory, null, 0);
-            if (access instanceof AccessStrategyLookahead)
-                if (!access.setup(blocks))
-                    return;
+            List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
+            for (int i = accesses.size(); i > 0; i--) {
+                AccessStrategy a = accesses.get(i - 1);
+                if (a instanceof AccessStrategyLookahead || a instanceof AccessStrategyLookaheadTrivial)
+                    if (!a.setup(blocks))
+                        return;
+            }
 
             SecureRandom randomness = new SecureRandom();
             List<Integer> addresses = new ArrayList<>();
@@ -97,10 +100,10 @@ public class MainContinue {
 
 //        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
 //        Util.logAndPrint(logger, resume.toString());
-            StringBuilder resume = new StringBuilder(oramFactory.getInitString());
-            resume.append("\n");
-            Util.logAndPrint(logger, oramFactory.getInitString());
-
+//            StringBuilder resume = new StringBuilder(oramFactory.getInitString());
+//            resume.append("\n");
+//            Util.logAndPrint(logger, oramFactory.getInitString());
+            StringBuilder resume = initializeStringBuilder(oramFactories);
 
 //        for (int j = 0; j < oramFactories.size(); j++) {
 //            if (accesses.get(j) instanceof AccessStrategyPath)
@@ -126,7 +129,7 @@ public class MainContinue {
                     data = null;
                 }
 
-                byte[] res = access.access(op, address, data, false, false);
+                byte[] res = accesses.get(0).access(op, address, data, false, false);
                 if (res == null) break;
 
 //            res = Util.removeTrailingZeroes(res);
@@ -182,7 +185,7 @@ public class MainContinue {
             }
 
             if (pathORAMChosen)
-                Util.logAndPrint(logger, "Max stash size: " + oramFactory.getMaxStashSize() + ", max stash size between accesses: " + oramFactory.getMaxStashSizeBetweenAccesses());
+                Util.logAndPrint(logger, "Max stash size between accesses: " + oramFactories.get(0).getMaxStashSizeBetweenAccesses());
 
             Util.logAndPrint(logger, "Overwriting with dummy blocks");
             if (communicationStrategy.sendEndSignal())
@@ -216,5 +219,15 @@ public class MainContinue {
         for (int j = 0; j < array.length; j++)
             array[j] = com.read(j + offset);
         System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
+    }
+
+    private static StringBuilder initializeStringBuilder(List<ORAMFactory> factories) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < factories.size(); i++) {
+            String string = Util.getEmptyStringOfLength(i * 5) + factories.get(i).getInitString();
+            builder.append(string).append("\n");
+            Util.logAndPrint(logger, string);
+        }
+        return builder;
     }
 }

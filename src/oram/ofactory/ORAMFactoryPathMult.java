@@ -62,7 +62,7 @@ public class ORAMFactoryPathMult implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
+        return "Path-MULT, size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
                 ", doing rounds: " + numberOfRounds;
     }
 

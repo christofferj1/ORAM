@@ -62,7 +62,7 @@ public class ORAMFactoryLookaheadTrivial implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
+        return "Lookahead-Trivial, size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
                 ", rounds: " + numberOfRounds;
     }
 
