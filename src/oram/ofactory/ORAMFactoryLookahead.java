@@ -23,7 +23,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     public ORAMFactoryLookahead(int size, int offSet) {
         this.size = size;
         this.offset = offSet;
-        numberOfBlocks = Math.min(size, 1000);
+        numberOfBlocks = Math.min(size, 1024);
         rows = (int) Math.sqrt(size);
         columns = rows + 2;
         totalSize = (int) (size + 2 * Math.sqrt(size));
@@ -31,7 +31,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
 
     public ORAMFactoryLookahead() {
         size = Util.getInteger("size");
-        numberOfBlocks = Math.min(size, 1000);
+        numberOfBlocks = Math.min(size, 1024);
         numberOfRounds = Util.getInteger("number of rounds");
         rows = (int) Math.sqrt(size);
         columns = rows + 2;

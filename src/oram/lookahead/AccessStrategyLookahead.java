@@ -203,13 +203,13 @@ public class AccessStrategyLookahead implements AccessStrategy {
         entries.sort(Comparator.comparing(Map.Entry::getKey));
 
         int positionMapBlocks = (int) Math.ceil((double) entries.size() / Constants.POSITION_BLOCK_SIZE);
-        for (int i = 1; i <= positionMapBlocks; i++) {
+        for (int i = 0; i <= positionMapBlocks; i++) {
             if (print) System.out.print(prefix + "    Indices in map " + i + ": ");
             Map<Integer, Integer> map = new HashMap<>();
             for (int j = 0; j < Constants.POSITION_BLOCK_SIZE; j++) {
                 int index = (i - 1) * Constants.POSITION_BLOCK_SIZE + j;
 
-                if (entries.size() > index) {
+                if (i != 0 && entries.size() > index) {
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
                     if (print) System.out.print(entries.get(index).getKey() + ", ");
                 } else {

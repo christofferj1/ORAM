@@ -11,7 +11,10 @@ import oram.factory.Factory;
 import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.AccessStrategyLookaheadTrivial;
-import oram.ofactory.*;
+import oram.ofactory.ORAMFactory;
+import oram.ofactory.ORAMFactoryLookahead;
+import oram.ofactory.ORAMFactoryPath;
+import oram.ofactory.ORAMFactoryTrivial;
 import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,16 +44,16 @@ public class MainContinue {
 
         int offset = 0;
         List<List<ORAMFactory>> oramFactoriesTotal = new ArrayList<>(Arrays.asList(
-                Collections.singletonList(new ORAMFactoryLookahead(64, offset)),
+                Collections.singletonList(new ORAMFactoryTrivial(64, offset)),
                 Collections.singletonList(new ORAMFactoryLookahead(1024, offset)),
-                Collections.singletonList(new ORAMFactoryLookaheadTrivial(1024, 0)),
+                Arrays.asList(new ORAMFactoryPath(1024, 0), new ORAMFactoryTrivial(64, 4092)),
                 Arrays.asList(new ORAMFactoryLookahead(1024, 0), new ORAMFactoryTrivial(64, 1088))));
 
-        int[] numberOfBlocksArray = new int[]{64, 100, 100, 100};
+        int[] numberOfBlocksArray = new int[]{64, 100, 1024, 1024};
 
-        int[] numberOfRoundsArray = new int[]{2000, 2000, 2000, 2000};
+        int[] numberOfRoundsArray = new int[]{4000, 2000, 2000, 2000};
 
-        int[] blockSize = new int[]{262144, 262144, 65536, 65536};
+        int[] blockSize = new int[]{512, 65536, 65536, 65536};
 
         for (int j = 0; j < oramFactoriesTotal.size(); j++) {
             Constants.BLOCK_SIZE = blockSize[j];

@@ -22,5 +22,5 @@ public class Constants {
 
     public static final int DUMMY_LEAF_NODE_INDEX = -42;
 
-    public static final int POSITION_BLOCK_SIZE = 17;
+    public static final int POSITION_BLOCK_SIZE = 16;
 }
