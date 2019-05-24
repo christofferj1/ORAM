@@ -46,6 +46,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private int dummyCounter = 0;
     private AccessStrategy accessStrategy;
     private String prefixString;
+    private int accessCounter;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory, AccessStrategy accessStrategy,
                               int offset, int prefixSize) {
@@ -61,6 +62,8 @@ public class AccessStrategyPath implements AccessStrategy {
         permutationStrategy = factory.getPermutationStrategy();
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
+
+        accessCounter = 0;
 
         prefixString = Util.getEmptyStringOfLength(prefixSize);
 
@@ -156,6 +159,7 @@ public class AccessStrategyPath implements AccessStrategy {
         if (data != null && data.length > Constants.BLOCK_SIZE) {
             logger.error(prefixString + "Accessed with data length: " + data.length);
         }
+        accessCounter++;
 
         int addressToLookUp = address;
         if (recursiveLookup)
@@ -207,8 +211,8 @@ public class AccessStrategyPath implements AccessStrategy {
             }
         }
 
-        logger.info(prefixString + "Access op: " + op.toString() + ", address: " + addressToLookUp +
-                ", leaf node: " + leafNodeIndex + " -> " + newLeafNodeIndex);
+//        logger.info(prefixString + "Access op: " + op.toString() + ", address: " + addressToLookUp +
+//                ", leaf node: " + leafNodeIndex + " -> " + newLeafNodeIndex);
         if (print)
             System.out.println(prefixString + "Access op: " + op.toString() + ", address: " + addressToLookUp +
                     ", leaf node: " + leafNodeIndex + " -> " + newLeafNodeIndex);
@@ -242,7 +246,7 @@ public class AccessStrategyPath implements AccessStrategy {
 
         if (stash.size() > maxStashSizeBetweenAccesses) {
             maxStashSizeBetweenAccesses = stash.size();
-            logger.info(prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses);
+            Util.logAndPrint(logger, prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses + ", after accesses: " + accessCounter);
         }
 
         if (print) System.out.println(prefixString + "Returning data: " + Util.getShortDataString(res));

@@ -28,7 +28,7 @@ public class MainPath {
 
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
-        int numberOfRounds = 65536;
+        int numberOfRounds = 655;
 //        int numberOfRounds = Util.getInteger("number of rounds");
 
         for (int z = 3; z <= 6; z++) {
