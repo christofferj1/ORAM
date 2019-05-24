@@ -397,12 +397,12 @@ public class Util {
     public static Map<Integer, Integer> getDummyMap(int addressToInclude) {
         Integer startAddress;
         if (addressToInclude == 0) {
-            startAddress = -16;
+            startAddress = Constants.POSITION_BLOCK_SIZE * -1;
         } else {
             startAddress = null;
-            for (int i = 0; i < 17; i++) {
-                int mod17 = (addressToInclude - i) % 17;
-                if (mod17 == 1) {
+            for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++) {
+                int modSize = (addressToInclude - i) % Constants.POSITION_BLOCK_SIZE;
+                if (modSize == 1) {
                     startAddress = addressToInclude - i;
                     break;
                 }

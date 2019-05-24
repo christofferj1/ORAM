@@ -32,6 +32,7 @@ public class AccessStrategyTrivial implements AccessStrategy {
     private final EncryptionStrategy encryptionStrategy;
     private final List<Integer> allAddresses;
     private String prefixString;
+    private boolean print = false;
 
     public AccessStrategyTrivial(int size, byte[] key, Factory factory, int offset, int prefixSize) {
         this.communicationStrategy = factory.getCommunicationStrategy();
@@ -49,14 +50,21 @@ public class AccessStrategyTrivial implements AccessStrategy {
     @Override
     public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
         logger.info(prefixString + "Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
-//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", position: " + position + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
+       if (print) System.out.println(prefixString + "Access op: " + op.toString() + ", address: " + address + ", read addresses from " + allAddresses.get(0) + " to " + allAddresses.get(allAddresses.size() - 1));
 
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(allAddresses);
+        if (print) System.out.println(prefixString + "Fetched blocks: " + encryptedBlocks.size());
         List<BlockTrivial> blocks = decryptBlocks(encryptedBlocks);
+        if (print) System.out.println(prefixString + "Decrypted blocks: " + (blocks != null));
+
+        if (blocks == null)
+            return null;
 
         int addressToLookUp = address;
         if (recursiveLookup)
             addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
+
+        if (print) System.out.println(prefixString + "Address to look up: " + addressToLookUp);
 
         BlockTrivial block = blocks.get(addressToLookUp);
         byte[] res = block.getData();
@@ -72,6 +80,15 @@ public class AccessStrategyTrivial implements AccessStrategy {
 
                 if (map == null)
                     return null;
+
+                if (print) {
+                    System.out.println(prefixString + "Returns map:");
+                    System.out.print(prefixString + "    ");
+                    for (Map.Entry e : map.entrySet())
+                        System.out.print(e.getKey() + " -> " + e.getValue() + ", ");
+                    System.out.println(" ");
+                }
+
                 map.put(address, Util.byteArrayToLeInt(data));
                 blocks.get(addressToLookUp).setData(Util.getByteArrayFromMap(map));
                 blocks.get(addressToLookUp).setAddress(addressToLookUp);

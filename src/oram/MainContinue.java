@@ -49,7 +49,7 @@ public class MainContinue {
 
         int[] numberOfBlocksArray = new int[]{64, 100, 1024, 1024, 1024};
 
-        int[] numberOfRoundsArray = new int[]{4000, 2000, 2000, 2000, 2000};
+        int[] numberOfRoundsArray = new int[]{0, 0, 2000, 0, 0};
 
         int[] blockSize = new int[]{512, 65536, 65536, 65536, 65536};
 
