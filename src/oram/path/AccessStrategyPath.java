@@ -84,7 +84,71 @@ public class AccessStrategyPath implements AccessStrategy {
 
     @Override
     public boolean setup(List<BlockTrivial> blocks) {
-        return true;
+        SecureRandom randomness = new SecureRandom();
+
+//        System.out.println(prefixString + "Setting up");
+
+        for (int i = 0; i < blocks.size(); i++) {
+            positionMap.put(blocks.get(i).getAddress(), randomness.nextInt(leafCount));
+        }
+
+//        System.out.println(prefixString + "Position map done");
+
+        List<BlockPath> blocksPath = new ArrayList<>();
+        for (BlockTrivial b : blocks)
+            blocksPath.add(new BlockPath(b.getAddress(), b.getData(), positionMap.get(b.getAddress())));
+
+        stash.addAll(blocksPath);
+
+        List<BlockEncrypted> blocksToWrite = new ArrayList<>();
+        List<Integer> nodesHandled = new ArrayList<>();
+        for (int l = L - 1; l >= 0; l--) { // Goes though all layers, starting at the bottom
+            for (int leafNodeIndex = leafCount - 1; leafNodeIndex >= 0; leafNodeIndex--) { // Goes through all leaves
+                int nodeIndex = getNode(leafNodeIndex, l); // Get the node for that leaf in the current layer
+                if (nodesHandled.contains(nodeIndex)) // On higher layers, nodes cover multiple leaves
+                    continue;
+
+//                Fill bucket with blocks and encrypt them
+                List<BlockPath> bucketOfBlocks = getBlocksForNode(nodeIndex);
+                bucketOfBlocks = fillBucketWithDummyBlocks(bucketOfBlocks);
+                removeBlocksFromStash(bucketOfBlocks);
+                List<BlockEncrypted> bucketOfEncryptedBlocks = encryptBucketOfBlocks(bucketOfBlocks);
+
+                if (bucketOfEncryptedBlocks == null) {
+                    logger.error("Returned null when trying to encrypt blocks when initializing the ORAM");
+                    return false;
+                }
+
+                nodesHandled.add(nodeIndex);
+                blocksToWrite.addAll(bucketOfEncryptedBlocks);
+            }
+
+//            System.out.println(prefixString + "Handled layer: " + l);
+
+            nodesHandled = new ArrayList<>();
+        }
+
+//        System.out.println(prefixString + "Blocks assigned to buckets");
+
+        Collections.reverse(blocksToWrite);
+
+        boolean res = true;
+
+        List<Integer> addresses = new ArrayList<>();
+        for (int i = 0; i < blocksToWrite.size(); i++)
+            addresses.add(i);
+
+//        System.out.println(prefixString + "Addresses added");
+
+        boolean writeSuccess = communicationStrategy.writeArray(addresses, blocksToWrite);
+        if (!writeSuccess) {
+            logger.error("Writing blocks were unsuccessful when initializing the ORAM");
+            res = false;
+        }
+
+//        System.out.println(prefixString + "Addresses written to server");
+
+        return res;
     }
 
     @Override
