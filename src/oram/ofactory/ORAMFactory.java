@@ -14,23 +14,13 @@ public interface ORAMFactory {
 
     AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy, int prefixSize);
 
-    int getColumns();
-
-    int getRows();
-
     int getBucketSize();
-
-    int factorySizeParameter0();
-
-    int factorySizeParameter1();
 
     int getNumberOfRounds();
 
     void setNumberOfRounds(int numberOfRounds);
 
     int getNumberOfBlocks();
-
-    int getOffSet();
 
     String getInitString();
 

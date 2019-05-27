@@ -21,16 +21,8 @@ public class Index {
         return rowIndex;
     }
 
-    public void setRowIndex(int rowIndex) {
-        this.rowIndex = rowIndex;
-    }
-
     public int getColIndex() {
         return colIndex;
-    }
-
-    public void setColIndex(int colIndex) {
-        this.colIndex = colIndex;
     }
 
     @Override

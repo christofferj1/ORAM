@@ -51,11 +51,6 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     }
 
     @Override
-    public int getOffSet() {
-        return 0;
-    }
-
-    @Override
     public String getInitString() {
         return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " +
                 Constants.BLOCK_SIZE;
@@ -87,28 +82,8 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     }
 
     @Override
-    public int getColumns() {
-        return 0;
-    }
-
-    @Override
-    public int getRows() {
-        return 0;
-    }
-
-    @Override
     public int getBucketSize() {
         return 0;
-    }
-
-    @Override
-    public int factorySizeParameter0() {
-        return size;
-    }
-
-    @Override
-    public int factorySizeParameter1() {
-        return 1;
     }
 
 

@@ -32,7 +32,7 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     public ORAMFactoryPath() {
-        size = Util.getInteger("size");
+        size = Util.getInteger("size, must be a power of 2");
         numberOfBlocks = Math.min(size, 1000);
         numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
@@ -57,11 +57,6 @@ public class ORAMFactoryPath implements ORAMFactory {
     @Override
     public int getNumberOfBlocks() {
         return numberOfBlocks;
-    }
-
-    @Override
-    public int getOffSet() {
-        return offset;
     }
 
     @Override
@@ -96,27 +91,8 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     @Override
-    public int getColumns() {
-        return 0;
-    }
-
-    @Override
-    public int getRows() {
-        return 0;
-    }
-
-    @Override
     public int getBucketSize() {
         return bucketSize;
     }
 
-    @Override
-    public int factorySizeParameter0() {
-        return size;
-    }
-
-    @Override
-    public int factorySizeParameter1() {
-        return bucketSize;
-    }
 }

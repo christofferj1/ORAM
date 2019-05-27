@@ -2,7 +2,6 @@ package oram.ofactory;
 
 import oram.AccessStrategy;
 import oram.Constants;
-import oram.Util;
 import oram.factory.Factory;
 import oram.path.AccessStrategyPathMult;
 
@@ -29,14 +28,6 @@ public class ORAMFactoryPathMult implements ORAMFactory {
         totalSize = size * bucketSize;
     }
 
-    public ORAMFactoryPathMult() {
-        size = Util.getInteger("size");
-        numberOfBlocks = Util.getInteger("number of blocks");
-        numberOfRounds = Util.getInteger("number of rounds");
-        bucketSize = Util.getInteger("bucket size");
-        totalSize = size * bucketSize;
-    }
-
     @Override
     public int getSize() {
         return size;
@@ -54,11 +45,6 @@ public class ORAMFactoryPathMult implements ORAMFactory {
     @Override
     public int getNumberOfBlocks() {
         return numberOfBlocks;
-    }
-
-    @Override
-    public int getOffSet() {
-        return 0;
     }
 
     @Override
@@ -93,27 +79,8 @@ public class ORAMFactoryPathMult implements ORAMFactory {
     }
 
     @Override
-    public int getColumns() {
-        return 0;
-    }
-
-    @Override
-    public int getRows() {
-        return 0;
-    }
-
-    @Override
     public int getBucketSize() {
         return bucketSize;
     }
 
-    @Override
-    public int factorySizeParameter0() {
-        return size;
-    }
-
-    @Override
-    public int factorySizeParameter1() {
-        return bucketSize;
-    }
 }

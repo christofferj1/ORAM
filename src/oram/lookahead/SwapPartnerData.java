@@ -29,10 +29,6 @@ public class SwapPartnerData {
         return swapNumber;
     }
 
-    public void setSwapNumber(int swapNumber) {
-        this.swapNumber = swapNumber;
-    }
-
     @Override
     public String toString() {
         return "SwapPartnerData{" +

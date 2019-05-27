@@ -31,7 +31,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     }
 
     public ORAMFactoryLookahead() {
-        size = Util.getInteger("size");
+        size = Util.getInteger("size, must be a square number");
         numberOfBlocks = Math.min(size, 1000);
         numberOfRounds = Util.getInteger("number of rounds");
         rows = (int) Math.sqrt(size);
@@ -56,14 +56,9 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     }
 
     @Override
-    public int getOffSet() {
-        return offset;
-    }
-
-    @Override
     public String getInitString() {
-        return "Size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " + numberOfBlocks +
-                ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
+        return "Lookahead, size: " + size + ", rows: " + rows + ", columns: " + columns + ", blocks: " +
+                numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
     }
 
     @Override
@@ -92,27 +87,8 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     }
 
     @Override
-    public int getColumns() {
-        return columns;
-    }
-
-    @Override
-    public int getRows() {
-        return rows;
-    }
-
-    @Override
     public int getBucketSize() {
-        return 0;
+        return -42;
     }
 
-    @Override
-    public int factorySizeParameter0() {
-        return rows;
-    }
-
-    @Override
-    public int factorySizeParameter1() {
-        return columns;
-    }
 }
