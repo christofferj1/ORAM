@@ -20,7 +20,7 @@ public class ORAMFactoryTrivial implements ORAMFactory {
     private int totalSize;
 
     public ORAMFactoryTrivial(int size, int offset) {
-        this.size = size + 1;
+        this.size = size;
         numberOfBlocks = Math.min(size, 1000);
         this.offset = offset;
         totalSize = size + 1;
@@ -52,8 +52,8 @@ public class ORAMFactoryTrivial implements ORAMFactory {
 
     @Override
     public String getInitString() {
-        return "Size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds + ", block size: " +
-                Constants.BLOCK_SIZE;
+        return "Trivial, size: " + size + ", blocks: " + numberOfBlocks + ", rounds: " + numberOfRounds +
+                ", block size: " + Constants.BLOCK_SIZE;
     }
 
     @Override
