@@ -36,7 +36,6 @@ public class UtilTest {
                 is(77));
         assertThat("number 2892341", Util.byteArrayToLeInt(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000}),
                 is(2892341));
-//        [<-83>, <50>, <61>, <17>]
         assertThat("number 289223341", Util.byteArrayToLeInt(
                 new byte[]{0b11111111111111111111111110101101, 0b00110010, 0b00111101, 0b00010001}), is(289223341));
     }
@@ -49,7 +48,6 @@ public class UtilTest {
                 is(new byte[]{0b01001101, 0b00000000, 0b00000000, 0b00000000}));
         assertThat("number 2892341", Util.leIntToByteArray(2892341),
                 is(new byte[]{0b00110101, 0b00100010, 0b00101100, 0b00000000}));
-//        [<-83>, <50>, <61>, <17>]
         assertThat("number 289223341", Util.leIntToByteArray(289223341),
                 is(new byte[]{0b11111111111111111111111110101101, 0b00110010, 0b00111101, 0b00010001}));
     }
