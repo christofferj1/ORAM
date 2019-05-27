@@ -1,7 +1,6 @@
 package oram;
 
 import javafx.util.Pair;
-import oram.block.BlockEncrypted;
 import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyCounting;
@@ -12,7 +11,6 @@ import oram.factory.FactoryLocal;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.AccessStrategyLookaheadTrivial;
 import oram.ofactory.*;
-import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -234,14 +232,6 @@ public class MainLocal {
         }
         factories.get(0).setNumberOfRounds(Util.getInteger("number of rounds"));
         return new Pair<>(factories, numberOfORAMS);
-    }
-
-    private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,
-                                            AccessStrategyPath access, int offset) {
-        BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
-        for (int j = 0; j < array.length; j++)
-            array[j] = com.read(j + offset);
-        System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
     }
 
     private static StringBuilder initializeStringBuilder(List<ORAMFactory> factories) {

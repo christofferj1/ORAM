@@ -98,66 +98,6 @@ public class Util {
         return Arrays.copyOf(array, i + 1);
     }
 
-    static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
-                            String prefixString) {
-        int layers = 0;
-        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
-            layers++;
-        }
-
-        List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
-
-        List<BlockPath> blockPaths = access.decryptBlockPaths(encrypted, false);
-        BlockPath[] array1 = blockPaths.toArray(new BlockPath[array.length]);
-        return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
-    }
-
-    private static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers,
-                                      String prefixString) {
-        StringBuilder prefix = new StringBuilder();
-
-        for (int i = 1; i < layer; i++)
-            prefix.append("        ");
-
-        StringBuilder builder = new StringBuilder();
-        double sizeMinusOne = Math.pow(2, maxLayers - 1) - 1;
-        if (index == sizeMinusOne + 1)
-            builder.append(prefixString);
-
-        for (int i = 0; i < bucketSize; i++) {
-            int firstIndexInBucket = index * bucketSize;
-            int currentIndex = firstIndexInBucket + i;
-            if (i == 0)
-                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
-            else
-                builder.append(prefix).append("    ");
-
-            if (array.length > currentIndex)
-                builder.append(array[currentIndex].toStringShort());
-
-            builder.append("\n").append(prefixString);
-        }
-
-        if (index >= sizeMinusOne)
-            return builder.toString();
-
-
-        String rightChild;
-        String leftChild;
-        if (index == 0) {
-            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers, prefixString);
-            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers, prefixString);
-        } else {
-            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers, prefixString);
-            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers, prefixString);
-        }
-
-        builder.insert(0, rightChild);
-        builder.append(leftChild);
-
-        return builder.toString();
-    }
-
     static String getTimeString(long milliseconds) {
         int hours = (int) (milliseconds / 3600000);
         int minutes = (int) (milliseconds % 3600000) / 60000;
@@ -336,5 +276,67 @@ public class Util {
                 res[i] = oramFactory.getAccessStrategy(key, factory, res[i + 1], prefixSize);
         }
         return new ArrayList<>(Arrays.asList(res));
+    }
+
+//    Methods used to print the Path ORAM tree, not used anymore
+
+    static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
+                            String prefixString) {
+        int layers = 0;
+        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
+            layers++;
+        }
+
+        List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
+
+        List<BlockPath> blockPaths = access.decryptBlockPaths(encrypted, false);
+        BlockPath[] array1 = blockPaths.toArray(new BlockPath[array.length]);
+        return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
+    }
+
+    private static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers,
+                                      String prefixString) {
+        StringBuilder prefix = new StringBuilder();
+
+        for (int i = 1; i < layer; i++)
+            prefix.append("        ");
+
+        StringBuilder builder = new StringBuilder();
+        double sizeMinusOne = Math.pow(2, maxLayers - 1) - 1;
+        if (index == sizeMinusOne + 1)
+            builder.append(prefixString);
+
+        for (int i = 0; i < bucketSize; i++) {
+            int firstIndexInBucket = index * bucketSize;
+            int currentIndex = firstIndexInBucket + i;
+            if (i == 0)
+                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
+            else
+                builder.append(prefix).append("    ");
+
+            if (array.length > currentIndex)
+                builder.append(array[currentIndex].toStringShort());
+
+            builder.append("\n").append(prefixString);
+        }
+
+        if (index >= sizeMinusOne)
+            return builder.toString();
+
+
+        String rightChild;
+        String leftChild;
+        if (index == 0) {
+            rightChild = printBucket(array, bucketSize, 2, layer + 1, maxLayers, prefixString);
+            leftChild = printBucket(array, bucketSize, 1, layer + 1, maxLayers, prefixString);
+        } else {
+            rightChild = printBucket(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers, prefixString);
+            leftChild = printBucket(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers, prefixString);
+        }
+
+        builder.insert(0, rightChild);
+        builder.append(leftChild);
+
+        return builder.toString();
     }
 }
