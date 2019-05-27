@@ -1,11 +1,12 @@
-package oram;
+package oram.clientcom;
 
+import oram.Constants;
+import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.blockcreator.LookaheadBlockCreator;
 import oram.blockcreator.PathBlockCreator;
 import oram.blockcreator.TrivialBlockCreator;
-import oram.clientcom.CommunicationStrategy;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -21,16 +22,9 @@ import java.util.List;
 
 public class CommunicationStrategyStub implements CommunicationStrategy {
     private BlockEncrypted[] blocks;
-    private int bucketSize;
+    private int bucketSize; // Matrix height (+2) when using Lookahead ORAM
 
     public CommunicationStrategyStub(int size, int bucketSize) {
-//        blocks = new ArrayList<>();
-//        for (int i = 0; i < (size * bucketSize); i++) {
-//            byte[] address = EncryptionStrategy.encrypt(Util.sizedByteArrayWithInt(0, Constants.LOG_OF_BLOCK_SIZE), key);
-//            byte[] data = EncryptionStrategy.encrypt(Util.sizedByteArrayWithInt(0, Constants.BLOCK_SIZE), key);
-//            blocks.add(new BlockEncrypted(address, data));
-//        }
-//        blocks = new ArrayList<>(Arrays.asList(new BlockEncrypted[size]));
         this.bucketSize = bucketSize;
         blocks = new BlockEncrypted[size * bucketSize];
     }
@@ -102,6 +96,55 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         blocks = blocksList.toArray(new BlockEncrypted[0]);
     }
 
+    public static String printTreeEncrypted(BlockEncrypted[] array, int bucketSize) {
+        int layers = 0;
+        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
+            layers++;
+        }
+
+        return printBucketEncrypted(array, bucketSize, 0, 1, layers);
+    }
+
+    public static String printBucketEncrypted(BlockEncrypted[] array, int bucketSize, int index, int layer,
+                                              int maxLayers) {
+        StringBuilder prefix = new StringBuilder();
+        for (int i = 1; i < layer; i++) {
+            prefix.append("        ");
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < bucketSize; i++) {
+            int firstIndexInBucket = index * bucketSize;
+            int currentIndex = firstIndexInBucket + i;
+            if (i == 0)
+                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
+            else
+                builder.append(prefix).append("    ");
+            if (array.length > currentIndex)
+                builder.append(array[currentIndex].toStringShort());
+            builder.append("\n");
+        }
+
+        if (index >= Math.pow(2, maxLayers - 1) - 1)
+            return builder.toString();
+
+
+        String rightChild;
+        String leftChild;
+        if (index == 0) {
+            rightChild = printBucketEncrypted(array, bucketSize, 2, layer + 1, maxLayers);
+            leftChild = printBucketEncrypted(array, bucketSize, 1, layer + 1, maxLayers);
+        } else {
+            rightChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
+            leftChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
+        }
+
+        builder.insert(0, rightChild);
+        builder.append(leftChild);
+
+        return builder.toString();
+    }
+
     @Override
     public boolean start() {
         return true;
@@ -109,7 +152,6 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
 
     @Override
     public BlockEncrypted read(int address) {
-//        return blocks.get(address);
         return blocks[address];
     }
 
@@ -144,13 +186,15 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         return true;
     }
 
+//    The methods beneath are used to print the Path ORAM tree and Lookahead ORAM matrix
+
     @Override
     public long speedTest() {
         return 0;
     }
 
-    public String getTreeString() {
-        return Util.printTreeEncrypted(blocks, bucketSize);
+    public void setBlocks(BlockEncrypted[] blocks) {
+        this.blocks = blocks;
     }
 
     public String getMatrixAndStashString(AccessStrategyLookahead accessStrategy) {
@@ -209,9 +253,5 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         }
 
         return builder.toString();
-    }
-
-    public void setBlocks(BlockEncrypted[] blocks) {
-        this.blocks = blocks;
     }
 }

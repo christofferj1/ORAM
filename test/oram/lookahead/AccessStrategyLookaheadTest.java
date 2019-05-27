@@ -1,11 +1,11 @@
 package oram.lookahead;
 
-import oram.CommunicationStrategyStub;
 import oram.Constants;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.block.BlockTrivial;
+import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.util.FactoryStub;

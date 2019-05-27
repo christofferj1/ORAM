@@ -1,8 +1,8 @@
 package oram.factory;
 
-import oram.CommunicationStrategyStub;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyCounting;
+import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyCounting;
 import oram.encryption.EncryptionStrategyImpl;

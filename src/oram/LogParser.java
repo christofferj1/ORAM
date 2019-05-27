@@ -9,6 +9,8 @@ import java.io.IOException;
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 06-05-2019. <br>
  * Master Thesis 2019 </p>
+ *
+ * Used to get data from log files
  */
 
 public class LogParser {
@@ -23,9 +25,8 @@ public class LogParser {
                     if (notDone) {
                         String percent = string.substring(10, 13);
                         String time = string.substring(29, 40);
-                        int timeSoFar = milisecondsFromString(time);
+                        int timeSoFar = millisecondsFromString(time);
                         System.out.println(percent + "; " + time + "; " + (timeSoFar - lastTime));
-//                    System.out.println(string);
                         lastTime = timeSoFar;
                     }
                     if (string.contains("100%")) {
@@ -43,12 +44,9 @@ public class LogParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        System.out.println(milisecondsFromString("0:0:3.4"));
-        System.out.println(milisecondsFromString("1:21:3.412"));
     }
 
-    private static int milisecondsFromString(String string) {
+    private static int millisecondsFromString(String string) {
         String tmp = string;
         String hoursString = tmp.substring(0, tmp.indexOf(":"));
         tmp = tmp.substring(tmp.indexOf(":") + 1, tmp.length());

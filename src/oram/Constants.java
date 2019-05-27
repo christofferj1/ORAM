@@ -23,9 +23,4 @@ public class Constants {
     public static final int DUMMY_LEAF_NODE_INDEX = -42; // TODO: Rename to DUMMY_POSITION
 
     public static final int POSITION_BLOCK_SIZE = 16;
-    public static final int SIZE_1 = 64;
-    public static final int SIZE_2 = 1024;
-    public static final int SIZE_3 = 16384;
-    public static final int SIZE_4 = 262144;
-    public static final int SIZE_5 = 4194304;
 }

@@ -1,10 +1,7 @@
 package oram;
 
-import oram.block.Block;
 import oram.block.BlockEncrypted;
-import oram.block.BlockLookahead;
 import oram.block.BlockPath;
-import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.lookahead.AccessStrategyDummy;
 import oram.ofactory.ORAMFactory;
@@ -15,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.crypto.SecretKey;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -30,7 +26,6 @@ import java.util.*;
 
 public class Util {
     private static final Logger logger = LogManager.getLogger("log");
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static byte[] getRandomByteArray(int length) {
         if (length <= 0) return new byte[0];
@@ -42,22 +37,10 @@ public class Util {
         return res;
     }
 
-    public static boolean isDummyBlock(Block block) {
-        if (block == null || block.getData() == null || block.getData().length == 0) return false;
-        for (byte bit : block.getData())
-            if (bit != 0) return false;
-        return true;
-    }
-
     public static boolean isDummyAddress(int address) {
         return address == 0;
     }
 
-    /**
-     * The following two functions are from
-     * https://stackoverflow.com/questions/5399798/byte-array-and-int-conversion-in-java/11419863
-     * The one for big endian integers is an adoption of those
-     */
     public static int byteArrayToLeInt(byte[] b) {
         final ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -78,15 +61,6 @@ public class Util {
         return bb.array();
     }
 
-    public static int numberOfBytesForInt(int i) {
-        int count = 0;
-        while (Math.abs(i) > 0) {
-            count += 1;
-            i = i >>> 8;
-        }
-        return count;
-    }
-
     public static String printByteArray(byte[] array, boolean trimEnd) {
         if (array == null) return null;
 
@@ -101,12 +75,11 @@ public class Util {
 
         StringBuilder builder = new StringBuilder("[");
         for (byte b : array) {
-            int i = b;
-            if (oneCipher.contains(i))
+            if (oneCipher.contains((int) b))
                 builder.append("   ");
-            else if (twoCiphers.contains(i) || oneCipherNegative.contains(i))
+            else if (twoCiphers.contains((int) b) || oneCipherNegative.contains((int) b))
                 builder.append("  ");
-            else if (treeCiphers.contains(i) || twoCiphersNegative.contains(i))
+            else if (treeCiphers.contains((int) b) || twoCiphersNegative.contains((int) b))
                 builder.append(" ");
             builder.append(b);
             builder.append(",");
@@ -116,7 +89,7 @@ public class Util {
         return builder.append("]").toString();
     }
 
-    public static byte[] removeTrailingZeroes(byte[] array) {
+    private static byte[] removeTrailingZeroes(byte[] array) {
         if (array == null) return null;
         int i = array.length - 1;
         while (i >= 0 && array[i] == 0)
@@ -125,8 +98,8 @@ public class Util {
         return Arrays.copyOf(array, i + 1);
     }
 
-    public static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
-                                   String prefixString) {
+    static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
+                            String prefixString) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
@@ -139,8 +112,8 @@ public class Util {
         return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
     }
 
-    public static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers,
-                                     String prefixString) {
+    private static String printBucket(BlockPath[] array, int bucketSize, int index, int layer, int maxLayers,
+                                      String prefixString) {
         StringBuilder prefix = new StringBuilder();
 
         for (int i = 1; i < layer; i++)
@@ -185,62 +158,7 @@ public class Util {
         return builder.toString();
     }
 
-    public static String printTreeEncrypted(BlockEncrypted[] array, int bucketSize) {
-        int layers = 0;
-        while ((array.length / bucketSize) >= Math.pow(2, layers)) {
-            layers++;
-        }
-
-        return printBucketEncrypted(array, bucketSize, 0, 1, layers);
-    }
-
-    public static String printBucketEncrypted(BlockEncrypted[] array, int bucketSize, int index, int layer,
-                                              int maxLayers) {
-        StringBuilder prefix = new StringBuilder();
-        for (int i = 1; i < layer; i++) {
-            prefix.append("        ");
-        }
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < bucketSize; i++) {
-            int firstIndexInBucket = index * bucketSize;
-            int currentIndex = firstIndexInBucket + i;
-            if (i == 0)
-                builder.append(prefix).append(StringUtils.leftPad(String.valueOf(index), 2)).append(": ");
-            else
-                builder.append(prefix).append("    ");
-            if (array.length > currentIndex)
-                builder.append(array[currentIndex].toStringShort());
-            builder.append("\n");
-        }
-
-        if (index >= Math.pow(2, maxLayers - 1) - 1)
-            return builder.toString();
-
-
-        String rightChild;
-        String leftChild;
-        if (index == 0) {
-            rightChild = printBucketEncrypted(array, bucketSize, 2, layer + 1, maxLayers);
-            leftChild = printBucketEncrypted(array, bucketSize, 1, layer + 1, maxLayers);
-        } else {
-            rightChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2), layer + 1, maxLayers);
-            leftChild = printBucketEncrypted(array, bucketSize, ((index + 1) * 2) - 1, layer + 1, maxLayers);
-        }
-
-        builder.insert(0, rightChild);
-        builder.append(leftChild);
-
-        return builder.toString();
-    }
-
-    public static BlockEncrypted getEncryptedDummy(SecretKey key, EncryptionStrategy encryptionStrategy) {
-        byte[] encryptedAddress = encryptionStrategy.encrypt(Util.leIntToByteArray(0), key);
-        byte[] encryptedData = encryptionStrategy.encrypt(new byte[Constants.BLOCK_SIZE], key);
-        return new BlockEncrypted(encryptedAddress, encryptedData);
-    }
-
-    public static String getTimeString(long milliseconds) {
+    static String getTimeString(long milliseconds) {
         int hours = (int) (milliseconds / 3600000);
         int minutes = (int) (milliseconds % 3600000) / 60000;
         int seconds = (int) (milliseconds % 60000) / 1000;
@@ -251,75 +169,7 @@ public class Util {
         return string; // Adds zeros to the milliseconds
     }
 
-    public static String getMatrixString(BlockLookahead[] blocks, int matrixHeight) {
-        StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
-        for (int row = 0; row < matrixHeight; row++) {
-            for (int col = 0; col < matrixHeight; col++) {
-                int index = col * matrixHeight + row;
-                BlockLookahead block = blocks[index];
-                if (block != null) {
-                    String string = new String(block.getData()).trim();
-                    builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                    builder.append(",");
-                    builder.append(StringUtils.leftPad(Integer.toString(block.getAddress()).trim(), 3));
-                } else
-                    builder.append("       null");
-                if (col < matrixHeight - 1)
-                    builder.append(" | ");
-            }
-            builder.append("\n");
-        }
-
-        builder.append("Swap                         | Access\n");
-        for (int i = 0; i < matrixHeight; i++) {
-            int index = i + matrixHeight * matrixHeight + matrixHeight;
-            BlockLookahead block = blocks[index];
-            if (block != null) {
-                String string = new String(block.getData()).trim();
-                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
-                builder.append("(");
-                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 2));
-                builder.append(", ");
-                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 2));
-                builder.append(")");
-            } else
-                builder.append("                     null");
-            builder.append(" | ");
-            index -= matrixHeight;
-            block = blocks[index];
-            if (block != null) {
-                String string = new String(block.getData()).trim();
-                builder.append(StringUtils.rightPad(string.isEmpty() ? "null" : string, 12));
-                builder.append(", at ").append(StringUtils.leftPad(String.valueOf(block.getAddress()), 2)).append(" ");
-                builder.append("(");
-                builder.append(StringUtils.leftPad(Integer.toString(block.getRowIndex()).trim(), 1));
-                builder.append(", ");
-                builder.append(StringUtils.leftPad(Integer.toString(block.getColIndex()).trim(), 1));
-                builder.append(") ");
-            } else
-                builder.append("               null");
-
-            builder.append("\n");
-        }
-
-        return builder.toString();
-    }
-
-    public static String getRandomString(int length) {
-        if (length <= 0) return "";
-
-        char[] charactersArray = CHARACTERS.toCharArray();
-        SecureRandom secureRandom = new SecureRandom();
-
-        char[] res = new char[length];
-        for (int i = 0; i < length; i++) {
-            res[i] = charactersArray[secureRandom.nextInt(charactersArray.length)];
-        }
-        return new String(res);
-    }
-
-    public static String getPercentageDoneString(long startTime, double numberOfRounds, int roundNumber) {
+    static String getPercentageDoneString(long startTime, double numberOfRounds, int roundNumber) {
         double percentDone = ((roundNumber + 1) / numberOfRounds) * 100;
         percentDone = percentDone * 1000000;
         percentDone = Math.round(percentDone);
@@ -339,7 +189,7 @@ public class Util {
         return null;
     }
 
-    public static String getClockString(long timeLeft) {
+    private static String getClockString(long timeLeft) {
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(System.currentTimeMillis() + timeLeft);
         String done = (now.get(Calendar.HOUR_OF_DAY) < 10 ? "0" + now.get(Calendar.HOUR_OF_DAY) : "" +
@@ -414,9 +264,8 @@ public class Util {
         }
 
         Map<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++) {
+        for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++)
             map.put(startAddress + i, Constants.DUMMY_LEAF_NODE_INDEX);
-        }
 
         return map;
     }
@@ -442,19 +291,19 @@ public class Util {
         return builder.toString();
     }
 
-    public static String chooseORAMType(String string) {
+    static String chooseORAMType(String string) {
         Scanner scanner = new Scanner(System.in);
         Util.logAndPrint(logger, string);
         String answer = scanner.nextLine();
         while (!(answer.equals("l") || answer.equals("p") || answer.equals("t") || answer.equals("lt"))) {
-            System.out.println("Choose ORAM [l/lt/p/t]");
+            System.out.println("Choose ORAM between Lookahead, Path, Trivial, or Lookahead (using Trivial specialised for Lookahead) [l/lt/p/t]");
             answer = scanner.nextLine();
         }
         logger.info(answer);
         return answer;
     }
 
-    public static int getLevelSize(int level, int numberOfORAM) {
+    static int getLevelSize(int level, int numberOfORAM) {
         return (int) Math.pow(2, ((numberOfORAM - level) * 4) + 6);
     }
 
@@ -473,7 +322,7 @@ public class Util {
         return addresses;
     }
 
-    public static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
+    static List<AccessStrategy> getAccessStrategies(List<ORAMFactory> factories, byte[] key, Factory factory) {
         AccessStrategy[] res = new AccessStrategy[factories.size()];
         for (int i = factories.size() - 1; i >= 0; i--) {
             ORAMFactory oramFactory = factories.get(i);

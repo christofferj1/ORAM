@@ -1,10 +1,10 @@
 package oram.path;
 
-import oram.CommunicationStrategyStub;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
+import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
 import oram.permutation.PermutationStrategy;
