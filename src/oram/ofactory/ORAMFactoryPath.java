@@ -29,15 +29,15 @@ public class ORAMFactoryPath implements ORAMFactory {
         numberOfBlocks = Math.min(size, 1000);
         this.size = size - 1;
         bucketSize = DEFAULT_BUCKET_SIZE;
-        totalSize = size * bucketSize;
+        totalSize = this.size * bucketSize;
     }
 
 //    For local position map ORAM
     public ORAMFactoryPath() {
         size = Util.getInteger("size, must be a power of 2");
         numberOfBlocks = Math.min(size, 1000);
-        numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
+        numberOfRounds = Util.getInteger("number of rounds");
         offset = 0;
         totalSize = size * bucketSize;
     }

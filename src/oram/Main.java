@@ -161,7 +161,7 @@ public class Main {
     }
 
     private static List<ORAMFactory> getORAMFactories() {
-        int numberOfORAMS = Util.getInteger("number of ORAMs (between 1 and 5, both included)");
+        int numberOfORAMS = Util.getInteger("number of layers of ORAMs (between 1 and 5, both included)");
         if (numberOfORAMS == 1)
             return Collections.singletonList(getSingleOramFactory());
 

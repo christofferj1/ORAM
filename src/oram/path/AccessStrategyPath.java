@@ -108,7 +108,7 @@ public class AccessStrategyPath implements AccessStrategy {
             leafNodeIndex = positionMap.getOrDefault(addressToLookUp, null);
 
             if (leafNodeIndex == null) {
-                logger.error(prefixString + "Unable to look up address: " + address);
+                logger.error(prefixString + "Unable to look up address: " + addressToLookUp);
                 return null;
             } else if (leafNodeIndex == DUMMY_LEAF_NODE_INDEX)
                 leafNodeIndex = randomness.nextInt((int) Math.pow(2, L - 1));
