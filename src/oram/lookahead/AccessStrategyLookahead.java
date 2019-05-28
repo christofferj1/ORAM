@@ -12,6 +12,7 @@ import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
+import oram.trivial.AccessStrategyTrivial;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -176,6 +177,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         int positionMapBlocks = (int) Math.ceil((double) entries.size() / Constants.POSITION_BLOCK_SIZE);
         for (int i = 0; i <= positionMapBlocks; i++) {
             Map<Integer, Integer> map = new HashMap<>();
+            if (i == 0 && !(accessStrategy instanceof AccessStrategyTrivial)) // Set a dummy block for Trivial ORAM only
+                continue;
             for (int j = 0; j < Constants.POSITION_BLOCK_SIZE; j++) {
                 int index = (i - 1) * Constants.POSITION_BLOCK_SIZE + j;
 
@@ -183,7 +186,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
                  else
                     map.put(index + 1, -42);
-
             }
             byte[] byteArrayForMap = Util.getByteArrayFromMap(map);
             if (accessStrategy.access(OperationType.WRITE, i, byteArrayForMap, false, true) == null) {

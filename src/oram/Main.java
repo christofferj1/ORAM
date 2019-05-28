@@ -169,6 +169,7 @@ public class Main {
             System.out.println("Can't create higher than 5 recursive ORAMs");
             System.exit(-1);
         }
+
         int offset = 0;
         List<ORAMFactory> factories = new ArrayList<>();
         outer:
