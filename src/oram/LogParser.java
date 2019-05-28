@@ -9,11 +9,11 @@ import java.io.IOException;
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 06-05-2019. <br>
  * Master Thesis 2019 </p>
- *
+ * <p>
  * Used to get data from log files
  */
 
-public class LogParser {
+class LogParser {
     public static void main(String[] args) {
         File file = new File("log.log");
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {

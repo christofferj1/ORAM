@@ -205,19 +205,19 @@ public class UtilTest {
         map = new HashMap<>();
         int newStart = 16 * 4;
         for (int i = 1; i <= 16; i++) {
-            map.put(i + newStart, Constants.DUMMY_LEAF_NODE_INDEX);
+            map.put(i + newStart, Constants.DUMMY_POSITION);
         }
 
         for (int i = newStart + 1; i <= newStart + 16; i++) {
-                        tmp = Util.getDummyMap(i);
+            tmp = Util.getDummyMap(i);
             assertThat("Map including: " + i, tmp, is(map));
         }
 
         tmp = Util.getDummyMap(0);
         assertNotNull("Map is not null", tmp);
-        for (int i = -16; i < 0; i++ ) {
+        for (int i = -16; i < 0; i++) {
             assertTrue("Maps contains: " + i, tmp.containsKey(i));
-            assertThat("Maps " + i + " to -42", tmp.get(i), is(Constants.DUMMY_LEAF_NODE_INDEX));
+            assertThat("Maps " + i + " to -42", tmp.get(i), is(Constants.DUMMY_POSITION));
         }
     }
 
@@ -253,8 +253,8 @@ public class UtilTest {
     @Test
     public void shouldBeAbleToConvertBetweenByteArraysAndMaps() {
         Map<Integer, Integer> map = new HashMap<>();
-        map.put(1,2);
-        map.put(0,0);
+        map.put(1, 2);
+        map.put(0, 0);
         map.put(-42, 321432432);
         byte[] bytes = Util.getByteArrayFromMap(map);
         assertThat(Util.getMapFromByteArray(bytes), is(map));

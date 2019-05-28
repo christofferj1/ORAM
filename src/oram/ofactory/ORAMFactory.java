@@ -14,8 +14,6 @@ public interface ORAMFactory {
 
     AccessStrategy getAccessStrategy(byte[] secretKey, Factory factory, AccessStrategy accessStrategy, int prefixSize);
 
-    int getBucketSize();
-
     int getNumberOfRounds();
 
     void setNumberOfRounds(int numberOfRounds);

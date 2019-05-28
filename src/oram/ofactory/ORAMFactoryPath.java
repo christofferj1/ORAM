@@ -23,7 +23,7 @@ public class ORAMFactoryPath implements ORAMFactory {
     private int offset;
     private int totalSize;
 
-//    For recursive ORAM
+    //    For recursive ORAM
     public ORAMFactoryPath(int size, int offset) {
         this.offset = offset;
         numberOfBlocks = Math.min(size, 1000);
@@ -32,7 +32,7 @@ public class ORAMFactoryPath implements ORAMFactory {
         totalSize = this.size * bucketSize;
     }
 
-//    For local position map ORAM
+    //    For local position map ORAM
     public ORAMFactoryPath() {
         size = Util.getInteger("size, must be a power of 2");
         numberOfBlocks = Math.min(size, 1000);
@@ -90,11 +90,6 @@ public class ORAMFactoryPath implements ORAMFactory {
     @Override
     public void setNumberOfRounds(int numberOfRounds) {
         this.numberOfRounds = numberOfRounds;
-    }
-
-    @Override
-    public int getBucketSize() {
-        return bucketSize;
     }
 
 }

@@ -28,8 +28,8 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
     private DataInputStream dataInputStream;
 
     @Override
-    public boolean start() {
-        if (!setupConnection()) return false;
+    public boolean start(String ipAddress) {
+        if (!setupConnection(ipAddress)) return false;
         return initializeStreams();
     }
 
@@ -309,11 +309,8 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
         return System.nanoTime() - startTime;
     }
 
-    private boolean setupConnection() {
-        String ipAddress = "10.192.96.190";
-
+    private boolean setupConnection(String ipAddress) {
         try {
-//            TODO: sleep and try over
             socket = new Socket(ipAddress, Constants.PORT);
             System.out.println("Socket opened, inet address: " + socket.getInetAddress());
             logger.info("Socket opened, inet address: " + socket.getInetAddress());

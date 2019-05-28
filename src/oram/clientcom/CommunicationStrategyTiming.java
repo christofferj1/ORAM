@@ -20,8 +20,8 @@ public class CommunicationStrategyTiming implements CommunicationStrategy {
     }
 
     @Override
-    public boolean start() {
-        return communicationStrategy.start();
+    public boolean start(String ipAddress) {
+        return communicationStrategy.start(ipAddress);
     }
 
     @Override

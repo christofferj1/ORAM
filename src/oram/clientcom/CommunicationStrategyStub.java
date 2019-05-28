@@ -146,7 +146,7 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
     }
 
     @Override
-    public boolean start() {
+    public boolean start(String ipAddress) {
         return true;
     }
 

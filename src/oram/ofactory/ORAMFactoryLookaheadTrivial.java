@@ -86,9 +86,4 @@ public class ORAMFactoryLookaheadTrivial implements ORAMFactory {
         this.numberOfRounds = numberOfRounds;
     }
 
-    @Override
-    public int getBucketSize() {
-        return -42;
-    }
-
 }

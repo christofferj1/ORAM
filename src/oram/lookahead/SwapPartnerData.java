@@ -8,11 +8,11 @@ import java.util.Objects;
  * Master Thesis 2019 </p>
  */
 
-public class SwapPartnerData {
+class SwapPartnerData {
     private Index index;
     private int swapNumber;
 
-    public SwapPartnerData(Index index, int swapNumber) {
+    SwapPartnerData(Index index, int swapNumber) {
         this.index = index;
         this.swapNumber = swapNumber;
     }
@@ -21,11 +21,7 @@ public class SwapPartnerData {
         return index;
     }
 
-    public void setIndex(Index index) {
-        this.index = index;
-    }
-
-    public int getSwapNumber() {
+    int getSwapNumber() {
         return swapNumber;
     }
 

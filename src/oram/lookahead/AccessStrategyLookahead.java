@@ -184,7 +184,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
                 if (i != 0 && entries.size() > index)
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
-                 else
+                else
                     map.put(index + 1, -42);
             }
             byte[] byteArrayForMap = Util.getByteArrayFromMap(map);
@@ -324,14 +324,14 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Update position map
         if (swapPartner.getAddress() == 0) {
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
         } else {
-            if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+            if (updatePositionMapFailed(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
         }
-        if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+        if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
         if (blockFoundInMatrix || blockFoundInAccessStash)
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
@@ -476,15 +476,15 @@ public class AccessStrategyLookahead implements AccessStrategy {
         return res;
     }
 
-    private boolean updatePositionMap(int key, int value) {
+    private boolean updatePositionMapFailed(int key, int value) {
         if (positionMap == null) {
             byte[] valueBytes = Util.leIntToByteArray(value);
             if (accessStrategy.access(OperationType.WRITE, key, valueBytes, true, false) == null)
-                return false;
+                return true;
         } else
             positionMap.put(key, value);
 
-        return true;
+        return false;
     }
 
     Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
@@ -605,7 +605,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
     }
 
-    public List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
+    private List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (BlockEncrypted b : encryptedBlocks) {
             BlockLookahead block = decryptToLookaheadBlock(b);

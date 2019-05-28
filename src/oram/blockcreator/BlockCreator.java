@@ -10,6 +10,6 @@ import java.util.List;
  * Master Thesis 2019 </p>
  */
 
-public interface BlockCreator {
+interface BlockCreator {
     List<BlockEncrypted> createBlocks(List<String> addresses);
 }

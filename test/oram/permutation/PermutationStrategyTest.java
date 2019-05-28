@@ -1,7 +1,7 @@
 package oram.permutation;
 
-import oram.block.BlockEncrypted;
 import oram.Util;
+import oram.block.BlockEncrypted;
 import org.junit.Before;
 import org.junit.Test;
 

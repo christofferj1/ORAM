@@ -159,7 +159,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         }
 
         if (uploadPositionMap) {
-            if (!writePositionMap())
+            if (writePositionMapFailed())
                 return false;
             positionMap = null;
         } else {
@@ -171,7 +171,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return true;
     }
 
-    private boolean writePositionMap() {
+    private boolean writePositionMapFailed() {
         List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(positionMap.entrySet());
         entries.sort(Comparator.comparing(Map.Entry::getKey));
 
@@ -194,7 +194,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             byte[] addressBytes = Util.getRandomByteArray(Constants.ENCRYPTED_INTEGER_SIZE);
             encryptedBlocks.add(new BlockEncrypted(addressBytes, encryptedData));
         }
-        return communicationStrategy.writeArray(addresses, encryptedBlocks);
+        return !communicationStrategy.writeArray(addresses, encryptedBlocks);
     }
 
     private boolean readPositionMap() {
@@ -354,14 +354,14 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
 //        Update position map
         if (swapPartner.getAddress() == 0) {
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
         } else {
-            if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+            updatePositionMapFailed(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
         }
-        if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+        updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
         if (blockFoundInMatrix || blockFoundInAccessStash)
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
@@ -406,7 +406,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         accessCounter++;
 
         if (uploadPositionMap) {
-            if (!writePositionMap())
+            if (writePositionMapFailed())
                 return null;
             positionMap = null;
         }
@@ -448,7 +448,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 //        Move blocks from access stash to column
         Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
         for (Map.Entry<Integer, BlockLookahead> entry : map.entrySet()) {
-                System.out.println(prefix + "          " + entry.getKey() + " -> " + entry.getValue().toStringShort());
+            System.out.println(prefix + "          " + entry.getKey() + " -> " + entry.getValue().toStringShort());
             BlockLookahead blockLookahead = column.get(entry.getKey());
             int address = blockLookahead.getAddress();
             if (!Util.isDummyAddress(address)) {
@@ -513,13 +513,11 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    private boolean updatePositionMap(int key, int value) {
+    private void updatePositionMapFailed(int key, int value) {
         positionMap.put(key, value);
-
-        return true;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
+    private Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
         int beginIndex = matrixHeight;
         if (!blockInColumn) beginIndex++;
         int endIndex = beginIndex + matrixHeight;
@@ -532,7 +530,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap
+    private Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap
             (Map<Integer, Map<Integer, BlockLookahead>> map,
              BlockLookahead block) {
         if (block.getAddress() == 0)
@@ -588,7 +586,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return column;
     }
 
-    BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {
+    private BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {
         int beginIndex = matrixHeight * 2;
         if (!blockInColumn) beginIndex++;
 
@@ -599,7 +597,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, Index index) {
+    private BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, Index index) {
         int colIndex = index.getColIndex();
         int rowIndex = index.getRowIndex();
         if (stash.containsKey(colIndex)) {
@@ -637,7 +635,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
     }
 
-    public List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
+    private List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (BlockEncrypted b : encryptedBlocks) {
             BlockLookahead block = decryptToLookaheadBlock(b);
@@ -650,7 +648,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
+    private BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
         byte[] encryptedDataFull = blockEncrypted.getData();
         int encryptedDataFullLength = encryptedDataFull.length;
         int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
@@ -681,7 +679,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return blockLookahead;
     }
 
-    BlockEncrypted encryptBlock(BlockLookahead block) {
+    private BlockEncrypted encryptBlock(BlockLookahead block) {
         List<BlockEncrypted> encryptedList = encryptBlocks(Collections.singletonList(block));
         if (encryptedList.isEmpty())
             return null;
@@ -689,7 +687,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             return encryptedList.get(0);
     }
 
-    List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
+    private List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
         List<BlockEncrypted> res = new ArrayList<>();
         for (BlockLookahead block : blockLookaheads) {
             if (block == null) {
@@ -717,19 +715,19 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    int getFlatArrayIndex(Index index) {
+    private int getFlatArrayIndex(Index index) {
         int res = index.getRowIndex();
         res += index.getColIndex() * matrixHeight;
         return res;
     }
 
-    Index getIndexFromFlatArrayIndex(int flatArrayIndex) {
+    private Index getIndexFromFlatArrayIndex(int flatArrayIndex) {
         int column = flatArrayIndex / matrixHeight;
         int row = flatArrayIndex % matrixHeight;
         return new Index(row, column);
     }
 
-    List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
+    private List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = 0; i < matrixHeight; i++) { // Columns
             for (int j = 0; j < matrixHeight; j++) { // Rows
@@ -743,7 +741,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    BlockLookahead getLookaheadDummyBlock() {
+    private BlockLookahead getLookaheadDummyBlock() {
         BlockLookahead blockLookahead = new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]);
         blockLookahead.setIndex(new Index(0, 0));
         return blockLookahead;

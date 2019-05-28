@@ -21,7 +21,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     private int offset;
     private int totalSize;
 
-//    For recursive ORAM
+    //    For recursive ORAM
     public ORAMFactoryLookahead(int size, int offSet) {
         this.size = size;
         this.offset = offSet;
@@ -31,7 +31,7 @@ public class ORAMFactoryLookahead implements ORAMFactory {
         totalSize = (int) (size + 2 * Math.sqrt(size));
     }
 
-//    For local position map ORAM
+    //    For local position map ORAM
     public ORAMFactoryLookahead() {
         size = Util.getInteger("size, must be a square number");
         numberOfBlocks = Math.min(size, 1000);
@@ -86,11 +86,6 @@ public class ORAMFactoryLookahead implements ORAMFactory {
     @Override
     public void setNumberOfRounds(int numberOfRounds) {
         this.numberOfRounds = numberOfRounds;
-    }
-
-    @Override
-    public int getBucketSize() {
-        return -42;
     }
 
 }

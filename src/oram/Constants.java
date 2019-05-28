@@ -20,7 +20,7 @@ public class Constants {
 
     public static final int DEFAULT_BUCKET_SIZE = 4;
 
-    public static final int DUMMY_LEAF_NODE_INDEX = -42; // TODO: Rename to DUMMY_POSITION
+    public static final int DUMMY_POSITION = -42;
 
     public static final int POSITION_BLOCK_SIZE = 16;
 }

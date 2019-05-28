@@ -19,7 +19,7 @@ import javax.crypto.SecretKey;
 import java.security.SecureRandom;
 import java.util.*;
 
-import static oram.Constants.DUMMY_LEAF_NODE_INDEX;
+import static oram.Constants.DUMMY_POSITION;
 
 /**
  * <p> ORAM <br>
@@ -28,10 +28,8 @@ import static oram.Constants.DUMMY_LEAF_NODE_INDEX;
 
 public class AccessStrategyPath implements AccessStrategy {
     private static final Logger logger = LogManager.getLogger("log");
-    private final int size;
     private final int L;
     private final int bucketSize;
-    private final int leafCount;
     private final int offset;
     private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
@@ -46,12 +44,10 @@ public class AccessStrategyPath implements AccessStrategy {
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory, AccessStrategy accessStrategy,
                               int offset, int prefixSize) {
-        this.size = size;
         this.bucketSize = bucketSize;
         this.offset = offset;
         stash = new ArrayList<>();
         L = (int) Math.ceil(Math.log(size) / Math.log(2));
-        leafCount = (int) (Math.pow(2, L - 1));
         communicationStrategy = factory.getCommunicationStrategy();
         encryptionStrategy = factory.getEncryptionStrategy();
         secretKey = encryptionStrategy.generateSecretKey(key);
@@ -110,7 +106,7 @@ public class AccessStrategyPath implements AccessStrategy {
             if (leafNodeIndex == null) {
                 logger.error(prefixString + "Unable to look up address: " + addressToLookUp);
                 return null;
-            } else if (leafNodeIndex == DUMMY_LEAF_NODE_INDEX)
+            } else if (leafNodeIndex == DUMMY_POSITION)
                 leafNodeIndex = randomness.nextInt((int) Math.pow(2, L - 1));
 
         } else {
@@ -157,7 +153,7 @@ public class AccessStrategyPath implements AccessStrategy {
             logger.info(prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses);
         }
 
-   return res;
+        return res;
     }
 
     private boolean readPathToStash(int leafNodeIndex) {
@@ -167,7 +163,7 @@ public class AccessStrategyPath implements AccessStrategy {
             int nodeNumber = getNode(leafNodeIndex, l);
             int position = nodeNumber * bucketSize;
 
-           for (int i = 0; i < bucketSize; i++)
+            for (int i = 0; i < bucketSize; i++)
                 positionsToRead.add(position + i + offset);
         }
 
@@ -182,7 +178,7 @@ public class AccessStrategyPath implements AccessStrategy {
                 logger.error(prefixString + "Unable to decrypt path of blocks");
                 res = false;
             } else {
-                                stash.addAll(blocksDecrypted);
+                stash.addAll(blocksDecrypted);
                 if (stash.size() > maxStashSize) {
                     maxStashSize = stash.size();
                     logger.info(prefixString + "Max stash size: " + maxStashSize);
@@ -244,7 +240,7 @@ public class AccessStrategyPath implements AccessStrategy {
     }
 
     private boolean writeBackPath(int leafNode) {
-             List<Integer> addressesToWrite = new ArrayList<>();
+        List<Integer> addressesToWrite = new ArrayList<>();
         List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
         for (int l = L - 1; l >= 0; l--) {
             int nodeNumber = getNode(leafNode, l);

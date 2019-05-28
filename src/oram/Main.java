@@ -22,7 +22,7 @@ import java.util.*;
  * Master Thesis 2019 </p>
  */
 
-public class Main {
+class Main {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
@@ -46,7 +46,7 @@ public class Main {
 
 //        Initialise communication
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
-        communicationStrategy.start();
+        communicationStrategy.start(getIPString());
 
 //        The Lookahead ORAM is initialised with the blocks it is going to use though out the execution
         List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
@@ -116,6 +116,18 @@ public class Main {
         else
             Util.logAndPrint(logger, "Unable to delete the blocks on the server");
         finalMessages(oramFactories, factory, communicationStrategy, resume);
+    }
+
+    private static String getIPString() {
+        Scanner scanner = new Scanner(System.in);
+        Util.logAndPrint(logger, "Provide an IP address to connect to (format: xxx.xxx.xxx.xxx)");
+        String res = scanner.nextLine();
+        while (!res.matches("(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})")) {
+            Util.logAndPrint(logger, "The IP address: " + res + " did not have the correct format");
+            res = scanner.nextLine();
+        }
+        Util.logAndPrint(logger, "IP chosen: " + res);
+        return res;
     }
 
     private static void finalMessages(List<ORAMFactory> oramFactories, Factory factory,

@@ -81,10 +81,5 @@ public class ORAMFactoryTrivial implements ORAMFactory {
         this.numberOfRounds = numberOfRounds;
     }
 
-    @Override
-    public int getBucketSize() {
-        return 0;
-    }
-
 
 }

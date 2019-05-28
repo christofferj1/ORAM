@@ -205,7 +205,7 @@ public class Util {
 
         Map<Integer, Integer> map = new HashMap<>();
         for (int i = 0; i < Constants.POSITION_BLOCK_SIZE; i++)
-            map.put(startAddress + i, Constants.DUMMY_LEAF_NODE_INDEX);
+            map.put(startAddress + i, Constants.DUMMY_POSITION);
 
         return map;
     }
