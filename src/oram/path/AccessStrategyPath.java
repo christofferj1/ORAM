@@ -9,7 +9,6 @@ import oram.block.BlockPath;
 import oram.block.BlockTrivial;
 import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
-import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +32,6 @@ public class AccessStrategyPath implements AccessStrategy {
     private final int offset;
     private final SecretKey secretKey;
     private final CommunicationStrategy communicationStrategy;
-    private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
     private final BlockEncryptionStrategyPath blockEncStrategy;
     private int maxStashSize;
@@ -50,8 +48,7 @@ public class AccessStrategyPath implements AccessStrategy {
         stash = new ArrayList<>();
         L = (int) Math.ceil(Math.log(size) / Math.log(2));
         communicationStrategy = factory.getCommunicationStrategy();
-        encryptionStrategy = factory.getEncryptionStrategy();
-        secretKey = encryptionStrategy.generateSecretKey(key);
+        secretKey = factory.getEncryptionStrategy().generateSecretKey(key);
         permutationStrategy = factory.getPermutationStrategy();
         blockEncStrategy = factory.getBlockEncryptionStrategyPath();
         maxStashSize = 0;

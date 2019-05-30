@@ -8,12 +8,11 @@ import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.block.BlockTrivial;
+import oram.blockenc.BlockEncryptionStrategyLookahead;
 import oram.clientcom.CommunicationStrategy;
-import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
 import oram.trivial.AccessStrategyTrivial;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -24,9 +23,6 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static oram.Constants.INTEGER_BYTE_ARRAY_SIZE;
-import static oram.Util.byteArrayToLeInt;
 
 /**
  * <p> ORAM <br>
@@ -42,8 +38,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
     private final int size;
     private final int matrixHeight; // Assumed to be equal to matrix width
     private final CommunicationStrategy communicationStrategy;
-    private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
+    private final BlockEncryptionStrategyLookahead blockEncStrategy;
     private Map<Integer, Integer> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
@@ -55,12 +51,12 @@ public class AccessStrategyLookahead implements AccessStrategy {
                                    AccessStrategy accessStrategy, int prefixSize) {
         this.size = size;
         this.matrixHeight = matrixHeight;
-        this.communicationStrategy = factory.getCommunicationStrategy();
-        this.encryptionStrategy = factory.getEncryptionStrategy();
-        this.secretKey = encryptionStrategy.generateSecretKey(key);
-        this.permutationStrategy = factory.getPermutationStrategy();
+        communicationStrategy = factory.getCommunicationStrategy();
+        secretKey = factory.getEncryptionStrategy().generateSecretKey(key);
+        permutationStrategy = factory.getPermutationStrategy();
+        blockEncStrategy = factory.getBlockEncryptionStrategyLookahead();
+        prefix = Util.getEmptyStringOfLength(prefixSize);
         this.offset = offset;
-        this.prefix = Util.getEmptyStringOfLength(prefixSize);
         if (!(size == matrixHeight * matrixHeight))
             logger.error("Size of matrix is wrong");
         accessCounter = 0;
@@ -144,7 +140,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         Util.logAndPrint(logger, prefix + "    Blocks added to final list");
 
 //        Encrypt and write blocks to server
-        List<BlockEncrypted> encryptedList = encryptBlocks(res);
+        List<BlockEncrypted> encryptedList = blockEncStrategy.encryptBlocks(res, secretKey);
+//        List<BlockEncrypted> encryptedList = encryptBlocks(res);
         if (encryptedList.isEmpty()) {
             logger.error(prefix + "Unable to decrypt when initializing the ORAM");
             return false;
@@ -290,7 +287,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
 
 //        Update swap partner index and encrypt it
         swapPartner.setIndex(indexOfCurrentAddress);
-        BlockEncrypted encryptedSwapPartner = encryptBlock(swapPartner);
+        BlockEncrypted encryptedSwapPartner = blockEncStrategy.encryptBlock(swapPartner, secretKey);
         if (encryptedSwapPartner == null) {
             logger.error(prefix + "Encrypting swap partner failed");
             return null;
@@ -326,7 +323,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
         if (swapPartner.getAddress() == 0) {
             if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
         } else {
-            if (updatePositionMapFailed(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+            if (updatePositionMapFailed(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex())))
+                return null;
         }
         if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
@@ -361,7 +359,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             addresses.add(getFlatArrayIndex(indexOfCurrentAddress) + offset);
         }
 
-        List<BlockEncrypted> encryptedBlocks = encryptBlocks(blocksFromMaintenance);
+        List<BlockEncrypted> encryptedBlocks = blockEncStrategy.encryptBlocks(blocksFromMaintenance, secretKey);
+//        List<BlockEncrypted> encryptedBlocks = encryptBlocks(blocksFromMaintenance);
         if (encryptedBlocks == null) {
             logger.error(prefix + "Unable to encrypt blocks");
             return null;
@@ -396,7 +395,8 @@ public class AccessStrategyLookahead implements AccessStrategy {
             return null;
         }
 
-        List<BlockLookahead> blocks = decryptLookaheadBlocks(encryptedBlocks);
+        List<BlockLookahead> blocks = blockEncStrategy.decryptBlocks(encryptedBlocks, secretKey);
+//        List<BlockLookahead> blocks = decryptLookaheadBlocks(encryptedBlocks);
         if (blocks == null) {
             logger.error(prefix + "Unable to decrypt blocks");
             return null;
@@ -603,86 +603,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
             swapStashContains = swapStashList.stream().anyMatch(s -> (s != null && s.getIndex().equals(finalIndex)));
         }
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
-    }
-
-    private List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
-        List<BlockLookahead> res = new ArrayList<>();
-        for (BlockEncrypted b : encryptedBlocks) {
-            BlockLookahead block = decryptToLookaheadBlock(b);
-            if (block == null) {
-                logger.error(prefix + "Unable to decrypt block");
-                return null;
-            }
-            res.add(block);
-        }
-        return res;
-    }
-
-    public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
-        byte[] encryptedDataFull = blockEncrypted.getData();
-        int encryptedDataFullLength = encryptedDataFull.length;
-        int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
-        byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
-        byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
-        byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
-        byte[] indices = encryptionStrategy.decrypt(encryptedIndex, secretKey);
-
-        if (data == null) {
-            logger.info(prefix + "Tried to turn an encrypted block with value = null into a Lookahead block");
-            return null;
-        }
-
-        byte[] addressBytes = encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey);
-
-        int address = byteArrayToLeInt(addressBytes);
-
-        int rowDataIndex = 0;
-        int colDataIndex = INTEGER_BYTE_ARRAY_SIZE;
-        byte[] rowIndexBytes = Arrays.copyOfRange(indices, rowDataIndex, colDataIndex);
-        byte[] colIndexBytes = Arrays.copyOfRange(indices, colDataIndex, INTEGER_BYTE_ARRAY_SIZE * 2);
-
-        BlockLookahead blockLookahead = new BlockLookahead();
-        blockLookahead.setAddress(address);
-        blockLookahead.setData(data);
-        blockLookahead.setRowIndex(byteArrayToLeInt(rowIndexBytes));
-        blockLookahead.setColIndex(byteArrayToLeInt(colIndexBytes));
-        return blockLookahead;
-    }
-
-    BlockEncrypted encryptBlock(BlockLookahead block) {
-        List<BlockEncrypted> encryptedList = encryptBlocks(Collections.singletonList(block));
-        if (encryptedList.isEmpty())
-            return null;
-        else
-            return encryptedList.get(0);
-    }
-
-    List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
-        List<BlockEncrypted> res = new ArrayList<>();
-        for (BlockLookahead block : blockLookaheads) {
-            if (block == null) {
-                res.add(null);
-                continue;
-            }
-            byte[] rowIndexBytes = Util.leIntToByteArray(block.getRowIndex());
-            byte[] colIndexBytes = Util.leIntToByteArray(block.getColIndex());
-            byte[] addressBytes = Util.leIntToByteArray(block.getAddress());
-            byte[] encryptedAddress = encryptionStrategy.encrypt(addressBytes, secretKey);
-            byte[] encryptedData = encryptionStrategy.encrypt(block.getData(), secretKey);
-            byte[] indexBytes = ArrayUtils.addAll(rowIndexBytes, colIndexBytes);
-            byte[] encryptedIndex = encryptionStrategy.encrypt(indexBytes,
-                    secretKey);
-
-            if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
-                logger.error(prefix + "Unable to encrypt block: " + block.toStringShort());
-                return new ArrayList<>();
-            }
-
-            byte[] encryptedDataPlus = ArrayUtils.addAll(encryptedData, encryptedIndex);
-
-            res.add(new BlockEncrypted(encryptedAddress, encryptedDataPlus));
-        }
-        return res;
     }
 
     int getFlatArrayIndex(Index index) {

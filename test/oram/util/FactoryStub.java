@@ -1,5 +1,6 @@
 package oram.util;
 
+import oram.blockenc.BlockEncryptionStrategyLookahead;
 import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyStub;
@@ -52,6 +53,11 @@ public class FactoryStub implements Factory {
     @Override
     public BlockEncryptionStrategyPath getBlockEncryptionStrategyPath() {
         return new BlockEncryptionStrategyPath(getEncryptionStrategy(), getPermutationStrategy());
+    }
+
+    @Override
+    public BlockEncryptionStrategyLookahead getBlockEncryptionStrategyLookahead() {
+        return new BlockEncryptionStrategyLookahead(getEncryptionStrategy());
     }
 
     public void setCommunicationStrategyStub(CommunicationStrategyStub communicationStrategyStub) {

@@ -5,6 +5,7 @@ import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockLookahead;
 import oram.block.BlockTrivial;
+import oram.blockenc.BlockEncryptionStrategyLookahead;
 import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
@@ -32,9 +33,11 @@ import static org.junit.Assert.assertNull;
 public class AccessStrategyLookaheadTest {
     private AccessStrategyLookahead access;
     private byte[] defaultKey;
+    private SecretKey secretKey;
     private int defaultSize;
     private int defaultMatrixSize;
     private FactoryStub factory;
+    private BlockEncryptionStrategyLookahead blockEncStrategyLookahead;
 
     @Before
     public void setUp() {
@@ -42,7 +45,9 @@ public class AccessStrategyLookaheadTest {
         defaultSize = 16;
         defaultMatrixSize = 4;
         factory = new FactoryStub(new CommunicationStrategyStub(0, 0));
+        secretKey = factory.getEncryptionStrategy().generateSecretKey(defaultKey);
         access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory, 0, null, 0);
+        blockEncStrategyLookahead = new BlockEncryptionStrategyLookahead(factory.getEncryptionStrategy());
     }
 
     @Test
@@ -295,7 +300,7 @@ public class AccessStrategyLookaheadTest {
         BlockEncrypted blockEncrypted = new BlockEncrypted(encryptedAddress,
                 ArrayUtils.addAll(encryptedData, encryptedIndex));
 
-        BlockLookahead blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
+        BlockLookahead blockLookahead = blockEncStrategyLookahead.decryptBlock(blockEncrypted, secretKey);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));
@@ -316,7 +321,7 @@ public class AccessStrategyLookaheadTest {
         blockEncrypted = new BlockEncrypted(encryptedAddress,
                 ArrayUtils.addAll(encryptedData, encryptedIndex));
 
-        blockLookahead = access.decryptToLookaheadBlock(blockEncrypted);
+        blockLookahead = blockEncStrategyLookahead.decryptBlock(blockEncrypted, secretKey);
         assertThat("Correct data", blockLookahead.getData(), is(blockData));
         assertThat("Correct address", blockLookahead.getAddress(), is(addressInt));
         assertThat("Correct row index", blockLookahead.getRowIndex(), is(rowIndex));
@@ -324,8 +329,8 @@ public class AccessStrategyLookaheadTest {
 
         BlockLookahead block = new BlockLookahead(23, new byte[]{21, 23, 65, 23, 65, 32, 65, 87, 23, 65, 8, 79, 3, 4, 66, 54, 34, 56, 7, 89, 0, 8, 76, 54, 32});
         block.setIndex(new Index(52, 93));
-        BlockEncrypted blockEncryptedSimple = access.encryptBlock(block);
-        BlockLookahead blockDecryptedSimple = access.decryptToLookaheadBlock(blockEncryptedSimple);
+        BlockEncrypted blockEncryptedSimple = blockEncStrategyLookahead.encryptBlock(block, secretKey);
+        BlockLookahead blockDecryptedSimple = blockEncStrategyLookahead.decryptBlock(blockEncryptedSimple, secretKey);
         assertThat(block, is(blockDecryptedSimple));
     }
 
@@ -342,7 +347,9 @@ public class AccessStrategyLookaheadTest {
         factory.setEncryptionStrategy(encryptionStrategy);
         access = new AccessStrategyLookahead(defaultSize, defaultMatrixSize, defaultKey, factory, 0, null, 0);
 
-        List<BlockEncrypted> encryptedBlocks = access.encryptBlocks(Arrays.asList(block0, null, block2));
+        BlockEncryptionStrategyLookahead blockEncStrategy = new BlockEncryptionStrategyLookahead(encryptionStrategy);
+        List<BlockEncrypted> encryptedBlocks = blockEncStrategy.encryptBlocks(
+                Arrays.asList(block0, null, block2), secretKey);
         assertThat(encryptedBlocks, hasSize(3));
 
 //        First block
@@ -421,7 +428,12 @@ public class AccessStrategyLookaheadTest {
         blocks[15] = block15;
 
         List<BlockLookahead> blockLookaheads = Arrays.asList(blocks);
-        List<BlockEncrypted> encryptedList = access.encryptBlocks(blockLookaheads);
+
+        BlockEncryptionStrategyLookahead blockEncStrategy =
+                new BlockEncryptionStrategyLookahead(factory.getEncryptionStrategy());
+        List<BlockEncrypted> encryptedList = blockEncStrategy.encryptBlocks(
+                blockLookaheads, factory.getEncryptionStrategy().generateSecretKey(defaultKey));
+
         BlockEncrypted[] blocksList = new BlockEncrypted[encryptedList.size()];
         for (int i = 0; i < encryptedList.size(); i++) {
             blocksList[i] = encryptedList.get(i);
@@ -444,8 +456,8 @@ public class AccessStrategyLookaheadTest {
     @Test
     public void shouldBeAbleToEncryptAndDecryptDummyBlocks() {
         BlockLookahead block = access.getLookaheadDummyBlock();
-        BlockEncrypted encryptedBlock = access.encryptBlock(block);
-        BlockLookahead decryptedBlock = access.decryptToLookaheadBlock(encryptedBlock);
+        BlockEncrypted encryptedBlock = blockEncStrategyLookahead.encryptBlock(block, secretKey);
+        BlockLookahead decryptedBlock = blockEncStrategyLookahead.decryptBlock(encryptedBlock, secretKey);
         assertThat(decryptedBlock, is(block));
     }
 

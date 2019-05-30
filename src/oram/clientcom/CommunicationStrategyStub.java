@@ -7,10 +7,11 @@ import oram.block.BlockLookahead;
 import oram.blockcreator.LookaheadBlockCreator;
 import oram.blockcreator.PathBlockCreator;
 import oram.blockcreator.TrivialBlockCreator;
-import oram.lookahead.AccessStrategyLookahead;
+import oram.blockenc.BlockEncryptionStrategyLookahead;
 import oram.ofactory.ORAMFactory;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -197,10 +198,11 @@ public class CommunicationStrategyStub implements CommunicationStrategy {
         this.blocks = blocks;
     }
 
-    public String getMatrixAndStashString(AccessStrategyLookahead accessStrategy) {
+    public String getMatrixAndStashString(BlockEncryptionStrategyLookahead blockEncStrategy, SecretKey secretKey) {
         BlockLookahead[] blocks = new BlockLookahead[this.blocks.length];
         for (int i = 0; i < this.blocks.length; i++)
-            blocks[i] = accessStrategy.decryptToLookaheadBlock(this.blocks[i]);
+
+            blocks[i] = blockEncStrategy.decryptBlock(this.blocks[i], secretKey);
 
         StringBuilder builder = new StringBuilder("\n#### Printing matrix and swaps ####\n");
         for (int row = 0; row < bucketSize; row++) {
