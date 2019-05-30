@@ -39,14 +39,13 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
     private final Logger logger = LogManager.getLogger("log");
     private final SecretKey secretKey;
     private final int size;
-    private final int matrixHeight; // Assumes to be equal to matrix width
+    private final int matrixHeight; // Assumed to be equal to matrix width
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
     private Map<Integer, Integer> positionMap;
     private int accessCounter;
     private List<SwapPartnerData> futureSwapPartners;
-    private boolean print = false;
     private int offset;
     private String prefix;
     private int positionMapOffSet;
@@ -82,8 +81,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         Util.logAndPrint(logger, prefix + "Starting setup");
 //        Fill with dummy blocks
         for (int i = blocks.size(); i < size; i++) {
-            blocks.add(new BlockTrivial(0, new byte[0])); // TODO: does this make any difference?
-//            blocks.add(new BlockTrivial(0, new byte[Constants.BLOCK_SIZE]));
+            blocks.add(new BlockTrivial(0, new byte[0]));
         }
 
         for (int i = blocks.size(); i > size; i--) {
@@ -112,12 +110,9 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
             BlockLookahead block = blockLookaheads.get(getFlatArrayIndex(index));
             if (Util.isDummyAddress(block.getAddress()))
-                block.setData(Util.getRandomByteArray(Constants.BLOCK_SIZE)); // TODO: do I need more changes?
+                block.setData(Util.getRandomByteArray(Constants.BLOCK_SIZE));
             swapPartners.add(block);
         }
-//        System.out.println("Initial swap partners: ");
-//        for (SwapPartnerData s : futureSwapPartners)
-//            System.out.println("    " + s.toString());
 
         Util.logAndPrint(logger, prefix + "    Swap partners picked");
 
@@ -130,9 +125,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             BlockLookahead block = blockLookaheads.get(i);
             Index index = block.getIndex();
             boolean isSwapPartner = futureSwapPartners.stream().anyMatch(s -> s.getIndex().equals(index));
-            if (isSwapPartner) {
-//                res.add(getLookaheadDummyBlock());
-            } else {
+            if (!isSwapPartner) {
 //                There are added dummy blocks for the permutation, they should not be written to the database
                 if (!Util.isDummyAddress(block.getAddress())) {
                     res.add(block);
@@ -142,17 +135,11 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         }
         futureSwapPartners = new ArrayList<>();
 
-//        Then the access swap
-//        for (int i = size; i < size + matrixHeight; i++)
-//            res.add(getLookaheadDummyBlock());
-
 //        At last the swap stash
         for (int i = (size + matrixHeight); i < (size + matrixHeight * 2); i++) {
             BlockLookahead swapPartner = swapPartners.get(i - (size + matrixHeight));
-//            if (!Util.isDummyAddress(swapPartner.getAddress())) {
             res.add(swapPartner);
             addresses.add(i + offset);
-//            }
         }
 
         Util.logAndPrint(logger, prefix + "    Blocks added to final list");
@@ -166,16 +153,13 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
         Util.logAndPrint(logger, prefix + "    Blocks encrypted");
 
-//        for (int i = 0; i < encryptedList.size(); i++)
-//            addresses.add(i);
-
         if (!communicationStrategy.writeArray(addresses, encryptedList)) {
             logger.error(prefix + "Writing blocks were unsuccessful when initializing the ORAM");
             return false;
         }
 
         if (uploadPositionMap) {
-            if (!writePositionMap())
+            if (writePositionMapFailed())
                 return false;
             positionMap = null;
         } else {
@@ -183,25 +167,12 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         }
 
         Util.logAndPrint(logger, prefix + "    Blocks written to server");
-//        for (int i = 0; i <= size; i++) {
-//            if (i != 0)
-//                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
-//            else System.out.print("       ");
-//            for (int j = 1; j <= size; j++) {
-//                int pos = positionMap.getOrDefault(j, -1);
-//                if (pos == i)
-//                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(pos), 2) + " ; ");
-//            }
-//            System.out.println(" ");
-//        }
-//        System.out.println(" ");
 
         return true;
     }
 
-    private boolean writePositionMap() {
+    private boolean writePositionMapFailed() {
         List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(positionMap.entrySet());
-        if (print) System.out.println(prefix + "    Writing position map, number of entries: " + entries.size());
         entries.sort(Comparator.comparing(Map.Entry::getKey));
 
         List<Integer> addresses = new ArrayList<>();
@@ -209,26 +180,21 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
         int positionMapBlocks = (int) Math.ceil((double) size / Constants.POSITION_BLOCK_SIZE);
         for (int i = 0; i < positionMapBlocks; i++) {
-            if (print) System.out.print(prefix + "    Indices in map " + (i + 1) + ": ");
             Map<Integer, Integer> map = new HashMap<>();
             for (int j = 0; j < Constants.POSITION_BLOCK_SIZE; j++) {
                 int index = i * Constants.POSITION_BLOCK_SIZE + j;
 
-                if (entries.size() > index) { // Fill the rest with dummy mappings
+                if (entries.size() > index) // Fill the rest with dummy mappings
                     map.put(entries.get(index).getKey(), entries.get(index).getValue());
-                    if (print) System.out.print(entries.get(index).getKey() + ", ");
-                } else {
+                else
                     map.put(index + 1, -42);
-                    if (print) System.out.print(index + ", ");
-                }
             }
-            if (print) System.out.println(" ");
             addresses.add(positionMapOffSet + i);
             byte[] encryptedData = encryptionStrategy.encrypt(Util.getByteArrayFromMap(map), secretKey);
             byte[] addressBytes = Util.getRandomByteArray(Constants.ENCRYPTED_INTEGER_SIZE);
             encryptedBlocks.add(new BlockEncrypted(addressBytes, encryptedData));
         }
-        return communicationStrategy.writeArray(addresses, encryptedBlocks);
+        return !communicationStrategy.writeArray(addresses, encryptedBlocks);
     }
 
     private boolean readPositionMap() {
@@ -260,23 +226,9 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
     @Override
     public byte[] access(OperationType op, int address, byte[] data, boolean recursiveLookup, boolean lookaheadSetup) {
-//        for (int i = 0; i <= size; i++) {
-//            if (i != 0)
-//                System.out.print(StringUtils.leftPad(String.valueOf(i), 2) + " ; " + StringUtils.leftPad(String.valueOf(positionMap.getOrDefault(i, -1)), 2));
-//            else System.out.print("       ");
-//            for (int j = 1; j <= size; j++) {
-//                int res = positionMap.getOrDefault(j, -1);
-//                if (res == i)
-//                    System.out.print(" ;             " + StringUtils.leftPad(String.valueOf(j), 2) + " ; " + StringUtils.leftPad(String.valueOf(res), 2) + " ; ");
-//            }
-//            System.out.println(" ");
-//        }
-//        System.out.println(" ");
-
         int addressToLookUp = address;
         if (recursiveLookup)
             addressToLookUp = (int) Math.ceil((double) address / Constants.POSITION_BLOCK_SIZE);
-        if (print) System.out.println(prefix + "Address to look up: " + addressToLookUp);
 
         Integer position;
         if (positionMap == null) {
@@ -302,19 +254,9 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         Index indexOfCurrentAddress = getIndexFromFlatArrayIndex(position);
         int maintenanceColumnIndex = Math.floorMod(accessCounter, matrixHeight);
 
-        if (print)
-            System.out.println(prefix + "Access op: " + op.toString() + ", address: " + addressToLookUp + ", index: ("
-                    + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
-                    "), maintenance column: " + maintenanceColumnIndex);
-
-
         logger.info(prefix + "Access op: " + op.toString() + ", address: " + addressToLookUp + ", index: ("
                 + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
                 "), maintenance column: " + maintenanceColumnIndex);
-
-//        System.out.println("Access op: " + op.toString() + ", address: " + address + ", index: ("
-//                + indexOfCurrentAddress.getRowIndex() + ", " + indexOfCurrentAddress.getColIndex() +
-//                "), maintenance column: " + maintenanceColumnIndex);
 
 //        This tells if the block we fetch is in the column used for maintenance
         boolean blockInColumn = indexOfCurrentAddress.getColIndex() == maintenanceColumnIndex;
@@ -360,26 +302,17 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
                     block = pair.getKey();
                     swapCount = pair.getValue();
                     logger.debug(prefix + "Block found in swap stash: " + block.toStringShort());
-                    if (print) System.out.println(prefix + "Block found in swap stash: " + block.toStringShort());
                 }
             } else {
                 logger.debug(prefix + "Block found in access stash: " + block.toStringShort());
-                if (print) System.out.println(prefix + "Block found in access stash: " + block.toStringShort());
             }
         } else {
             logger.debug(prefix + "Block found in matrix: " + block.toStringShort());
-            if (print) System.out.println(prefix + "Block found in matrix: " + block.toStringShort());
         }
 
 //        Get swap partner
         BlockLookahead swapPartner = swapStash[maintenanceColumnIndex];
         swapStash[maintenanceColumnIndex] = null;
-
-        if (print) {
-            System.out.println(prefix + "Block and swap partner: ");
-            System.out.println(prefix + "    " + block.toStringShort());
-            System.out.println(prefix + "    " + swapPartner.toStringShort());
-        }
 
 //        Set index to index of swap partner and add to access stash
         block.setIndex(swapPartner.getIndex());
@@ -393,25 +326,15 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             return null;
         }
 
-        if (print) {
-            System.out.println(prefix + "Block and swap partner: ");
-            System.out.println(prefix + "    " + block.toStringShort());
-            System.out.println(prefix + "    " + swapPartner.toStringShort());
-        }
-
 //        Save data and overwrite if operation is a write
         byte[] res = block.getData();
         if (op.equals(OperationType.WRITE)) {
-            if (print) System.out.print(prefix + "Writing data");
             if (recursiveLookup && !lookaheadSetup) {
-                if (print) System.out.print(" recursively\n");
                 Map<Integer, Integer> map = Util.getMapFromByteArray(res);
                 map.put(address, Util.byteArrayToLeInt(data));
                 block.setData(Util.getByteArrayFromMap(map));
-            } else {
+            } else
                 block.setData(data);
-                if (print) System.out.print(" NON recursively\n");
-            }
         }
 
 //        Handle the switch around of the blocks
@@ -424,43 +347,24 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             accessStash = removeFromAccessStash(accessStash, indexOfCurrentAddress);
         } else {
             blockToWriteBackToMatrix = getLookaheadDummyBlock();
-//            if (blockToWriteBackToMatrix == null) {
-//                logger.error("Unable to encrypt dummy block");
-//                return null;
-//            }
             BlockLookahead swapReplacement = new BlockLookahead(swapPartner.getAddress(), swapPartner.getData());
             swapReplacement.setIndex(indexOfCurrentAddress);
             swapStash[swapCount] = swapReplacement;
-
-            if (swapReplacement.getAddress() == 0) {
-                if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
-            } else {
-                if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
-                    return null;
-            }
-//            if (!updatePositionMap(swapReplacement.getAddress(), getFlatArrayIndex(swapReplacement.getIndex())))
-//                return null;
         }
 
 //        Update position map
         if (swapPartner.getAddress() == 0) {
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
         } else {
-            if (!updatePositionMap(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()))) return null;
+            updatePositionMapFailed(swapPartner.getAddress(), getFlatArrayIndex(swapPartner.getIndex()));
         }
-        if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+        updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
 //        Doing the update again, to not disclose if a second swap stash block was changed or not
         if (blockFoundInMatrix || blockFoundInAccessStash)
-            if (!updatePositionMap(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
+            updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()));
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
-
-//        Write block back to the matrix
-//        if (!communicationStrategy.write(flatArrayIndex, blockToWriteBackToMatrix)) {
-//            logger.error("Unable to write swap partner to communicationStrategy: \n" + swapPartner.toString());
-//            return null;
-//        }
 
         pickNewFutureSwapPartner(swapStash);
         List<BlockLookahead> blocksFromMaintenance = maintenanceJob(column, accessStash, swapStash);
@@ -493,10 +397,6 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             return null;
         }
 
-//        System.out.println("Addresses size: " + addresses.size() + ", blocks size: " + blocksFromMaintenance.size());
-//        System.out.println("Blocks to write");
-//        for (int i = 0; i < blocksFromMaintenance.size(); i++)
-//            System.out.println("  Index: " + addresses.get(i) + ", " + blocksFromMaintenance.get(i).toStringShort());
         boolean writeStatus = communicationStrategy.writeArray(addresses, encryptedBlocks);
         if (!writeStatus) {
             logger.error(prefix + "Unable to write blocks to server");
@@ -506,7 +406,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         accessCounter++;
 
         if (uploadPositionMap) {
-            if (!writePositionMap())
+            if (writePositionMapFailed())
                 return null;
             positionMap = null;
         }
@@ -526,7 +426,6 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         indices.addAll(getIndicesForAccessStash());
         indices.addAll(getIndicesForSwapStash());
 
-        if (print) System.out.println(prefix + "Read addresses: " + Arrays.toString(indices.toArray()));
         List<BlockEncrypted> encryptedBlocks = communicationStrategy.readArray(indices);
         if (encryptedBlocks == null) {
             logger.error(prefix + "Unable to read blocks");
@@ -544,39 +443,15 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
     private List<BlockLookahead> maintenanceJob(List<BlockLookahead> column,
                                                 Map<Integer, Map<Integer, BlockLookahead>> accessStash,
                                                 BlockLookahead[] swapStash) {
-//        System.out.println("Maintenance job");
         int columnIndex = Math.floorMod(accessCounter, matrixHeight);
-//        System.out.println("    Column index: " + columnIndex);
-//        List<BlockLookahead> column = new ArrayList<>();
-
-////        Retrieve column from matrix
-//        for (int i = 0; i < matrixHeight; i++) {
-//            BlockEncrypted encryptedBlock = communicationStrategy.read(getFlatArrayIndex(new Index(i, columnIndex)));
-//            if (encryptedBlock == null) {
-//                logger.error("Unable to read block with index (" + i + ", " + columnIndex + ") from communicationStrategy");
-//                return false;
-//            }
-//            BlockLookahead block = decryptToLookaheadBlock(encryptedBlock);
-//            column.add(block);
-//        }
 
 //        Move blocks from access stash to column
-        if (print) {
-            System.out.println(prefix + "    Move blocks from access stash to column");
-            System.out.println(prefix + "        Current column");
-            for (BlockLookahead b : column)
-                System.out.println(prefix + "          " + (b != null ? b.toStringShort() : null));
-        }
         Map<Integer, BlockLookahead> map = accessStash.getOrDefault(columnIndex, new HashMap<>());
-        if (print) System.out.println(prefix + "        Moved map (size: " + map.size() + "):");
         for (Map.Entry<Integer, BlockLookahead> entry : map.entrySet()) {
-            if (print)
-                System.out.println(prefix + "          " + entry.getKey() + " -> " + entry.getValue().toStringShort());
+            System.out.println(prefix + "          " + entry.getKey() + " -> " + entry.getValue().toStringShort());
             BlockLookahead blockLookahead = column.get(entry.getKey());
-            if (print) System.out.println(prefix + "          Block: " + blockLookahead.toStringShort());
             int address = blockLookahead.getAddress();
             if (!Util.isDummyAddress(address)) {
-                System.out.println(prefix + "AAAAAAAAAAAAAAAAAAAAAAAAARRRRH");
                 logger.error(prefix + "Was suppose to add accessed block to stash at index (" + entry.getKey() + ", " +
                         columnIndex + "), but place were not filled with dummy block");
                 return null;
@@ -587,29 +462,12 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         accessStash.remove(columnIndex);
 
 //        Move blocks from column to swap stash
-        if (print) {
-            System.out.println(prefix + "    Move blocks from column to swap, column: " + columnIndex);
-            System.out.println(prefix + "        Current swap stash:");
-            for (BlockLookahead b : swapStash)
-                System.out.println(prefix + "          " + (b != null ? b.toStringShort() : null));
-            System.out.println(prefix + "        Current column");
-            for (BlockLookahead b : column)
-                System.out.println(prefix + "          " + (b != null ? b.toStringShort() : null));
-            System.out.println(prefix + "        Future swap partners");
-            for (SwapPartnerData s : futureSwapPartners)
-                System.out.println(prefix + "          " + s.toString());
-            System.out.println(prefix + "      --------------------------");
-        }
         for (int i = futureSwapPartners.size() - 1; i >= 0; i--) {
             SwapPartnerData swap = futureSwapPartners.get(i);
-            if (print) System.out.println(prefix + "  Future swap partner: " + swap.toString());
             if (swap.getIndex().getColIndex() == columnIndex) {
                 int rowIndex = swap.getIndex().getRowIndex();
-                if (print) System.out.println(prefix + "    Row index: " + rowIndex);
                 BlockLookahead swapPartner = column.get(rowIndex);
-                if (print) System.out.println(prefix + "            Swap partner: " + swapPartner.toStringShort());
-
-//                This could actually be applied if #blocks = size, test that
+//                This test could actually be applied if #blocks = size, test that
 //                if (Util.isDummyAddress(swapPartner.getAddress())) {
 //                    logger.error("Trying to set a dummy block as swap partner with swap data: " + swap);
 //                    return null;
@@ -618,31 +476,14 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
                 swapStash[Math.floorMod(swap.getSwapNumber(), matrixHeight)] = swapPartner;
                 futureSwapPartners.remove(i);
                 column.set(rowIndex, getLookaheadDummyBlock());
-//                System.out.println("    Current swap stash:");
-//                for (BlockLookahead b : swapStash)
-//                    System.out.println("      " + (b != null ? b.toStringShort() : null));
-//                System.out.println("    Current column");
-//                for (BlockLookahead b : column)
-//                    System.out.println("      " + (b != null ? b.toStringShort() : null));
             }
         }
-        if (print) {
-            System.out.println(prefix + "        Current swap stash:");
-            for (BlockLookahead b : swapStash)
-                System.out.println(prefix + "          " + (b != null ? b.toStringShort() : null));
-            System.out.println(prefix + "        Current column");
-            for (BlockLookahead b : column)
-                System.out.println(prefix + "          " + (b != null ? b.toStringShort() : null));
-        }
+
 //        Putting the blocks back into a result list
         List<BlockLookahead> res;
 
 //        Column
         res = column;
-
-//        System.out.println("Blocks returned from maintenance job, size: " + res.size());
-//        for (BlockLookahead b : res)
-//            System.out.println("    " + b.toStringShort());
 
 //        Access stash
         List<BlockLookahead> accessStashList = new ArrayList<>();
@@ -652,18 +493,12 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             }
         }
 
-        for (int i = 0; i < matrixHeight; i++) {
-//            System.out.println("Adding dummies to access stash, size: " + accessStashList.size());
-            if (accessStashList.size() <= i) {
+        for (int i = 0; i < matrixHeight; i++)
+            if (accessStashList.size() <= i)
                 accessStashList.add(getLookaheadDummyBlock());
-            }
-        }
+
         accessStashList = permutationStrategy.permuteLookaheadBlocks(accessStashList);
         res.addAll(accessStashList);
-
-//        System.out.println("Blocks returned from maintenance job, size: " + res.size());
-//        for (BlockLookahead b : res)
-//            System.out.println("    " + b.toStringShort());
 
 //        Swap stash
         List<BlockLookahead> swapStashList = new ArrayList<>();
@@ -675,24 +510,14 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         }
         res.addAll(swapStashList);
 
-//        if (print) {
-//            System.out.println(prefix + "Blocks returned from maintenance job, size: " + res.size());
-//            for (BlockLookahead b : res)
-//                System.out.println(prefix + "    " + b.toStringShort());
-//        }
         return res;
     }
 
-    private boolean updatePositionMap(int key, int value) {
-        if (print) System.out.print(prefix + "Update position map (put: " + key + " -> " + value);
-
-        if (print) System.out.print(" locally)\n");
+    private void updatePositionMapFailed(int key, int value) {
         positionMap.put(key, value);
-
-        return true;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
+    private Map<Integer, Map<Integer, BlockLookahead>> getAccessStash(List<BlockLookahead> blocks, boolean blockInColumn) {
         int beginIndex = matrixHeight;
         if (!blockInColumn) beginIndex++;
         int endIndex = beginIndex + matrixHeight;
@@ -705,7 +530,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap
+    private Map<Integer, Map<Integer, BlockLookahead>> addToAccessStashMap
             (Map<Integer, Map<Integer, BlockLookahead>> map,
              BlockLookahead block) {
         if (block.getAddress() == 0)
@@ -761,7 +586,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return column;
     }
 
-    BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {
+    private BlockLookahead[] getSwapStash(List<BlockLookahead> blocks, boolean blockInColumn) {
         int beginIndex = matrixHeight * 2;
         if (!blockInColumn) beginIndex++;
 
@@ -772,7 +597,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, Index index) {
+    private BlockLookahead findBlockInAccessStash(Map<Integer, Map<Integer, BlockLookahead>> stash, Index index) {
         int colIndex = index.getColIndex();
         int rowIndex = index.getRowIndex();
         if (stash.containsKey(colIndex)) {
@@ -810,7 +635,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         futureSwapPartners.add(new SwapPartnerData(index, accessCounter));
     }
 
-    public List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
+    private List<BlockLookahead> decryptLookaheadBlocks(List<BlockEncrypted> encryptedBlocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (BlockEncrypted b : encryptedBlocks) {
             BlockLookahead block = decryptToLookaheadBlock(b);
@@ -823,14 +648,10 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    //    TODO: check for null the correct places
-    public BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
-//        System.out.println("Decrypt block");
+    private BlockLookahead decryptToLookaheadBlock(BlockEncrypted blockEncrypted) {
         byte[] encryptedDataFull = blockEncrypted.getData();
-//        System.out.println("    " + Arrays.toString(encryptedDataFull));
         int encryptedDataFullLength = encryptedDataFull.length;
         int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
-//        System.out.println("    data length: " + encryptedDataFullLength + ", end of data length: " + endOfDataIndex);
         byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
         byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
         byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
@@ -840,16 +661,8 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             logger.info(prefix + "Tried to turn an encrypted block with value = null into a Lookahead block");
             return null;
         }
-//        System.out.println("    Data: " + Arrays.toString(data));
-//        System.out.println("    Indices: " + Arrays.toString(indices));
-//        if (Arrays.equals(indices, new byte[]{5, 0, 0, 0, 5, 0, 0, 0}))
-//            System.out.println("jdlsajd");
-//
-//        System.out.println("    Encrypted address: " + Arrays.toString(blockEncrypted.getAddress()));
 
         byte[] addressBytes = encryptionStrategy.decrypt(blockEncrypted.getAddress(), secretKey);
-
-//        System.out.println("    Address bytes: " + Arrays.toString(addressBytes));
 
         int address = byteArrayToLeInt(addressBytes);
 
@@ -866,7 +679,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return blockLookahead;
     }
 
-    BlockEncrypted encryptBlock(BlockLookahead block) {
+    private BlockEncrypted encryptBlock(BlockLookahead block) {
         List<BlockEncrypted> encryptedList = encryptBlocks(Collections.singletonList(block));
         if (encryptedList.isEmpty())
             return null;
@@ -874,7 +687,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             return encryptedList.get(0);
     }
 
-    List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
+    private List<BlockEncrypted> encryptBlocks(List<BlockLookahead> blockLookaheads) {
         List<BlockEncrypted> res = new ArrayList<>();
         for (BlockLookahead block : blockLookaheads) {
             if (block == null) {
@@ -890,12 +703,6 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
             byte[] encryptedIndex = encryptionStrategy.encrypt(indexBytes,
                     secretKey);
 
-//            System.out.println("Encrypt block");
-//            System.out.println("    Row bytes: " + rowIndexBytes.length + ", " + Arrays.toString(rowIndexBytes));
-//            System.out.println("    Col bytes: " + colIndexBytes.length + ", " + Arrays.toString(colIndexBytes));
-//            System.out.println("    Add bytes: " + addressBytes.length + ", " + Arrays.toString(addressBytes));
-//            System.out.println("    Dat bytes: " + block.getData().length + ", " + Arrays.toString(block.getData()));
-
             if (encryptedAddress == null || encryptedData == null || encryptedIndex == null) {
                 logger.error(prefix + "Unable to encrypt block: " + block.toStringShort());
                 return new ArrayList<>();
@@ -903,29 +710,24 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
 
             byte[] encryptedDataPlus = ArrayUtils.addAll(encryptedData, encryptedIndex);
 
-//            System.out.println("    Ind bytes: " + indexBytes.length + ", " + Arrays.toString(indexBytes));
-//            System.out.println("    Enc ind bytes: " + encryptedIndex.length + ", " + Arrays.toString(encryptedIndex));
-//            System.out.println("    Enc dat bytes: " + encryptedData.length + ", " + Arrays.toString(encryptedData));
-//            System.out.println("    Enc da+ bytes: " + encryptedDataPlus.length + ", " + Arrays.toString(encryptedDataPlus));
-
             res.add(new BlockEncrypted(encryptedAddress, encryptedDataPlus));
         }
         return res;
     }
 
-    int getFlatArrayIndex(Index index) {
+    private int getFlatArrayIndex(Index index) {
         int res = index.getRowIndex();
         res += index.getColIndex() * matrixHeight;
         return res;
     }
 
-    Index getIndexFromFlatArrayIndex(int flatArrayIndex) {
+    private Index getIndexFromFlatArrayIndex(int flatArrayIndex) {
         int column = flatArrayIndex / matrixHeight;
         int row = flatArrayIndex % matrixHeight;
         return new Index(row, column);
     }
 
-    List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
+    private List<BlockLookahead> trivialToLookaheadBlocksForSetup(List<BlockTrivial> blocks) {
         List<BlockLookahead> res = new ArrayList<>();
         for (int i = 0; i < matrixHeight; i++) { // Columns
             for (int j = 0; j < matrixHeight; j++) { // Rows
@@ -939,7 +741,7 @@ public class AccessStrategyLookaheadTrivial implements AccessStrategy {
         return res;
     }
 
-    BlockLookahead getLookaheadDummyBlock() {
+    private BlockLookahead getLookaheadDummyBlock() {
         BlockLookahead blockLookahead = new BlockLookahead(0, new byte[Constants.BLOCK_SIZE]);
         blockLookahead.setIndex(new Index(0, 0));
         return blockLookahead;

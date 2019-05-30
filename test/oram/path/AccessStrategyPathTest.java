@@ -1,18 +1,15 @@
 package oram.path;
 
-import oram.CommunicationStrategyStub;
 import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
+import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
-import oram.permutation.PermutationStrategy;
-import oram.permutation.PermutationStrategyIdentity;
 import oram.util.FactoryStub;
 import oram.util.TestUtil;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Before;
 import org.junit.Test;
 
 import javax.crypto.SecretKey;
@@ -28,12 +25,6 @@ import static org.junit.Assert.assertNotNull;
 
 public class AccessStrategyPathTest {
     private static final int BUCKET_SIZE = 4;
-    private PermutationStrategy permutation;
-
-    @Before
-    public void setUp() {
-        permutation = new PermutationStrategyIdentity();
-    }
 
     @Test
     public void shouldCalculateTheRightNodeIndexFor7Blocks() {
@@ -165,30 +156,21 @@ public class AccessStrategyPathTest {
         accessStrategy.setup();
 
         accessStrategy.access(OperationType.WRITE, 4, "Test 1".getBytes(), false, false);
-//        System.out.println("###########################################\n" + server.getTreeString());
         byte[] endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertNotNull(endObject);
         assertThat("Value is 'Test 1'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 1"));
 
-//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "42".getBytes(), false, false);
-//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 42", new String(TestUtil.removeTrailingZeroes(endObject)), is("42"));
 
-//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "1337".getBytes(), false, false);
-//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 1337", new String(TestUtil.removeTrailingZeroes(endObject)), is("1337"));
 
-//        System.out.println("###########################################\n" + server.getTreeString());
         accessStrategy.access(OperationType.WRITE, 4, "Test 4".getBytes(), false, false);
-//        System.out.println("###########################################\n" + server.getTreeString());
         endObject = accessStrategy.access(OperationType.READ, 4, null, false, false);
         assertThat("Value is 'Test 4'", new String(TestUtil.removeTrailingZeroes(endObject)), is("Test 4"));
-
-//        System.out.println("###########################################\n" + server.getTreeString());
     }
 
     @Test
@@ -271,21 +253,6 @@ public class AccessStrategyPathTest {
         System.out.println("    Data c 3 " + Arrays.toString(datac3));
         System.out.println("    Index b 3 " + Arrays.toString(indexb3));
         System.out.println("    Index c 3 " + Arrays.toString(indexc3));
-
-//        BlockEncrypted encrypted1 = new BlockEncrypted(
-//                encryptionStrategy.encrypt(Util.leIntToByteArray(block1.getAddress()), secretKey),
-//                ArrayUtils.addAll(encryptionStrategy.encrypt(block1.getData(), secretKey),
-//                        encryptionStrategy.encrypt(Util.leIntToByteArray(block1.getIndex()), secretKey)));
-//
-//        BlockEncrypted encrypted2 = new BlockEncrypted(
-//                encryptionStrategy.encrypt(Util.leIntToByteArray(block2.getAddress()), secretKey),
-//                ArrayUtils.addAll(encryptionStrategy.encrypt(block2.getData(), secretKey),
-//                        encryptionStrategy.encrypt(Util.leIntToByteArray(block2.getIndex()), secretKey)));
-//
-//        BlockEncrypted encrypted3 = new BlockEncrypted(
-//                encryptionStrategy.encrypt(Util.leIntToByteArray(block3.getAddress()), secretKey),
-//                ArrayUtils.addAll(encryptionStrategy.encrypt(block3.getData(), secretKey),
-//                        encryptionStrategy.encrypt(Util.leIntToByteArray(block3.getIndex()), secretKey)));
 
         List<BlockEncrypted> encryptedList = Arrays.asList(encrypted0, encrypted1, encrypted2, encrypted3);
 

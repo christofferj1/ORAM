@@ -16,14 +16,6 @@ public class BlockPath implements Block {
     private byte[] data;
     private int index;
 
-    public BlockPath() {
-    }
-
-//    public BlockPath(int address, byte[] data) {
-//        this.address = address;
-//        this.data = data;
-//    }
-
     public BlockPath(int address, byte[] data, int index) {
         this.address = address;
         this.data = data;

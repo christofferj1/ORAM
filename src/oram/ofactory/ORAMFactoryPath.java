@@ -15,7 +15,7 @@ import static oram.Constants.DEFAULT_BUCKET_SIZE;
  */
 
 public class ORAMFactoryPath implements ORAMFactory {
-        private AccessStrategyPath accessStrategy;
+    private AccessStrategyPath accessStrategy;
     private int size;
     private int bucketSize;
     private int numberOfBlocks;
@@ -23,19 +23,21 @@ public class ORAMFactoryPath implements ORAMFactory {
     private int offset;
     private int totalSize;
 
+    //    For recursive ORAM
     public ORAMFactoryPath(int size, int offset) {
         this.offset = offset;
         numberOfBlocks = Math.min(size, 1000);
         this.size = size - 1;
         bucketSize = DEFAULT_BUCKET_SIZE;
-        totalSize = size * bucketSize;
+        totalSize = this.size * bucketSize;
     }
 
+    //    For local position map ORAM
     public ORAMFactoryPath() {
-        size = Util.getInteger("size");
+        size = Util.getInteger("size, must be a power of 2");
         numberOfBlocks = Math.min(size, 1000);
-        numberOfRounds = Util.getInteger("number of rounds");
         bucketSize = Util.getInteger("bucket size");
+        numberOfRounds = Util.getInteger("number of rounds");
         offset = 0;
         totalSize = size * bucketSize;
     }
@@ -60,13 +62,8 @@ public class ORAMFactoryPath implements ORAMFactory {
     }
 
     @Override
-    public int getOffSet() {
-        return offset;
-    }
-
-    @Override
     public String getInitString() {
-        return "Size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
+        return "Path, size: " + size + ", bucket size: " + bucketSize + ", with number of blocks: " + numberOfBlocks +
                 ", rounds: " + numberOfRounds + ", block size: " + Constants.BLOCK_SIZE;
     }
 
@@ -95,28 +92,4 @@ public class ORAMFactoryPath implements ORAMFactory {
         this.numberOfRounds = numberOfRounds;
     }
 
-    @Override
-    public int getColumns() {
-        return 0;
-    }
-
-    @Override
-    public int getRows() {
-        return 0;
-    }
-
-    @Override
-    public int getBucketSize() {
-        return bucketSize;
-    }
-
-    @Override
-    public int factorySizeParameter0() {
-        return size;
-    }
-
-    @Override
-    public int factorySizeParameter1() {
-        return bucketSize;
-    }
 }

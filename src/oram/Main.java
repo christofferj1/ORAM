@@ -1,6 +1,5 @@
 package oram;
 
-import oram.block.BlockEncrypted;
 import oram.block.BlockTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyTiming;
@@ -11,7 +10,6 @@ import oram.factory.FactoryImpl;
 import oram.lookahead.AccessStrategyLookahead;
 import oram.lookahead.AccessStrategyLookaheadTrivial;
 import oram.ofactory.*;
-import oram.path.AccessStrategyPath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,46 +22,33 @@ import java.util.*;
  * Master Thesis 2019 </p>
  */
 
-public class Main {
+class Main {
     private static final Logger logger = LogManager.getLogger("log");
 
     public static void main(String[] args) {
-        byte[] key = Constants.KEY_BYTES;
+        byte[] key = Constants.KEY_BYTES; // Used for encryption
 
-
-//        ORAMFactory oramFactory = getOramFactory("main");
-//        Factory factory = new FactoryCustom(Enc.IMPL, Com.IMPL, Per.IMPL, oramFactory.factorySizeParameter0(),
-//                oramFactory.factorySizeParameter1());
+//        Initialise factories
         List<ORAMFactory> oramFactories = getORAMFactories();
         Factory factory = new FactoryImpl();
 
+//        Initialise block array
         int numberOfBlocks = oramFactories.get(0).getNumberOfBlocks();
-
         BlockTrivial[] blockArray = new BlockTrivial[(numberOfBlocks + 1)];
         List<BlockTrivial> blocks = new ArrayList<>();
         for (int i = 1; i <= numberOfBlocks; i++) {
             int mapBeginning = (i - 1) * Constants.POSITION_BLOCK_SIZE + 1;
             Map<Integer, Integer> map = Util.getDummyMap(mapBeginning);
-            BlockTrivial block = new BlockTrivial(i, Util.getByteArrayFromMap(map));
+            BlockTrivial block = new BlockTrivial(i, Util.getByteArrayFromMap(map)); // Maps are used in case of recursive ORAMs
             blocks.add(block);
             blockArray[i] = block;
         }
 
-        boolean pathORAMChosen = oramFactories.get(0) instanceof ORAMFactoryPath;
+//        Initialise communication
         CommunicationStrategy communicationStrategy = factory.getCommunicationStrategy();
-        communicationStrategy.start();
+        communicationStrategy.start(getIPString());
 
-//        Create recursive ORAM
-//        ORAMFactory oramFactory2 = getOramFactory("2");
-//        AccessStrategy access2 = oramFactory2.getAccessStrategy(key, factory, null);
-//
-//        ORAMFactory oramFactory1 = getOramFactory("1");
-//        AccessStrategy access1 = oramFactory1.getAccessStrategy(key, factory, access2);
-//
-//        AccessStrategy access = oramFactory.getAccessStrategy(key, factory, access1);
-//        if (oramFactory instanceof ORAMFactoryLookahead)
-//            access.setup(blocks);
-
+//        The Lookahead ORAM is initialised with the blocks it is going to use though out the execution
         List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
         for (int i = accesses.size(); i > 0; i--) {
             AccessStrategy a = accesses.get(i - 1);
@@ -72,30 +57,24 @@ public class Main {
                     return;
         }
 
+
         SecureRandom randomness = new SecureRandom();
         List<Integer> addresses = new ArrayList<>();
         int numberOfRounds = oramFactories.get(0).getNumberOfRounds();
         for (int i = 0; i < numberOfRounds / 2; i++)
             addresses.add(randomness.nextInt(numberOfBlocks) + 1);
 
-//        StringBuilder resume = new StringBuilder(oramFactories.get(0).getInitString());
-//        Util.logAndPrint(logger, resume.toString());
+//        Initialise the string builder which gives a resume of the execution at the end
         StringBuilder resume = initializeStringBuilder(oramFactories);
 
-//        for (int j = 0; j < oramFactories.size(); j++) {
-//            if (accesses.get(j) instanceof AccessStrategyPath)
-//                printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
-//        }
-//        printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
-//        printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
-
+//        Keeps track of the addresses written to, to know when the data read should be known and should match the local copy
         List<Integer> addressesWrittenTo = new ArrayList<>();
         long speedTestTime = 0;
         long startTime = System.nanoTime();
         for (int i = 0; i < numberOfRounds; i++) {
             int address = addresses.get(i % addresses.size());
 
-            boolean writing = i < numberOfRounds / 2;
+            boolean writing = i < numberOfRounds / 2; // The first half of the rounds are writes, the rest are reads
             OperationType op;
             byte[] data;
             if (writing) {
@@ -109,14 +88,12 @@ public class Main {
             byte[] res = accesses.get(0).access(op, address, data, false, false);
             if (res == null) break;
 
-//            res = Util.removeTrailingZeroes(res);
-
             if (addressesWrittenTo.contains(address)) {
-                if (pathORAMChosen && res.length == 0)
+                if (oramFactories.get(0) instanceof ORAMFactoryPath && res.length == 0)
                     break;
-                else {
+                else { // When something goes south
                     if (!Arrays.equals(res, blockArray[address].getData())) {
-                        Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
+                        Util.logAndPrint(logger, "Something went wrong! (wrong block)");
                         Util.logAndPrint(logger, "    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
                         Util.logAndPrint(logger, "    The arrays, that weren't the same:");
                         Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
@@ -129,97 +106,88 @@ public class Main {
 
             if (op.equals(OperationType.WRITE)) blockArray[address] = new BlockTrivial(address, data);
 
-//            System.out.println("Block array");
-//            for (int j = 0; j < blockArray.length; j++) {
-//                BlockTrivial b = blockArray[j];
-//                System.out.println("  " + j + ": " + (b != null ? b.toStringShort() : ""));
-//            }
-//            System.out.println(" ");
-//            for (int j = 0; j < oramFactories.size(); j++) {
-//                if (accesses.get(j) instanceof AccessStrategyPath)
-//                    printTreeFromServer(oramFactories.get(j).getSize(), oramFactories.get(j).getBucketSize(), communicationStrategy, (AccessStrategyPath) accesses.get(j), oramFactories.get(j).getOffSet());
-//            }
-//            printTreeFromServer(oramFactory.getSize(), oramFactory.getBucketSize(), communicationStrategy, (AccessStrategyPath) access, oramFactory.getOffSet());
-//            printTreeFromServer(oramFactory1.getSize(), oramFactory1.getBucketSize(), communicationStrategy, (AccessStrategyPath) access1, oramFactory1.getOffSet());
-
-            String percentString = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, i);
-            if (percentString != null) {
-                long tmp = communicationStrategy.speedTest();
-                percentString += ", speed test: " + (tmp / 1000000) + " ms, " + (16 / (tmp / 1000000)) + " Mb/ms";
-
-                if (tmp < 0)
-                    break;
-                else
-                    speedTestTime += tmp;
-
-                if (percentString.contains("0%"))
-                    resume.append("\n").append(percentString);
-
-                logger.info("\n\n" + percentString + "\n");
-                System.out.println(percentString);
-            }
+            speedTestTime += handleMessages(communicationStrategy, startTime, speedTestTime, numberOfRounds, i, resume);
         }
 
-        if (pathORAMChosen)
-            Util.logAndPrint(logger, "Max stash size: " + oramFactories.get(0).getMaxStashSize() + ", max stash size between accesses: " + oramFactories.get(0).getMaxStashSizeBetweenAccesses());
-
-        Util.logAndPrint(logger, "Overwriting with dummy blocks");
+//        End the session
+        Util.logAndPrint(logger, "Delete blocks on server");
         if (communicationStrategy.sendEndSignal())
-            Util.logAndPrint(logger, "Successfully rewrote all the blocks");
+            Util.logAndPrint(logger, "Successfully deleted all the blocks");
         else
-            Util.logAndPrint(logger, "Unable to overwrite the blocks on the server");
+            Util.logAndPrint(logger, "Unable to delete the blocks on the server");
+        finalMessages(oramFactories, factory, communicationStrategy, resume);
+    }
 
+    private static String getIPString() {
+        Scanner scanner = new Scanner(System.in);
+        Util.logAndPrint(logger, "Provide an IP address to connect to (format: xxx.xxx.xxx.xxx)");
+        String res = scanner.nextLine();
+        while (!res.matches("(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})")) {
+            Util.logAndPrint(logger, "The IP address: " + res + " did not have the correct format");
+            res = scanner.nextLine();
+        }
+        Util.logAndPrint(logger, "IP chosen: " + res);
+        return res;
+    }
+
+    private static void finalMessages(List<ORAMFactory> oramFactories, Factory factory,
+                                      CommunicationStrategy communicationStrategy, StringBuilder resume) {
+        //        Print stash size, if main ORAM were Path ORAM
+        if (oramFactories.get(0) instanceof ORAMFactoryPath)
+            Util.logAndPrint(logger, "Max stash size: " + oramFactories.get(0).getMaxStashSize() +
+                    ", max stash size between accesses: " + oramFactories.get(0).getMaxStashSizeBetweenAccesses());
+
+//        Print the amount of time used to encrypt and decrypt blocks
         EncryptionStrategy encryptionStrategy = factory.getEncryptionStrategy();
         if (encryptionStrategy instanceof EncryptionStrategyTiming)
             Util.logAndPrint(logger, "Encryption time: " +
                     Util.getTimeString(((EncryptionStrategyTiming) encryptionStrategy).getTime() / 1000000));
 
+//        Print the amount of time used to send and receive data
         if (communicationStrategy instanceof CommunicationStrategyTiming)
             Util.logAndPrint(logger, "Communication time: " +
                     Util.getTimeString(((CommunicationStrategyTiming) communicationStrategy).getTime() / 1000000));
 
+//        Print the resume
         Util.logAndPrint(logger, "\n ### Resume ###\n" + resume.toString());
     }
 
-    private static ORAMFactory getOramFactory(String name) {
-        Scanner scanner = new Scanner(System.in);
-        Util.logAndPrint(logger, "Choose ORAM: " + name + " [l/lt/p/t]");
-        String answer = scanner.nextLine();
-        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t") || answer.equals("lt"))) {
-            System.out.println("Choose ORAM [l/lt/p/t]");
-            answer = scanner.nextLine();
+    private static long handleMessages(CommunicationStrategy communicationStrategy, long startTime, long speedTestTime,
+                                       int numberOfRounds, int roundNumber, StringBuilder resume) {
+        String percentString = Util.getPercentageDoneString(startTime + speedTestTime, numberOfRounds, roundNumber);
+        if (percentString != null) {
+            long tmp = communicationStrategy.speedTest();
+            percentString += ", speed test: " + (tmp / 1000000) + " ms, " + (16 / (tmp / 1000000)) + " Mb/ms";
+
+            if (tmp < 0)
+                return tmp;
+
+            if (percentString.contains("0%"))
+                resume.append("\n").append(percentString);
+
+            logger.info("\n\n" + percentString + "\n");
+            System.out.println(percentString);
+            return tmp;
         }
-        switch (answer) {
-            case "l":
-                return new ORAMFactoryLookahead();
-            case "lt":
-                return new ORAMFactoryLookaheadTrivial();
-            case "p":
-                return new ORAMFactoryPath();
-            case "t":
-                return new ORAMFactoryTrivial();
-            default:
-                logger.error("Unable to find ORAM factory for: " + answer);
-                System.exit(-1);
-                return null;
-        }
+        return 0;
     }
 
     private static List<ORAMFactory> getORAMFactories() {
-        int numberOfORAMS = Util.getInteger("number of ORAMs");
+        int numberOfORAMS = Util.getInteger("number of layers of ORAMs (between 1 and 5, both included)");
         if (numberOfORAMS == 1)
-            return Collections.singletonList(getOramFactory("ONLY ORAM"));
+            return Collections.singletonList(getSingleOramFactory());
 
         if (numberOfORAMS > 5) {
             System.out.println("Can't create higher than 5 recursive ORAMs");
             System.exit(-1);
         }
+
         int offset = 0;
         List<ORAMFactory> factories = new ArrayList<>();
         outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch (Util.chooseORAMType("ORAM number " + i + " [l/lt/p/t]")) {
+            switch (Util.chooseORAMType("ORAM number " + i + ", choose between Lookahead, Path, Trivial, or Lookahead (using Trivial specialised for Lookahead) [l/lt/p/t]")) {
                 case "l":
                     factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);
@@ -240,12 +208,26 @@ public class Main {
         return factories;
     }
 
-    private static void printTreeFromServer(int size, int bucketSize, CommunicationStrategy com,
-                                            AccessStrategyPath access, int offset) {
-        BlockEncrypted[] array = new BlockEncrypted[size * bucketSize];
-        for (int j = 0; j < array.length; j++)
-            array[j] = com.read(j + offset);
-        System.out.println(Util.printTree(array, bucketSize, access, Util.getEmptyStringOfLength(15)));
+    private static ORAMFactory getSingleOramFactory() {
+        Scanner scanner = new Scanner(System.in);
+        Util.logAndPrint(logger, "Choose ORAM, either Lookahead, Path or Trivial [l/p/t]");
+        String answer = scanner.nextLine();
+        while (!(answer.equals("l") || answer.equals("p") || answer.equals("t"))) {
+            System.out.println("Choose ORAM [l/p/t]");
+            answer = scanner.nextLine();
+        }
+        switch (answer) {
+            case "l":
+                return new ORAMFactoryLookahead();
+            case "p":
+                return new ORAMFactoryPath();
+            case "t":
+                return new ORAMFactoryTrivial();
+            default:
+                logger.error("Unable to find ORAM factory for: " + answer);
+                System.exit(-1);
+                return null;
+        }
     }
 
     private static StringBuilder initializeStringBuilder(List<ORAMFactory> factories) {

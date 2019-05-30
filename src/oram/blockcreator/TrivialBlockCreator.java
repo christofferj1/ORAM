@@ -34,7 +34,8 @@ public class TrivialBlockCreator implements BlockCreator {
         EncryptionStrategyImpl encryptionStrategy = new EncryptionStrategyImpl();
         SecretKey secretKey = encryptionStrategy.generateSecretKey(Constants.KEY_BYTES);
         int numberOfFiles = addresses.size();
-        Util.logAndPrint(logger, "Overwriting " + numberOfFiles + " Trivial files, from: " + addresses.get(0) + ", to: " + addresses.get(addresses.size() - 1));
+        Util.logAndPrint(logger, "Overwriting " + numberOfFiles + " Trivial files, from: " + addresses.get(0) + ", to: "
+                + addresses.get(addresses.size() - 1));
         List<BlockEncrypted> res = new ArrayList<>();
         for (int i = 0; i < numberOfFiles; i++) {
 
@@ -44,23 +45,7 @@ public class TrivialBlockCreator implements BlockCreator {
             double percent = ((double) (i + 1) / numberOfFiles) * 100;
             if (percent % 1 == 0)
                 Util.logAndPrint(logger, "    Done with " + ((int) percent) + "% of the files");
-//            byte[] data = block.getData();
-//            byte[] address = block.getAddress();
-//            byte[] bytesToWrite = new byte[data.length + address.length];
-//            System.arraycopy(address, 0, bytesToWrite, 0, address.length);
-//            System.arraycopy(data, 0, bytesToWrite, address.length, data.length);
-//
-//            if (!Util.writeFile(bytesToWrite, addresses.get(i))) {
-//                logger.error("Unable to write file: " + i);
-//                return false;
-//            }
-//
-//            double percent = ((double) (i + 1) / numberOfFiles) * 100;
-//            if (percent % 1 == 0)
-//                Util.logAndPrint(logger, "    Done with " + ((int) percent) + "% of the files");
         }
-
-//        return true;
         return res;
     }
 

@@ -1,7 +1,5 @@
 package oram.block;
 
-import oram.Util;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
@@ -62,14 +60,6 @@ public class BlockTrivial implements Block, Serializable {
         return "BlockTrivial{" +
                 "address=" + address +
                 ", data=" + Arrays.toString(data) +
-                '}';
-    }
-
-    public String toStringShort() {
-        String dataString = Util.getShortDataString(data);
-        return "Block{" +
-                "add=" + address +
-                ", data=" + dataString +
                 '}';
     }
 }

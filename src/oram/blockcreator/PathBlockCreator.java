@@ -46,27 +46,6 @@ public class PathBlockCreator implements BlockCreator {
 
         if (encryptedList.isEmpty()) return null;
         return encryptedList;
-//
-//        Util.logAndPrint(logger, "    Data encrypted");
-//
-//        for (int i = 0; i < numberOfFiles; i++) {
-//            byte[] data = encryptedList.get(i).getData();
-//            byte[] address = encryptedList.get(i).getAddress();
-//            byte[] bytesToWrite = new byte[data.length + address.length];
-//            System.arraycopy(address, 0, bytesToWrite, 0, address.length);
-//            System.arraycopy(data, 0, bytesToWrite, address.length, data.length);
-//
-//            if (!Util.writeFile(bytesToWrite, addresses.get(i))) {
-//                logger.error("Unable to write file: " + i);
-//                return false;
-//            }
-//
-//            double percent = ((double) (i + 1) / numberOfFiles) * 100;
-//            if (percent % 1 == 0)
-//                Util.logAndPrint(logger, "    Done with " + ((int) percent) + "% of the files");
-//        }
-//
-//        return true;
     }
 
     private List<BlockEncrypted> encryptBlocks(List<BlockPath> blockPaths, EncryptionStrategyImpl encryptionStrategy,

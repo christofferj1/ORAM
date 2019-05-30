@@ -38,8 +38,6 @@ public class BlockEncrypted implements Serializable {
 
     @Override
     public String toString() {
-//        if (Util.isDummyAddress(Util.byteArrayToLeInt(address)))
-//            return "DUMMY COUNTER: " + Util.byteArrayToLeInt(data);
         return "BlockEncrypted{" +
                 "address=" + Util.printByteArray(address, false) +
                 ", data=" + Util.printByteArray(data, false) +

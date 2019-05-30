@@ -11,7 +11,7 @@ import java.util.List;
  */
 
 public interface CommunicationStrategy {
-    boolean start();
+    boolean start(String ipAddress);
 
     BlockEncrypted read(int address);
 
