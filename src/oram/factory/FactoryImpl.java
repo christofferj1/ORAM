@@ -2,6 +2,7 @@ package oram.factory;
 
 import oram.blockenc.BlockEncryptionStrategyLookahead;
 import oram.blockenc.BlockEncryptionStrategyPath;
+import oram.blockenc.BlockEncryptionStrategyTrivial;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyImpl;
 import oram.clientcom.CommunicationStrategyTiming;
@@ -57,5 +58,10 @@ public class FactoryImpl implements Factory {
     @Override
     public BlockEncryptionStrategyLookahead getBlockEncryptionStrategyLookahead() {
         return new BlockEncryptionStrategyLookahead(getEncryptionStrategy());
+    }
+
+    @Override
+    public BlockEncryptionStrategyTrivial getBlockEncryptionStrategyTrivial() {
+        return new BlockEncryptionStrategyTrivial(getEncryptionStrategy());
     }
 }
