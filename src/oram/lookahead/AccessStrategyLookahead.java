@@ -320,6 +320,7 @@ public class AccessStrategyLookahead implements AccessStrategy {
         }
 
 //        Update position map
+//        If the swap partner were a dummy block, the position of the desired address is update twice to hide that fact
         if (swapPartner.getAddress() == 0) {
             if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
         } else {
@@ -327,9 +328,6 @@ public class AccessStrategyLookahead implements AccessStrategy {
                 return null;
         }
         if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
-//        Doing the update again, to not disclose if a second swap stash block was changed or not
-        if (blockFoundInMatrix || blockFoundInAccessStash)
-            if (updatePositionMapFailed(block.getAddress(), getFlatArrayIndex(block.getIndex()))) return null;
 
         if (blockInColumn)
             column.set(indexOfCurrentAddress.getRowIndex(), blockToWriteBackToMatrix);
