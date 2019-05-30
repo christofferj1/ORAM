@@ -50,7 +50,7 @@ public class Util {
     }
 
     public static boolean isDummyAddress(int address) {
-        return address == 0;
+        return address == Constants.DUMMY_BLOCK_ADDRESS;
     }
 
     /**
