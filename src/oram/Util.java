@@ -2,16 +2,17 @@ package oram;
 
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.factory.Factory;
 import oram.lookahead.AccessStrategyDummy;
 import oram.ofactory.ORAMFactory;
 import oram.ofactory.ORAMFactoryLookaheadTrivial;
-import oram.path.AccessStrategyPath;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -280,8 +281,8 @@ public class Util {
 
 //    Methods used to print the Path ORAM tree, not used anymore
 
-    static String printTree(BlockEncrypted[] array, int bucketSize, AccessStrategyPath access,
-                            String prefixString) {
+    static String printTree(BlockEncrypted[] array, int bucketSize, SecretKey secretKey, String prefixString,
+                            BlockEncryptionStrategyPath blockEncryptionStrategyPath) {
         int layers = 0;
         while ((array.length / bucketSize) >= Math.pow(2, layers)) {
             layers++;
@@ -289,7 +290,7 @@ public class Util {
 
         List<BlockEncrypted> encrypted = new ArrayList<>(Arrays.asList(array));
 
-        List<BlockPath> blockPaths = access.decryptBlockPaths(encrypted, false);
+        List<BlockPath> blockPaths = blockEncryptionStrategyPath.decryptBlocks(encrypted, secretKey, false);
         BlockPath[] array1 = blockPaths.toArray(new BlockPath[array.length]);
         return printBucket(array1, bucketSize, 0, 1, layers, prefixString);
     }

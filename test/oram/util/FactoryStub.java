@@ -1,5 +1,6 @@
 package oram.util;
 
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
@@ -46,6 +47,11 @@ public class FactoryStub implements Factory {
 
     public void setPermutationStrategy(PermutationStrategy permutationStrategy) {
         this.permutationStrategy = permutationStrategy;
+    }
+
+    @Override
+    public BlockEncryptionStrategyPath getBlockEncryptionStrategyPath() {
+        return new BlockEncryptionStrategyPath(getEncryptionStrategy(), getPermutationStrategy());
     }
 
     public void setCommunicationStrategyStub(CommunicationStrategyStub communicationStrategyStub) {

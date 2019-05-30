@@ -7,11 +7,11 @@ import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
 import oram.block.BlockTrivial;
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.factory.Factory;
 import oram.permutation.PermutationStrategy;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +35,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private final CommunicationStrategy communicationStrategy;
     private final EncryptionStrategy encryptionStrategy;
     private final PermutationStrategy permutationStrategy;
+    private final BlockEncryptionStrategyPath blockEncStrategy;
     private int maxStashSize;
     private int maxStashSizeBetweenAccesses;
     private List<BlockPath> stash;
@@ -52,6 +53,7 @@ public class AccessStrategyPath implements AccessStrategy {
         encryptionStrategy = factory.getEncryptionStrategy();
         secretKey = encryptionStrategy.generateSecretKey(key);
         permutationStrategy = factory.getPermutationStrategy();
+        blockEncStrategy = factory.getBlockEncryptionStrategyPath();
         maxStashSize = 0;
         maxStashSizeBetweenAccesses = 0;
 
@@ -173,7 +175,8 @@ public class AccessStrategyPath implements AccessStrategy {
             logger.error(prefixString + "Did not fetch the right amount of blocks");
             res = false;
         } else {
-            List<BlockPath> blocksDecrypted = decryptBlockPaths(encryptedBlocks, true);
+            List<BlockPath> blocksDecrypted = blockEncStrategy.decryptBlocks(encryptedBlocks, secretKey, true);
+//            List<BlockPath> blocksDecrypted = decryptBlockPaths(encryptedBlocks, true);
             if (blocksDecrypted == null) {
                 logger.error(prefixString + "Unable to decrypt path of blocks");
                 res = false;
@@ -257,7 +260,8 @@ public class AccessStrategyPath implements AccessStrategy {
             removeBlocksFromStash(blocksToWrite);
 
 //            Encrypts all pairs
-            List<BlockEncrypted> encryptedBlocksToWriteTmp = encryptBucketOfBlocks(blocksToWrite);
+            List<BlockEncrypted> encryptedBlocksToWriteTmp = blockEncStrategy.encryptBlocks(blocksToWrite, secretKey);
+//            List<BlockEncrypted> encryptedBlocksToWriteTmp = encryptBucketOfBlocks(blocksToWrite);
             if (encryptedBlocksToWriteTmp == null) {
                 logger.error(prefixString + "Returned null when trying to encrypt blocks");
                 return false;
@@ -313,24 +317,6 @@ public class AccessStrategyPath implements AccessStrategy {
         }
     }
 
-    private List<BlockEncrypted> encryptBucketOfBlocks(List<BlockPath> blocksToWrite) {
-        List<BlockEncrypted> encryptedBlocksToWrite = new ArrayList<>();
-        for (BlockPath block : blocksToWrite) {
-            byte[] addressCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getAddress()), secretKey);
-            byte[] indexCipher = encryptionStrategy.encrypt(Util.leIntToByteArray(block.getIndex()), secretKey);
-            byte[] dataCipher = encryptionStrategy.encrypt(block.getData(), secretKey);
-            if (addressCipher == null || indexCipher == null || dataCipher == null) {
-                logger.error(prefixString + "Unable to encrypt address: " + block.getAddress() + " or data");
-                return null;
-            }
-            byte[] encryptedDataPlus = ArrayUtils.addAll(dataCipher, indexCipher);
-            encryptedBlocksToWrite.add(new BlockEncrypted(addressCipher, encryptedDataPlus));
-        }
-        encryptedBlocksToWrite = permutationStrategy.permuteEncryptedBlocks(encryptedBlocksToWrite);
-        return encryptedBlocksToWrite;
-    }
-
-
     private List<BlockPath> fillWithDummy(List<BlockPath> temp) {
         for (int i = temp.size(); i < bucketSize; i++) {
             temp.add(new BlockPath(Constants.DUMMY_BLOCK_ADDRESS, new byte[Constants.BLOCK_SIZE], 0));
@@ -359,42 +345,6 @@ public class AccessStrategyPath implements AccessStrategy {
         int res = (int) (Math.pow(2, L - 1) - 1 + leafNode);
         for (int i = L - 1; i > level; i--) {
             res = (int) Math.floor((res - 1) / 2);
-        }
-        return res;
-    }
-
-    public List<BlockPath> decryptBlockPaths(List<BlockEncrypted> encryptedBlocks, boolean filterOutDummies) {
-        List<BlockPath> res = new ArrayList<>();
-        for (BlockEncrypted block : encryptedBlocks) {
-            if (block == null) continue;
-//            Address
-            byte[] addressBytes = encryptionStrategy.decrypt(block.getAddress(), secretKey);
-
-            if (addressBytes == null) continue;
-            int addressInt = Util.byteArrayToLeInt(addressBytes);
-
-            if (filterOutDummies && Util.isDummyAddress(addressInt)) continue;
-
-//            Data and index
-            byte[] encryptedDataFull = block.getData();
-
-            int encryptedDataFullLength = encryptedDataFull.length;
-            int endOfDataIndex = encryptedDataFullLength - Constants.AES_BLOCK_SIZE * 2;
-
-            byte[] encryptedData = Arrays.copyOfRange(encryptedDataFull, 0, endOfDataIndex);
-            byte[] encryptedIndex = Arrays.copyOfRange(encryptedDataFull, endOfDataIndex, encryptedDataFullLength);
-
-            byte[] data = encryptionStrategy.decrypt(encryptedData, secretKey);
-            byte[] indexBytes = encryptionStrategy.decrypt(encryptedIndex, secretKey);
-
-            if (data == null || indexBytes == null) {
-                Util.logAndPrint(logger, prefixString + "Unable to decrypt a Path block");
-                return null;
-            }
-
-            int index = Util.byteArrayToLeInt(indexBytes);
-
-            res.add(new BlockPath(addressInt, data, index));
         }
         return res;
     }

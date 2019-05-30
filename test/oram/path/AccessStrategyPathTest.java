@@ -4,6 +4,7 @@ import oram.OperationType;
 import oram.Util;
 import oram.block.BlockEncrypted;
 import oram.block.BlockPath;
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategyStub;
 import oram.encryption.EncryptionStrategy;
 import oram.encryption.EncryptionStrategyImpl;
@@ -259,9 +260,10 @@ public class AccessStrategyPathTest {
         CommunicationStrategyStub communicationStrategyStub = new CommunicationStrategyStub(15, 1);
         FactoryStub factory = new FactoryStub(communicationStrategyStub);
         factory.setEncryptionStrategy(encryptionStrategy);
-        AccessStrategyPath access = new AccessStrategyPath(4, 1, key, factory, null, 0, 0);
 
-        List<BlockPath> res = access.decryptBlockPaths(encryptedList, true);
+        BlockEncryptionStrategyPath blockEncryptionStrategyPath =
+                new BlockEncryptionStrategyPath(factory.getEncryptionStrategy(), factory.getPermutationStrategy());
+        List<BlockPath> res = blockEncryptionStrategyPath.decryptBlocks(encryptedList, secretKey, true);
         assertThat(res, hasSize(3));
         assertThat(res, hasItem(block0));
         assertThat(res, hasItem(block1));

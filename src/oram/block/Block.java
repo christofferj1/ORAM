@@ -6,7 +6,7 @@ package oram.block;
  * Master Thesis 2019 </p>
  */
 
-interface Block {
+public interface Block {
     int getAddress();
 
     byte[] getData();

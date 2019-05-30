@@ -1,5 +1,6 @@
 package oram.factory;
 
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
 import oram.clientcom.CommunicationStrategyImpl;
 import oram.clientcom.CommunicationStrategyTiming;
@@ -45,5 +46,10 @@ public class FactoryImpl implements Factory {
         if (permutationStrategy == null)
             permutationStrategy = new PermutationStrategyImpl();
         return permutationStrategy;
+    }
+
+    @Override
+    public BlockEncryptionStrategyPath getBlockEncryptionStrategyPath() {
+        return new BlockEncryptionStrategyPath(getEncryptionStrategy(),getPermutationStrategy());
     }
 }

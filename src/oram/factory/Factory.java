@@ -1,5 +1,6 @@
 package oram.factory;
 
+import oram.blockenc.BlockEncryptionStrategyPath;
 import oram.clientcom.CommunicationStrategy;
 import oram.encryption.EncryptionStrategy;
 import oram.permutation.PermutationStrategy;
@@ -16,4 +17,6 @@ public interface Factory {
     CommunicationStrategy getCommunicationStrategy();
 
     PermutationStrategy getPermutationStrategy();
+
+    BlockEncryptionStrategyPath getBlockEncryptionStrategyPath();
 }
