@@ -6,6 +6,8 @@ import oram.Util;
 import oram.factory.Factory;
 import oram.path.AccessStrategyPathMult;
 
+import java.util.Map;
+
 import static oram.Constants.DEFAULT_BUCKET_SIZE;
 
 /**
@@ -80,6 +82,11 @@ public class ORAMFactoryPathMult implements ORAMFactory {
     @Override
     public int getTotalSize() {
         return totalSize;
+    }
+
+    @Override
+    public Map<Integer, Integer> getStashSizeMap() {
+        return null;
     }
 
     @Override

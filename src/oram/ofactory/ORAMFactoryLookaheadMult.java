@@ -6,6 +6,8 @@ import oram.Util;
 import oram.factory.Factory;
 import oram.lookahead.AccessStrategyLookaheadMult;
 
+import java.util.Map;
+
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 28-03-2019. <br>
@@ -77,6 +79,11 @@ public class ORAMFactoryLookaheadMult implements ORAMFactory {
     @Override
     public int getTotalSize() {
         return totalSize;
+    }
+
+    @Override
+    public Map<Integer, Integer> getStashSizeMap() {
+        return null;
     }
 
     @Override

@@ -3,6 +3,8 @@ package oram.ofactory;
 import oram.AccessStrategy;
 import oram.factory.Factory;
 
+import java.util.Map;
+
 /**
  * <p> ORAM <br>
  * Created by Christoffer S. Jensen on 28-03-2019. <br>
@@ -39,4 +41,6 @@ public interface ORAMFactory {
     int getMaxStashSizeBetweenAccesses();
 
     int getTotalSize();
+
+    Map<Integer, Integer> getStashSizeMap();
 }

@@ -47,6 +47,7 @@ public class AccessStrategyPath implements AccessStrategy {
     private AccessStrategy accessStrategy;
     private String prefixString;
     private int accessCounter;
+    private Map<Integer, Integer> stashSizeMap;
 
     public AccessStrategyPath(int size, int bucketSize, byte[] key, Factory factory, AccessStrategy accessStrategy,
                               int offset, int prefixSize) {
@@ -64,6 +65,7 @@ public class AccessStrategyPath implements AccessStrategy {
         maxStashSizeBetweenAccesses = 0;
 
         accessCounter = 0;
+        stashSizeMap = new HashMap<>();
 
         prefixString = Util.getEmptyStringOfLength(prefixSize);
 
@@ -244,6 +246,7 @@ public class AccessStrategyPath implements AccessStrategy {
             return null;
         }
 
+        stashSizeMap.merge(stash.size(), 1, Integer::sum);
         if (stash.size() > maxStashSizeBetweenAccesses) {
             maxStashSizeBetweenAccesses = stash.size();
             Util.logAndPrint(logger, prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses + ", after accesses: " + accessCounter);
@@ -575,5 +578,9 @@ public class AccessStrategyPath implements AccessStrategy {
 
     public int getMaxStashSizeBetweenAccesses() {
         return maxStashSizeBetweenAccesses;
+    }
+
+    public Map<Integer, Integer> getStashSizeMap() {
+        return stashSizeMap;
     }
 }
