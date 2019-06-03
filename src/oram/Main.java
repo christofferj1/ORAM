@@ -187,7 +187,7 @@ class Main {
         outer:
         for (int i = 0; i < numberOfORAMS; i++) {
             int levelSize = Util.getLevelSize(i, numberOfORAMS - 1);
-            switch (Util.chooseORAMType("ORAM number " + i + ", choose between Lookahead, Path, Trivial, or Lookahead (using Trivial specialised for Lookahead) [l/lt/p/t]")) {
+            switch (Util.chooseORAMType("ORAM number " + i + ", choose between Lookahead, Lookahead using Trivial specialised for Lookahead, Path, or Trivial [l/lt/p/t]")) {
                 case "l":
                     factories.add(new ORAMFactoryLookahead(levelSize, offset));
                     offset += levelSize + 2 * Math.sqrt(levelSize);
