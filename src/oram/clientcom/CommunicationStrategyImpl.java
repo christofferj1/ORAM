@@ -172,7 +172,6 @@ public class CommunicationStrategyImpl implements CommunicationStrategy {
             return null;
         }
         return res;
-
     }
 
     @Override

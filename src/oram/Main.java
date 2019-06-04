@@ -50,11 +50,23 @@ class Main {
 
 //        The Lookahead ORAM is initialised with the blocks it is going to use though out the execution
         List<AccessStrategy> accesses = Util.getAccessStrategies(oramFactories, key, factory);
+        List<BlockTrivial> mapBlocks = new ArrayList<>(blocks);
         for (int i = accesses.size(); i > 0; i--) {
             AccessStrategy a = accesses.get(i - 1);
             if (a instanceof AccessStrategyLookahead || a instanceof AccessStrategyLookaheadTrivial)
-                if (!a.setup(blocks))
-                    return;
+                if (i == 1) {
+                blocks = new ArrayList<>();
+                    for (int j = 1; j <= numberOfBlocks; j++) {
+                        BlockTrivial block = new BlockTrivial(j, Util.getRandomByteArray(Constants.BLOCK_SIZE));
+                        blocks.add(block);
+                        blockArray[j] = block;
+                    }
+                    if (!a.setup(blocks))
+                        return;
+                } else {
+                    if (!a.setup(mapBlocks))
+                        return;
+                }
         }
 
 
