@@ -6,7 +6,7 @@ This repository contains the code used for experiments in connections with my wo
 
 If you have gradle installed, you can build and run it with the commands *gradle build* and *gradle run*.
 
-If you do not have gradle installed, you can use the wrapper scripts, *gradlew* for Unix based systems and *gradlew.bat* for Windows based.
+If you do not have gradle installed, you can use the wrapper scripts, *gradlew* for Unix based systems and *gradlew.bat* for Windows based. These scripts should also be used with the "build" and "run" commands.
 
 ### Using the software
 
