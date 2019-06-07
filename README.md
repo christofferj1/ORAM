@@ -1,6 +1,6 @@
 # ORAM
 
-ORAM is short for Oblivious RAM, which is a cryptographic primitive used to simulate RAM and hide the access pattern. It can be used when data is stored on an online server, and you want to make sure the server can't tell what block of you are accessing or if you are reading or writing. It is an additional layer of security put on top when conventional encryption is not enough.
+ORAM is short for Oblivious RAM, which is a cryptographic primitive used to simulate RAM and hide the access pattern. It can be used when data is stored on an online server, and you want to make sure the server can't tell what block of data you are accessing or if you are reading or writing. It is an additional layer of security put on top when conventional encryption is not enough.
 
 This repository contains the code used for experiments in connections with my work on my Master's Thesis. This is the client-side software that works together with the [server-side](https://github.com/christofferj1/oram_server).
 
