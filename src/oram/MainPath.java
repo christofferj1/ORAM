@@ -26,7 +26,6 @@ public class MainPath {
     public static void main(String[] args) {
         byte[] key = Constants.KEY_BYTES;
         int numberOfRounds = 131072; // 2^17
-//        int numberOfRounds = Util.getInteger("number of rounds");
 
         for (int z = 3; z <= 6; z++) {
             Constants.DEFAULT_BUCKET_SIZE = z;
@@ -54,7 +53,7 @@ public class MainPath {
             AccessStrategy access = oramFactory.getAccessStrategy(key, factory, null, 0);
             access.setup(blocks);
 
-            List<Integer> addresses = IntStream.range(0, numberOfBlocks).boxed().collect(Collectors.toList());
+            List<Integer> addresses = IntStream.range(1, numberOfBlocks + 1).boxed().collect(Collectors.toList());
 
             StringBuilder resume = initializeStringBuilder(Collections.singletonList(oramFactory));
 
@@ -62,6 +61,7 @@ public class MainPath {
             List<Integer> addressesWrittenTo = new ArrayList<>();
             long startTime = System.nanoTime();
             for (int i = 0; i < numberOfRounds; i++) {
+
                 int address = addresses.get(i % addresses.size());
 
                 boolean writing = randomness.nextBoolean();
@@ -82,12 +82,14 @@ public class MainPath {
                     if (res.length == 0)
                         break;
                     else {
-                        if (!Arrays.equals(res, blockArray[address].getData())) {
+                        byte[] oldData = blockArray[address].getData();
+                        if (!Arrays.equals(res, oldData) &&
+                                !Arrays.equals(res, Arrays.copyOf(oldData, 32))) {
                             Util.logAndPrint(logger, "SHIT WENT WRONG!!! - WRONG BLOCK!!!");
                             Util.logAndPrint(logger, "    Address: " + address + ", in: " + Arrays.toString(addressesWrittenTo.toArray()));
                             Util.logAndPrint(logger, "    The arrays, that weren't the same:");
                             Util.logAndPrint(logger, "        res: " + Arrays.toString(res));
-                            Util.logAndPrint(logger, "        old: " + Arrays.toString(blockArray[address].getData()));
+                            Util.logAndPrint(logger, "        old: " + Arrays.toString(oldData));
                             break;
                         }
                     }

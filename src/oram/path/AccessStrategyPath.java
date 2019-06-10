@@ -246,10 +246,11 @@ public class AccessStrategyPath implements AccessStrategy {
             return null;
         }
 
+        logger.info(";" + accessCounter + ";" + stash.size());
         stashSizeMap.merge(stash.size(), 1, Integer::sum);
         if (stash.size() > maxStashSizeBetweenAccesses) {
             maxStashSizeBetweenAccesses = stash.size();
-            Util.logAndPrint(logger, prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses + ", after accesses: " + accessCounter);
+//            Util.logAndPrint(logger, prefixString + "Max stash size between accesses: " + maxStashSizeBetweenAccesses + ", after accesses: " + accessCounter);
         }
 
         if (print) System.out.println(prefixString + "Returning data: " + Util.getShortDataString(res));
